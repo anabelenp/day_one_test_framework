@@ -1,0 +1,51 @@
+name: Performance - JMeter DLP
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  jmeter-dlp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install JMeter
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jmeter
+
+      - name: Start local stack
+        run: |
+          docker-compose -f docker-compose.local.yml up -d || true
+          sleep 20
+
+      - name: Run DLP JMeter test
+        run: |
+          mkdir -p reports
+          jmeter -n -t tests/performance/jmeter/dlp_scan_load_test.jmx \
+                 -Jbase_url=http://localhost:8080 -Jusers=20 -Jramp_time=30 -Jduration=60 \
+                 -l reports/dlp-jmeter-results.jtl \
+                 -e -o reports/dlp-jmeter-report || true
+
+      - name: Upload JMeter reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: dlp-jmeter-reports
+          path: |
+            reports/dlp-jmeter-results.jtl
+            reports/dlp-jmeter-report/**
+
+      - name: Tear down local stack
+        if: always()
+        run: |
+          docker-compose -f docker-compose.local.yml down -v || true

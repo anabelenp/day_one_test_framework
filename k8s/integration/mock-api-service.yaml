@@ -1,0 +1,421 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-api-config
+  namespace: netskope-integration
+data:
+  config.yaml: |
+    # Mock API Configuration for Integration Environment
+    server:
+      host: "0.0.0.0"
+      port: 8080
+      debug: false
+    
+    api:
+      base_path: "/api/v2"
+      rate_limit: 1000  # requests per minute
+      auth_required: true
+      default_api_key: "integration-api-key-2024"
+    
+    responses:
+      delay_ms: 50  # Simulate network latency
+      error_rate: 0.01  # 1% error rate for testing
+    
+    logging:
+      level: "INFO"
+      format: "json"
+    
+    metrics:
+      enabled: true
+      port: 9090
+      path: "/metrics"
+  
+  mock_responses.json: |
+    {
+      "events": {
+        "data": [
+          {
+            "event_id": "evt_001",
+            "timestamp": "2024-12-18T10:00:00Z",
+            "event_type": "swg",
+            "severity": "medium",
+            "user": "test.user@company.com",
+            "action": "blocked",
+            "url": "malicious-site.com",
+            "category": "malware"
+          },
+          {
+            "event_id": "evt_002",
+            "timestamp": "2024-12-18T10:05:00Z",
+            "event_type": "dlp",
+            "severity": "high",
+            "user": "admin@company.com",
+            "action": "quarantined",
+            "file": "sensitive_data.xlsx",
+            "violation": "PII detected"
+          }
+        ],
+        "total": 2,
+        "page": 1,
+        "per_page": 100
+      },
+      "policies": {
+        "data": [
+          {
+            "policy_id": "pol_001",
+            "name": "Block Social Media",
+            "type": "swg",
+            "enabled": true,
+            "rules": [
+              {
+                "action": "block",
+                "categories": ["social_media"],
+                "users": ["all"]
+              }
+            ]
+          },
+          {
+            "policy_id": "pol_002",
+            "name": "DLP - Financial Data",
+            "type": "dlp",
+            "enabled": true,
+            "rules": [
+              {
+                "action": "quarantine",
+                "patterns": ["credit_card", "ssn"],
+                "severity": "high"
+              }
+            ]
+          }
+        ],
+        "total": 2
+      },
+      "users": {
+        "data": [
+          {
+            "user_id": "usr_001",
+            "email": "test.user@company.com",
+            "name": "Test User",
+            "risk_score": 25,
+            "status": "active",
+            "last_activity": "2024-12-18T09:30:00Z"
+          },
+          {
+            "user_id": "usr_002",
+            "email": "admin@company.com",
+            "name": "Admin User",
+            "risk_score": 10,
+            "status": "active",
+            "last_activity": "2024-12-18T10:00:00Z"
+          }
+        ],
+        "total": 2
+      },
+      "alerts": {
+        "data": [
+          {
+            "alert_id": "alt_001",
+            "timestamp": "2024-12-18T10:10:00Z",
+            "type": "security_incident",
+            "severity": "critical",
+            "title": "Multiple failed login attempts",
+            "description": "User test.user@company.com has 5 failed login attempts",
+            "status": "open"
+          }
+        ],
+        "total": 1
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-api-service
+  namespace: netskope-integration
+  labels:
+    app: mock-api
+    environment: integration
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mock-api
+  template:
+    metadata:
+      labels:
+        app: mock-api
+        environment: integration
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: mock-api
+        image: python:3.11-slim
+        ports:
+        - containerPort: 8080
+          name: api
+        - containerPort: 9090
+          name: metrics
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install flask prometheus-client pyyaml
+          
+          cat > /app/mock_api.py << 'EOF'
+          import json
+          import yaml
+          import time
+          import random
+          from flask import Flask, request, jsonify
+          from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+          
+          app = Flask(__name__)
+          
+          # Metrics
+          REQUEST_COUNT = Counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status'])
+          REQUEST_DURATION = Histogram('api_request_duration_seconds', 'API request duration')
+          
+          # Load configuration
+          with open('/etc/config/config.yaml', 'r') as f:
+              config = yaml.safe_load(f)
+          
+          with open('/etc/config/mock_responses.json', 'r') as f:
+              mock_data = json.load(f)
+          
+          def authenticate():
+              auth_header = request.headers.get('Authorization')
+              api_key = request.headers.get('X-API-Key')
+              
+              if not config['api']['auth_required']:
+                  return True
+              
+              if api_key == config['api']['default_api_key']:
+                  return True
+              
+              if auth_header and auth_header.startswith('Bearer '):
+                  token = auth_header.split(' ')[1]
+                  return token == config['api']['default_api_key']
+              
+              return False
+          
+          def simulate_delay():
+              if config['responses']['delay_ms'] > 0:
+                  time.sleep(config['responses']['delay_ms'] / 1000.0)
+          
+          def simulate_error():
+              if random.random() < config['responses']['error_rate']:
+                  return True
+              return False
+          
+          @app.before_request
+          def before_request():
+              request.start_time = time.time()
+          
+          @app.after_request
+          def after_request(response):
+              duration = time.time() - request.start_time
+              REQUEST_DURATION.observe(duration)
+              REQUEST_COUNT.labels(
+                  method=request.method,
+                  endpoint=request.endpoint or 'unknown',
+                  status=response.status_code
+              ).inc()
+              return response
+          
+          @app.route('/health')
+          def health():
+              return jsonify({"status": "healthy", "timestamp": time.time()})
+          
+          @app.route('/metrics')
+          def metrics():
+              return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+          
+          @app.route('/api/v2/events')
+          def get_events():
+              if not authenticate():
+                  return jsonify({"error": "Unauthorized"}), 401
+              
+              simulate_delay()
+              if simulate_error():
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              page = int(request.args.get('page', 1))
+              per_page = int(request.args.get('per_page', 100))
+              
+              return jsonify(mock_data['events'])
+          
+          @app.route('/api/v2/policies')
+          def get_policies():
+              if not authenticate():
+                  return jsonify({"error": "Unauthorized"}), 401
+              
+              simulate_delay()
+              if simulate_error():
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['policies'])
+          
+          @app.route('/api/v2/users')
+          def get_users():
+              if not authenticate():
+                  return jsonify({"error": "Unauthorized"}), 401
+              
+              simulate_delay()
+              if simulate_error():
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['users'])
+          
+          @app.route('/api/v2/users', methods=['POST'])
+          def create_user():
+              if not authenticate():
+                  return jsonify({"error": "Unauthorized"}), 401
+              
+              simulate_delay()
+              if simulate_error():
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              user_data = request.get_json()
+              user_data['user_id'] = f"usr_{random.randint(1000, 9999)}"
+              user_data['status'] = 'active'
+              user_data['risk_score'] = random.randint(1, 100)
+              
+              return jsonify({"status": "created", "user": user_data}), 201
+          
+          @app.route('/api/v2/alerts')
+          def get_alerts():
+              if not authenticate():
+                  return jsonify({"error": "Unauthorized"}), 401
+              
+              simulate_delay()
+              if simulate_error():
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['alerts'])
+          
+          @app.route('/api/v2/reports')
+          def get_reports():
+              if not authenticate():
+                  return jsonify({"error": "Unauthorized"}), 401
+              
+              simulate_delay()
+              if simulate_error():
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify({
+                  "data": [
+                      {
+                          "report_id": "rpt_001",
+                          "name": "Security Summary",
+                          "type": "security",
+                          "generated_at": "2024-12-18T10:00:00Z",
+                          "status": "completed"
+                      }
+                  ],
+                  "total": 1
+              })
+          
+          if __name__ == '__main__':
+              app.run(
+                  host=config['server']['host'],
+                  port=config['server']['port'],
+                  debug=config['server']['debug']
+              )
+          EOF
+          
+          cd /app && python mock_api.py
+        
+        volumeMounts:
+        - name: mock-api-config
+          mountPath: /etc/config
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      
+      volumes:
+      - name: mock-api-config
+        configMap:
+          name: mock-api-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-api-service
+  namespace: netskope-integration
+  labels:
+    app: mock-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: api
+  - port: 9090
+    targetPort: 9090
+    name: metrics
+  selector:
+    app: mock-api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: integration-ingress
+  namespace: netskope-integration
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: netskope-integration.local
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: mock-api-service
+            port:
+              number: 8080
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 3000
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
+      - path: /jaeger
+        pathType: Prefix
+        backend:
+          service:
+            name: jaeger-service
+            port:
+              number: 16686

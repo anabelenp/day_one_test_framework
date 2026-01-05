@@ -1,0 +1,230 @@
+# Staging Environment Configuration
+# Production-like environment with enhanced security and monitoring
+
+ENVIRONMENT: staging
+MOCK_MODE: false
+
+# Service Endpoints (Kubernetes services with HA)
+REDIS_HOST: redis-ha-service.netskope-staging.svc.cluster.local
+REDIS_PORT: 6379
+REDIS_PASSWORD: staging-redis-ha-2024-secure
+REDIS_SENTINEL_HOSTS: redis-sentinel-service.netskope-staging.svc.cluster.local:26379
+REDIS_MASTER_NAME: mymaster
+REDIS_DB: 0
+REDIS_SSL: false
+REDIS_POOL_SIZE: 50
+REDIS_MAX_CONNECTIONS: 100
+
+KAFKA_BOOTSTRAP_SERVERS: kafka-ha-service.netskope-staging.svc.cluster.local:9092
+KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+KAFKA_SASL_MECHANISM: PLAIN
+KAFKA_SASL_USERNAME: admin
+KAFKA_SASL_PASSWORD: staging-kafka-ha-2024-secure
+KAFKA_CONSUMER_GROUP: netskope-staging-consumers
+KAFKA_AUTO_OFFSET_RESET: earliest
+KAFKA_ENABLE_AUTO_COMMIT: false
+KAFKA_SESSION_TIMEOUT_MS: 30000
+KAFKA_HEARTBEAT_INTERVAL_MS: 3000
+
+MONGODB_HOST: mongodb-ha-service.netskope-staging.svc.cluster.local
+MONGODB_PORT: 27017
+MONGODB_USERNAME: netskope_app
+MONGODB_PASSWORD: staging-mongodb-app-2024-secure
+MONGODB_DATABASE: netskope_staging
+MONGODB_AUTH_SOURCE: netskope_staging
+MONGODB_REPLICA_SET: rs0
+MONGODB_SSL: false
+MONGODB_POOL_SIZE: 50
+MONGODB_MAX_POOL_SIZE: 100
+MONGODB_CONNECT_TIMEOUT_MS: 30000
+MONGODB_SERVER_SELECTION_TIMEOUT_MS: 30000
+
+# Enhanced Netskope API Configuration
+NETSKOPE_BASE_URL: https://staging-api-service.netskope-staging.svc.cluster.local:8080
+API_KEY: staging-api-key-2024-secure-enhanced
+API_TIMEOUT: 30
+API_RETRIES: 5
+API_RETRY_BACKOFF: exponential
+API_MAX_RETRY_DELAY: 60
+API_JWT_ENABLED: true
+API_RATE_LIMIT: 5000
+API_BURST_LIMIT: 1000
+
+# AWS Services (Enhanced LocalStack or real AWS)
+AWS_REGION: us-west-2
+AWS_ENDPOINT_URL: null  # Use real AWS in staging
+AWS_ACCESS_KEY_ID: AKIA_STAGING_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY: staging_secret_access_key
+AWS_S3_BUCKET: netskope-staging-data
+AWS_KMS_KEY_ID: arn:aws:kms:us-west-2:123456789012:key/staging-key-id
+AWS_CLOUDWATCH_LOG_GROUP: /netskope/staging/logs
+
+# GCP Services (Real GCP for staging)
+GCP_PROJECT_ID: netskope-staging-project
+GOOGLE_APPLICATION_CREDENTIALS: /etc/gcp/staging-credentials.json
+GCP_STORAGE_BUCKET: netskope-staging-storage
+GCP_PUBSUB_TOPIC: netskope-staging-events
+GCP_BIGQUERY_DATASET: netskope_staging_analytics
+
+# Enhanced Monitoring and Observability
+PROMETHEUS_URL: http://prometheus-ha-service.netskope-staging.svc.cluster.local:9090
+GRAFANA_URL: http://grafana-ha-service.netskope-staging.svc.cluster.local:3000
+JAEGER_URL: http://jaeger-ha-service.netskope-staging.svc.cluster.local:16686
+ALERTMANAGER_URL: http://alertmanager-service.netskope-staging.svc.cluster.local:9093
+
+# Metrics Collection (Enhanced)
+METRICS_ENABLED: true
+METRICS_PORT: 9090
+METRICS_PATH: /metrics
+METRICS_INTERVAL: 15
+METRICS_RETENTION: 30d
+METRICS_DETAILED: true
+METRICS_CUSTOM_LABELS: environment=staging,cluster=staging-k8s
+
+# Distributed Tracing (Enhanced)
+TRACING_ENABLED: true
+JAEGER_AGENT_HOST: jaeger-ha-service.netskope-staging.svc.cluster.local
+JAEGER_AGENT_PORT: 6831
+JAEGER_COLLECTOR_ENDPOINT: http://jaeger-ha-service.netskope-staging.svc.cluster.local:14268/api/traces
+JAEGER_SAMPLER_TYPE: probabilistic
+JAEGER_SAMPLER_PARAM: 0.1
+JAEGER_SERVICE_NAME: netskope-sdet-staging
+JAEGER_TAGS: environment=staging,version=1.0.0
+
+# Enhanced Test Configuration
+TEST_TIMEOUT: 600
+TEST_RETRIES: 5
+TEST_PARALLEL_WORKERS: 8
+TEST_FAIL_FAST: false
+TEST_VERBOSE: true
+TEST_REPORT_FORMAT: html,json,junit
+TEST_COVERAGE_THRESHOLD: 85
+TEST_PERFORMANCE_BASELINE: true
+
+# Enhanced Logging Configuration
+LOG_LEVEL: INFO
+LOG_FORMAT: json
+LOG_OUTPUT: stdout,file
+LOG_FILE: /var/log/netskope-sdet/staging.log
+LOG_ROTATION: daily
+LOG_RETENTION: 30d
+LOG_MAX_SIZE: 100MB
+LOG_STRUCTURED: true
+LOG_CORRELATION_ID: true
+
+# Security Configuration (Enhanced)
+SECURITY_TLS_ENABLED: true
+SECURITY_TLS_MIN_VERSION: "1.2"
+SECURITY_MUTUAL_TLS: false
+SECURITY_CERT_PATH: /etc/tls/tls.crt
+SECURITY_KEY_PATH: /etc/tls/tls.key
+SECURITY_CA_PATH: /etc/tls/ca.crt
+SECURITY_ENCRYPTION_AT_REST: true
+SECURITY_AUDIT_LOGGING: true
+SECURITY_ACCESS_CONTROL: rbac
+SECURITY_SESSION_TIMEOUT: 3600
+SECURITY_PASSWORD_POLICY: strict
+
+# Performance Configuration (Enhanced)
+PERFORMANCE_MAX_CONNECTIONS: 500
+PERFORMANCE_CONNECTION_POOL_SIZE: 50
+PERFORMANCE_REQUEST_TIMEOUT: 30
+PERFORMANCE_MAX_RETRIES: 5
+PERFORMANCE_CIRCUIT_BREAKER: true
+PERFORMANCE_RATE_LIMITING: true
+PERFORMANCE_CACHING: true
+PERFORMANCE_COMPRESSION: true
+
+# Health Check Configuration (Enhanced)
+HEALTH_CHECK_INTERVAL: 15
+HEALTH_CHECK_TIMEOUT: 5
+HEALTH_CHECK_RETRIES: 3
+HEALTH_CHECK_ENDPOINTS: /health,/ready,/live
+HEALTH_CHECK_DETAILED: true
+HEALTH_CHECK_DEPENDENCIES: true
+
+# Kubernetes Configuration (Enhanced)
+KUBERNETES_NAMESPACE: netskope-staging
+KUBERNETES_SERVICE_ACCOUNT: staging-service-account
+KUBERNETES_IN_CLUSTER: true
+KUBERNETES_CONFIG_PATH: /var/run/secrets/kubernetes.io/serviceaccount
+KUBERNETES_API_VERSION: v1
+KUBERNETES_RESOURCE_QUOTAS: true
+KUBERNETES_NETWORK_POLICIES: true
+
+# Data Management Configuration
+DATA_RETENTION_POLICY: 90d
+DATA_BACKUP_ENABLED: true
+DATA_BACKUP_SCHEDULE: "0 2 * * *"
+DATA_BACKUP_RETENTION: 30d
+DATA_ENCRYPTION_ENABLED: true
+DATA_COMPRESSION_ENABLED: true
+DATA_VALIDATION_STRICT: true
+DATA_AUDIT_TRAIL: true
+
+# Feature Flags (Enhanced)
+FEATURE_DISTRIBUTED_TRACING: true
+FEATURE_METRICS_COLLECTION: true
+FEATURE_ADVANCED_LOGGING: true
+FEATURE_CHAOS_TESTING: false
+FEATURE_LOAD_TESTING: true
+FEATURE_SECURITY_SCANNING: true
+FEATURE_COMPLIANCE_TESTING: true
+FEATURE_PERFORMANCE_PROFILING: true
+
+# Compliance and Governance
+COMPLIANCE_SOC2: true
+COMPLIANCE_GDPR: true
+COMPLIANCE_HIPAA: false
+COMPLIANCE_PCI_DSS: true
+COMPLIANCE_ISO27001: true
+COMPLIANCE_AUDIT_LOGGING: true
+COMPLIANCE_DATA_CLASSIFICATION: true
+COMPLIANCE_ACCESS_REVIEWS: true
+
+# Notification Configuration (Enhanced)
+NOTIFICATIONS_ENABLED: true
+SLACK_WEBHOOK_URL: https://hooks.slack.com/services/staging/webhook
+EMAIL_NOTIFICATIONS: true
+EMAIL_SMTP_HOST: smtp.company.com
+EMAIL_SMTP_PORT: 587
+EMAIL_SMTP_USERNAME: staging-notifications@company.com
+EMAIL_SMTP_PASSWORD: staging_smtp_password
+NOTIFICATION_ON_FAILURE: true
+NOTIFICATION_ON_SUCCESS: false
+NOTIFICATION_ON_PERFORMANCE_DEGRADATION: true
+NOTIFICATION_ESCALATION: true
+
+# Integration Configuration
+INTEGRATION_JIRA_ENABLED: true
+INTEGRATION_JIRA_URL: https://company.atlassian.net
+INTEGRATION_JIRA_USERNAME: staging-integration@company.com
+INTEGRATION_JIRA_API_TOKEN: staging_jira_api_token
+INTEGRATION_CONFLUENCE_ENABLED: true
+INTEGRATION_SERVICENOW_ENABLED: false
+
+# Load Testing Configuration
+LOAD_TEST_ENABLED: true
+LOAD_TEST_DURATION: 300
+LOAD_TEST_USERS: 100
+LOAD_TEST_RAMP_UP: 60
+LOAD_TEST_SCENARIOS: api_endpoints,database_operations,cache_operations
+LOAD_TEST_THRESHOLDS: response_time=2s,error_rate=1%,throughput=1000rps
+
+# Chaos Engineering Configuration
+CHAOS_ENGINEERING_ENABLED: false
+CHAOS_MONKEY_ENABLED: false
+CHAOS_NETWORK_ENABLED: false
+CHAOS_CPU_ENABLED: false
+CHAOS_MEMORY_ENABLED: false
+CHAOS_DISK_ENABLED: false
+
+# Backup and Recovery Configuration
+BACKUP_STRATEGY: incremental
+BACKUP_COMPRESSION: true
+BACKUP_ENCRYPTION: true
+BACKUP_VERIFICATION: true
+RECOVERY_TESTING: weekly
+DISASTER_RECOVERY_PLAN: true
+RTO_TARGET: 4h
+RPO_TARGET: 1h

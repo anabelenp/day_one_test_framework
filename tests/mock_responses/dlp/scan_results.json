@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "data": {
+    "scan_id": "scan_12345",
+    "file_name": "test_document.pdf",
+    "scan_result": "violation_detected",
+    "violations": [
+      {
+        "rule_id": "SSN_DETECTION",
+        "rule_name": "Social Security Number",
+        "severity": "high",
+        "matches": 2,
+        "locations": ["page 1", "page 3"]
+      },
+      {
+        "rule_id": "CREDIT_CARD",
+        "rule_name": "Credit Card Number", 
+        "severity": "medium",
+        "matches": 1,
+        "locations": ["page 2"]
+      }
+    ],
+    "risk_score": 85,
+    "action_taken": "quarantine"
+  },
+  "timestamp": "2024-12-18T10:30:00Z"
+}

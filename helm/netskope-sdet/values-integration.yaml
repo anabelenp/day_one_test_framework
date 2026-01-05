@@ -1,0 +1,171 @@
+# Integration environment specific values
+# Override default values for integration deployment
+
+global:
+  environment: integration
+  namespace: netskope-integration
+
+environment:
+  name: integration
+  mockMode: false
+  testTimeout: 600  # Longer timeout for integration tests
+  testRetries: 5
+  parallelWorkers: 6
+
+# Enhanced resource allocation for integration testing
+redis:
+  replicas: 3
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+
+kafka:
+  replicas: 3
+  zookeeper:
+    replicas: 3
+    persistence:
+      dataSize: 10Gi
+      logSize: 5Gi
+  persistence:
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+mongodb:
+  replicas: 3
+  persistence:
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+mockApi:
+  replicas: 3
+  config:
+    rateLimit: 2000  # Higher rate limit for integration tests
+    errorRate: 0.005  # Lower error rate for stability
+    delayMs: 25  # Lower latency
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+monitoring:
+  prometheus:
+    retention: "14d"  # Longer retention for integration
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
+  
+  grafana:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+  
+  jaeger:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+
+testRunner:
+  job:
+    backoffLimit: 5  # More retries for integration tests
+  
+  cronjob:
+    schedule: "0 1,13 * * *"  # Run twice daily
+  
+  resources:
+    requests:
+      cpu: 1
+      memory: 2Gi
+    limits:
+      cpu: 4
+      memory: 8Gi
+
+# Enhanced resource quotas for integration environment
+resourceQuota:
+  hard:
+    requests.cpu: "16"
+    requests.memory: 32Gi
+    limits.cpu: "32"
+    limits.memory: 64Gi
+    persistentvolumeclaims: "20"
+    services: "30"
+    secrets: "20"
+    configmaps: "20"
+
+limitRange:
+  limits:
+    - default:
+        cpu: "2"
+        memory: "4Gi"
+      defaultRequest:
+        cpu: "200m"
+        memory: "256Mi"
+      type: Container
+
+# Enable ingress for integration environment
+ingress:
+  enabled: true
+  hosts:
+    - host: netskope-integration.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: mock-api-service
+          port: 8080
+        - path: /grafana
+          pathType: Prefix
+          service: grafana-service
+          port: 3000
+        - path: /prometheus
+          pathType: Prefix
+          service: prometheus-service
+          port: 9090
+        - path: /jaeger
+          pathType: Prefix
+          service: jaeger-service
+          port: 16686
+
+# Enable network policies for security
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Enable backup for data persistence
+backup:
+  enabled: true
+  schedule: "0 4 * * *"  # Daily at 4 AM
+  retention: "14d"

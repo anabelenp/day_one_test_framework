@@ -1,0 +1,395 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: integration-config
+  namespace: netskope-integration
+data:
+  env.yaml: |
+    # Integration Environment Configuration
+    ENVIRONMENT: integration
+    MOCK_MODE: false
+    
+    # Service Endpoints
+    REDIS_HOST: redis-service
+    REDIS_PORT: 6379
+    REDIS_PASSWORD: integration-redis-2024
+    
+    KAFKA_BOOTSTRAP_SERVERS: kafka-service:9092
+    KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+    
+    MONGODB_HOST: mongodb-service
+    MONGODB_PORT: 27017
+    MONGODB_USERNAME: netskope_app
+    MONGODB_PASSWORD: netskope-app-2024
+    MONGODB_DATABASE: netskope_integration
+    MONGODB_AUTH_SOURCE: netskope_integration
+    
+    # Mock Netskope API (for integration testing)
+    NETSKOPE_BASE_URL: http://mock-api-service:8080
+    API_KEY: integration-api-key-2024
+    
+    # AWS LocalStack (for cloud integration testing)
+    AWS_REGION: us-east-1
+    AWS_ENDPOINT_URL: http://localstack-service:4566
+    AWS_ACCESS_KEY_ID: test
+    AWS_SECRET_ACCESS_KEY: test
+    
+    # GCP Mock Services
+    GCP_PROJECT_ID: netskope-integration-test
+    GOOGLE_APPLICATION_CREDENTIALS: /etc/gcp/credentials.json
+    
+    # Monitoring
+    PROMETHEUS_URL: http://prometheus-service:9090
+    GRAFANA_URL: http://grafana-service:3000
+    JAEGER_URL: http://jaeger-service:16686
+    
+    # Test Configuration
+    TEST_TIMEOUT: 300
+    TEST_RETRIES: 3
+    PARALLEL_TESTS: 4
+    
+    # Logging
+    LOG_LEVEL: INFO
+    LOG_FORMAT: json
+  
+  pytest.ini: |
+    [tool:pytest]
+    minversion = 6.0
+    addopts = 
+        -v 
+        --tb=short 
+        --strict-markers 
+        --disable-warnings
+        --html=reports/integration_report.html 
+        --self-contained-html
+        --junitxml=reports/junit.xml
+        --cov=src 
+        --cov-report=html:reports/coverage
+        --cov-report=xml:reports/coverage.xml
+        --maxfail=10
+    testpaths = tests
+    markers =
+        integration: Integration tests
+        e2e: End-to-end tests
+        security: Security tests
+        performance: Performance tests
+        smoke: Smoke tests
+        slow: Slow running tests
+    filterwarnings =
+        ignore::DeprecationWarning
+        ignore::PendingDeprecationWarning
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: integration-secrets
+  namespace: netskope-integration
+type: Opaque
+data:
+  # Base64 encoded credentials
+  redis-password: aW50ZWdyYXRpb24tcmVkaXMtMjAyNA==  # integration-redis-2024
+  mongodb-password: bmV0c2tvcGUtYXBwLTIwMjQ=  # netskope-app-2024
+  api-key: aW50ZWdyYXRpb24tYXBpLWtleS0yMDI0  # integration-api-key-2024
+  gcp-credentials: ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAibmV0c2tvcGUtaW50ZWdyYXRpb24tdGVzdCIsCiAgInByaXZhdGVfa2V5X2lkIjogIm1vY2sta2V5LWlkIiwKICAicHJpdmF0ZV9rZXkiOiAiLS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5tb2NrLXByaXZhdGUta2V5XG4tLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tXG4iLAogICJjbGllbnRfZW1haWwiOiAibW9jay1zZXJ2aWNlLWFjY291bnRAbmV0c2tvcGUtaW50ZWdyYXRpb24tdGVzdC5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgImNsaWVudF9pZCI6ICJtb2NrLWNsaWVudC1pZCIsCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwKICAidG9rZW5fdXJpIjogImh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIgp9
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-runner-integration
+  namespace: netskope-integration
+  labels:
+    app: test-runner
+    environment: integration
+    test-type: integration
+spec:
+  parallelism: 1
+  completions: 1
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: test-runner
+        environment: integration
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: test-runner
+        image: netskope-sdet:integration
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          echo "🚀 Starting Netskope SDET Integration Tests"
+          
+          # Wait for services to be ready
+          echo "⏳ Waiting for services to be ready..."
+          
+          # Wait for Redis
+          until nc -z redis-service 6379; do
+            echo "Waiting for Redis..."
+            sleep 5
+          done
+          
+          # Wait for Kafka
+          until nc -z kafka-service 9092; do
+            echo "Waiting for Kafka..."
+            sleep 5
+          done
+          
+          # Wait for MongoDB
+          until nc -z mongodb-service 27017; do
+            echo "Waiting for MongoDB..."
+            sleep 5
+          done
+          
+          echo "✅ All services are ready!"
+          
+          # Set environment
+          export TESTING_MODE=integration
+          export PYTHONPATH=/app/src:$PYTHONPATH
+          
+          # Run environment validation
+          echo "🔍 Validating integration environment..."
+          python -c "
+          from src.environment_manager import EnvironmentManager
+          from src.environment_manager import Environment
+          
+          env_manager = EnvironmentManager()
+          is_valid = env_manager.validate_environment(Environment.INTEGRATION)
+          
+          if is_valid:
+              print('✅ Integration environment validation passed')
+          else:
+              print('❌ Integration environment validation failed')
+              exit(1)
+          "
+          
+          # Run service health checks
+          echo "🏥 Running service health checks..."
+          python -c "
+          from src.service_manager import ServiceManager
+          
+          service_manager = ServiceManager()
+          health_results = service_manager.health_check_all()
+          
+          all_healthy = True
+          for service, is_healthy in health_results.items():
+              status = '✅ Healthy' if is_healthy else '❌ Unhealthy'
+              print(f'  {service}: {status}')
+              if not is_healthy:
+                  all_healthy = False
+          
+          if not all_healthy:
+              print('❌ Some services are unhealthy')
+              exit(1)
+          
+          print('✅ All services are healthy')
+          "
+          
+          # Create reports directory
+          mkdir -p /app/reports
+          
+          # Run integration tests
+          echo "🧪 Running integration tests..."
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            --html=/app/reports/integration_report.html \
+            --self-contained-html \
+            --junitxml=/app/reports/junit.xml \
+            --cov=src \
+            --cov-report=html:/app/reports/coverage \
+            --cov-report=xml:/app/reports/coverage.xml \
+            -m "integration" \
+            --maxfail=5
+          
+          # Run E2E tests
+          echo "🔄 Running E2E tests..."
+          pytest tests/e2e/ \
+            -v \
+            --tb=short \
+            --html=/app/reports/e2e_report.html \
+            --self-contained-html \
+            -m "e2e" \
+            --maxfail=3
+          
+          # Run security tests
+          echo "🛡️ Running security tests..."
+          pytest tests/security/ \
+            -v \
+            --tb=short \
+            --html=/app/reports/security_report.html \
+            --self-contained-html \
+            -m "security" \
+            --maxfail=3
+          
+          echo "🎉 All tests completed successfully!"
+          
+          # Generate summary report
+          python -c "
+          import json
+          import os
+          from datetime import datetime
+          
+          summary = {
+              'timestamp': datetime.now().isoformat(),
+              'environment': 'integration',
+              'status': 'completed',
+              'reports': {
+                  'integration': '/app/reports/integration_report.html',
+                  'e2e': '/app/reports/e2e_report.html',
+                  'security': '/app/reports/security_report.html',
+                  'coverage': '/app/reports/coverage/index.html'
+              }
+          }
+          
+          with open('/app/reports/test_summary.json', 'w') as f:
+              json.dump(summary, f, indent=2)
+          
+          print('📊 Test summary generated')
+          "
+        
+        env:
+        - name: TESTING_MODE
+          value: "integration"
+        - name: PYTHONPATH
+          value: "/app/src:/app"
+        
+        envFrom:
+        - configMapRef:
+            name: integration-config
+        - secretRef:
+            name: integration-secrets
+        
+        volumeMounts:
+        - name: integration-config
+          mountPath: /app/config
+        - name: gcp-credentials
+          mountPath: /etc/gcp
+          readOnly: true
+        - name: test-reports
+          mountPath: /app/reports
+        
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 4Gi
+        
+        # Health check during test execution
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - "ps aux | grep -v grep | grep pytest || exit 0"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+      
+      volumes:
+      - name: integration-config
+        configMap:
+          name: integration-config
+      - name: gcp-credentials
+        secret:
+          secretName: integration-secrets
+          items:
+          - key: gcp-credentials
+            path: credentials.json
+      - name: test-reports
+        emptyDir: {}
+      
+      # Service account for Kubernetes API access if needed
+      serviceAccountName: test-runner-sa
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test-runner-sa
+  namespace: netskope-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: netskope-integration
+  name: test-runner-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test-runner-binding
+  namespace: netskope-integration
+subjects:
+- kind: ServiceAccount
+  name: test-runner-sa
+  namespace: netskope-integration
+roleRef:
+  kind: Role
+  name: test-runner-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scheduled-integration-tests
+  namespace: netskope-integration
+  labels:
+    app: test-runner
+    environment: integration
+    type: scheduled
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: scheduled-test-runner
+            image: netskope-sdet:integration
+            command:
+            - /bin/bash
+            - -c
+            - |
+              echo "🕐 Running scheduled integration tests..."
+              export TESTING_MODE=integration
+              export PYTHONPATH=/app/src:$PYTHONPATH
+              
+              # Run smoke tests first
+              pytest tests/ -m "smoke" -v --tb=short
+              
+              # If smoke tests pass, run full integration suite
+              if [ $? -eq 0 ]; then
+                pytest tests/integration/ -v --html=/app/reports/scheduled_report.html
+              else
+                echo "❌ Smoke tests failed, skipping full integration tests"
+                exit 1
+              fi
+            
+            envFrom:
+            - configMapRef:
+                name: integration-config
+            - secretRef:
+                name: integration-secrets
+            
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 1
+                memory: 2Gi
+          serviceAccountName: test-runner-sa

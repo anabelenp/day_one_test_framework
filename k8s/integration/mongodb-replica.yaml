@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-init
+  namespace: netskope-integration
+data:
+  init-mongo.js: |
+    // MongoDB Initialization Script for Integration Environment
+    
+    // Create databases
+    db = db.getSiblingDB('netskope_integration');
+    
+    // Create collections with validation
+    db.createCollection('test_results', {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['test_id', 'timestamp', 'status'],
+          properties: {
+            test_id: { bsonType: 'string' },
+            timestamp: { bsonType: 'date' },
+            status: { enum: ['passed', 'failed', 'skipped'] },
+            duration_ms: { bsonType: 'int' },
+            error_message: { bsonType: 'string' }
+          }
+        }
+      }
+    });
+    
+    db.createCollection('security_events', {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['event_id', 'timestamp', 'event_type'],
+          properties: {
+            event_id: { bsonType: 'string' },
+            timestamp: { bsonType: 'date' },
+            event_type: { enum: ['swg', 'dlp', 'ztna', 'firewall'] },
+            severity: { enum: ['low', 'medium', 'high', 'critical'] },
+            details: { bsonType: 'object' }
+          }
+        }
+      }
+    });
+    
+    db.createCollection('policies', {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['policy_id', 'name', 'type'],
+          properties: {
+            policy_id: { bsonType: 'string' },
+            name: { bsonType: 'string' },
+            type: { enum: ['swg', 'dlp', 'ztna', 'firewall'] },
+            enabled: { bsonType: 'bool' },
+            rules: { bsonType: 'array' }
+          }
+        }
+      }
+    });
+    
+    // Create indexes
+    db.test_results.createIndex({ test_id: 1 }, { unique: true });
+    db.test_results.createIndex({ timestamp: -1 });
+    db.test_results.createIndex({ status: 1 });
+    
+    db.security_events.createIndex({ event_id: 1 }, { unique: true });
+    db.security_events.createIndex({ timestamp: -1 });
+    db.security_events.createIndex({ event_type: 1, severity: 1 });
+    
+    db.policies.createIndex({ policy_id: 1 }, { unique: true });
+    db.policies.createIndex({ type: 1, enabled: 1 });
+    
+    // Create admin user
+    db = db.getSiblingDB('admin');
+    db.createUser({
+      user: 'integration_admin',
+      pwd: 'integration-mongo-2024',
+      roles: [
+        { role: 'root', db: 'admin' }
+      ]
+    });
+    
+    // Create application user
+    db = db.getSiblingDB('netskope_integration');
+    db.createUser({
+      user: 'netskope_app',
+      pwd: 'netskope-app-2024',
+      roles: [
+        { role: 'readWrite', db: 'netskope_integration' }
+      ]
+    });
+    
+    print('MongoDB initialization completed successfully');
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb-replica
+  namespace: netskope-integration
+  labels:
+    app: mongodb
+    environment: integration
+spec:
+  serviceName: mongodb-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        environment: integration
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "integration_admin"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "integration-mongo-2024"
+        - name: MONGO_INITDB_DATABASE
+          value: "netskope_integration"
+        command:
+        - mongod
+        - --replSet
+        - rs0
+        - --bind_ip_all
+        - --auth
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-init
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 2Gi
+        livenessProbe:
+          exec:
+            command:
+            - mongosh
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - mongosh
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: mongodb-init
+        configMap:
+          name: mongodb-init
+      initContainers:
+      - name: init-replica
+        image: mongo:6
+        command:
+        - sh
+        - -c
+        - |
+          sleep 10
+          if [ "$(hostname)" = "mongodb-replica-0" ]; then
+            mongosh --eval "
+              rs.initiate({
+                _id: 'rs0',
+                members: [
+                  { _id: 0, host: 'mongodb-replica-0.mongodb-headless:27017' },
+                  { _id: 1, host: 'mongodb-replica-1.mongodb-headless:27017' },
+                  { _id: 2, host: 'mongodb-replica-2.mongodb-headless:27017' }
+                ]
+              })
+            "
+          fi
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-headless
+  namespace: netskope-integration
+  labels:
+    app: mongodb
+spec:
+  clusterIP: None
+  ports:
+  - port: 27017
+    name: mongodb
+  selector:
+    app: mongodb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  namespace: netskope-integration
+  labels:
+    app: mongodb
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+    name: mongodb
+  selector:
+    app: mongodb

@@ -1,0 +1,323 @@
+# Netskope SDET Framework - Integration Environment Test Runner
+# Multi-stage build for optimized integration testing container
+
+# Build stage
+FROM python:3.11-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Runtime stage
+FROM python:3.11-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-openbsd \
+    redis-tools \
+    mongodb-clients \
+    kafkacat \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Create app directory
+WORKDIR /app
+
+# Create non-root user for security
+RUN groupadd -r netskope && useradd -r -g netskope -d /app -s /bin/bash netskope
+
+# Copy application code
+COPY src/ /app/src/
+COPY tests/ /app/tests/
+COPY config/ /app/config/
+COPY conftest.py /app/
+COPY setup.py /app/
+
+# Install the framework in development mode
+RUN pip install -e .
+
+# Create directories for reports and logs
+RUN mkdir -p /app/reports /app/logs && \
+    chown -R netskope:netskope /app
+
+# Copy integration-specific configuration
+COPY config/integration.yaml /app/config/
+
+# Create health check script
+RUN cat > /app/healthcheck.py << 'EOF'
+#!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, '/app/src')
+
+try:
+    from environment_manager import EnvironmentManager, Environment
+    from service_manager import ServiceManager
+    
+    # Check environment
+    env_manager = EnvironmentManager()
+    current_env = env_manager.get_current_environment()
+    
+    if current_env != Environment.INTEGRATION:
+        print(f"❌ Wrong environment: {current_env.value}")
+        sys.exit(1)
+    
+    # Check service health
+    service_manager = ServiceManager()
+    health_results = service_manager.health_check_all()
+    
+    unhealthy_services = [service for service, healthy in health_results.items() if not healthy]
+    
+    if unhealthy_services:
+        print(f"❌ Unhealthy services: {', '.join(unhealthy_services)}")
+        sys.exit(1)
+    
+    print("✅ All systems healthy")
+    sys.exit(0)
+    
+except Exception as e:
+    print(f"❌ Health check failed: {e}")
+    sys.exit(1)
+EOF
+
+RUN chmod +x /app/healthcheck.py
+
+# Create test runner script
+RUN cat > /app/run_integration_tests.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Netskope SDET Integration Test Runner"
+echo "========================================"
+
+# Set environment variables
+export TESTING_MODE=integration
+export PYTHONPATH=/app/src:/app:$PYTHONPATH
+
+# Function to wait for service
+wait_for_service() {
+    local host=$1
+    local port=$2
+    local service_name=$3
+    local timeout=${4:-60}
+    
+    echo "⏳ Waiting for $service_name ($host:$port)..."
+    
+    for i in $(seq 1 $timeout); do
+        if nc -z $host $port; then
+            echo "✅ $service_name is ready"
+            return 0
+        fi
+        sleep 1
+    done
+    
+    echo "❌ Timeout waiting for $service_name"
+    return 1
+}
+
+# Wait for all services
+wait_for_service redis-service 6379 "Redis" 120
+wait_for_service kafka-service 9092 "Kafka" 120  
+wait_for_service mongodb-service 27017 "MongoDB" 120
+wait_for_service mock-api-service 8080 "Mock API" 60
+
+echo "✅ All services are ready!"
+
+# Run environment validation
+echo "🔍 Validating integration environment..."
+python /app/healthcheck.py
+
+# Create reports directory
+mkdir -p /app/reports
+
+# Run tests based on arguments
+TEST_TYPE=${1:-all}
+EXTRA_ARGS=${@:2}
+
+case $TEST_TYPE in
+    "integration")
+        echo "🧪 Running integration tests..."
+        pytest tests/integration/ \
+            -v --tb=short \
+            --html=/app/reports/integration_report.html \
+            --self-contained-html \
+            --junitxml=/app/reports/integration_junit.xml \
+            --cov=src \
+            --cov-report=html:/app/reports/integration_coverage \
+            --cov-report=xml:/app/reports/integration_coverage.xml \
+            -m "integration" \
+            $EXTRA_ARGS
+        ;;
+    "e2e")
+        echo "🔄 Running E2E tests..."
+        pytest tests/e2e/ \
+            -v --tb=short \
+            --html=/app/reports/e2e_report.html \
+            --self-contained-html \
+            --junitxml=/app/reports/e2e_junit.xml \
+            -m "e2e" \
+            $EXTRA_ARGS
+        ;;
+    "security")
+        echo "🛡️ Running security tests..."
+        pytest tests/security/ \
+            -v --tb=short \
+            --html=/app/reports/security_report.html \
+            --self-contained-html \
+            --junitxml=/app/reports/security_junit.xml \
+            -m "security" \
+            $EXTRA_ARGS
+        ;;
+    "performance")
+        echo "⚡ Running performance tests..."
+        pytest tests/performance/ \
+            -v --tb=short \
+            --html=/app/reports/performance_report.html \
+            --self-contained-html \
+            --junitxml=/app/reports/performance_junit.xml \
+            -m "performance" \
+            $EXTRA_ARGS
+        ;;
+    "smoke")
+        echo "💨 Running smoke tests..."
+        pytest tests/ \
+            -v --tb=short \
+            --html=/app/reports/smoke_report.html \
+            --self-contained-html \
+            --junitxml=/app/reports/smoke_junit.xml \
+            -m "smoke" \
+            --maxfail=5 \
+            $EXTRA_ARGS
+        ;;
+    "all")
+        echo "🎯 Running all test suites..."
+        
+        # Run smoke tests first
+        pytest tests/ -m "smoke" -v --tb=short --maxfail=3
+        
+        if [ $? -eq 0 ]; then
+            # Run integration tests
+            pytest tests/integration/ \
+                -v --tb=short \
+                --html=/app/reports/full_integration_report.html \
+                --self-contained-html \
+                --junitxml=/app/reports/full_integration_junit.xml \
+                --cov=src \
+                --cov-report=html:/app/reports/full_coverage \
+                --cov-report=xml:/app/reports/full_coverage.xml \
+                -m "integration" \
+                $EXTRA_ARGS
+            
+            # Run E2E tests
+            pytest tests/e2e/ \
+                -v --tb=short \
+                --html=/app/reports/full_e2e_report.html \
+                --self-contained-html \
+                -m "e2e" \
+                $EXTRA_ARGS
+            
+            # Run security tests
+            pytest tests/security/ \
+                -v --tb=short \
+                --html=/app/reports/full_security_report.html \
+                --self-contained-html \
+                -m "security" \
+                $EXTRA_ARGS
+        else
+            echo "❌ Smoke tests failed, skipping full test suite"
+            exit 1
+        fi
+        ;;
+    *)
+        echo "❌ Unknown test type: $TEST_TYPE"
+        echo "Available types: integration, e2e, security, performance, smoke, all"
+        exit 1
+        ;;
+esac
+
+echo "🎉 Test execution completed!"
+
+# Generate test summary
+python -c "
+import json
+import os
+from datetime import datetime
+from pathlib import Path
+
+reports_dir = Path('/app/reports')
+summary = {
+    'timestamp': datetime.now().isoformat(),
+    'environment': 'integration',
+    'test_type': '$TEST_TYPE',
+    'status': 'completed',
+    'reports': {}
+}
+
+# Find all HTML reports
+for report_file in reports_dir.glob('*.html'):
+    report_name = report_file.stem.replace('_report', '')
+    summary['reports'][report_name] = str(report_file)
+
+# Find all JUnit XML reports  
+for junit_file in reports_dir.glob('*junit.xml'):
+    junit_name = junit_file.stem.replace('_junit', '') + '_junit'
+    summary['reports'][junit_name] = str(junit_file)
+
+# Find coverage reports
+coverage_dirs = list(reports_dir.glob('*coverage'))
+for coverage_dir in coverage_dirs:
+    if coverage_dir.is_dir():
+        index_file = coverage_dir / 'index.html'
+        if index_file.exists():
+            coverage_name = coverage_dir.name
+            summary['reports'][coverage_name] = str(index_file)
+
+with open('/app/reports/test_summary.json', 'w') as f:
+    json.dump(summary, f, indent=2)
+
+print('📊 Test summary generated at /app/reports/test_summary.json')
+"
+
+EOF
+
+RUN chmod +x /app/run_integration_tests.sh
+
+# Switch to non-root user
+USER netskope
+
+# Set environment variables
+ENV TESTING_MODE=integration
+ENV PYTHONPATH=/app/src:/app
+ENV LOG_LEVEL=INFO
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python /app/healthcheck.py
+
+# Default command
+CMD ["/app/run_integration_tests.sh", "all"]
+
+# Labels for metadata
+LABEL maintainer="Netskope SDET Team"
+LABEL version="1.0.0"
+LABEL description="Integration test runner for Netskope SDET Framework"
+LABEL environment="integration"

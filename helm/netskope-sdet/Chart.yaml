@@ -1,0 +1,22 @@
+apiVersion: v2
+name: netskope-sdet
+description: Day-1 Framework - Integration Environment Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/netskope/sdet-framework
+sources:
+  - https://github.com/netskope/sdet-framework
+maintainers:
+  - name: Day-1 Team
+    email: sdet-team@netskope.com
+keywords:
+  - netskope
+  - sdet
+  - testing
+  - security
+  - integration
+  - kubernetes
+annotations:
+  category: Testing
+dependencies: []

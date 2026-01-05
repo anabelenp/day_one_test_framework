@@ -1,0 +1,451 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-ha-config
+  namespace: netskope-staging
+data:
+  server.properties: |
+    # Kafka HA Configuration for Staging Environment
+    broker.id=-1
+    listeners=SASL_PLAINTEXT://0.0.0.0:9092,PLAINTEXT://0.0.0.0:9093
+    advertised.listeners=SASL_PLAINTEXT://$(POD_NAME).kafka-ha-headless:9092,PLAINTEXT://$(POD_NAME).kafka-ha-headless:9093
+    listener.security.protocol.map=SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT:PLAINTEXT
+    inter.broker.listener.name=PLAINTEXT
+    
+    # SASL Configuration
+    sasl.enabled.mechanisms=PLAIN
+    sasl.mechanism.inter.broker.protocol=PLAIN
+    listener.name.sasl_plaintext.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+      username="admin" \
+      password="${KAFKA_PASSWORD}" \
+      user_admin="${KAFKA_PASSWORD}" \
+      user_producer="${KAFKA_PASSWORD}" \
+      user_consumer="${KAFKA_PASSWORD}";
+    
+    # Zookeeper
+    zookeeper.connect=zookeeper-ha-service:2181
+    zookeeper.connection.timeout.ms=18000
+    
+    # Log settings
+    log.dirs=/kafka/logs
+    num.network.threads=8
+    num.io.threads=16
+    socket.send.buffer.bytes=102400
+    socket.receive.buffer.bytes=102400
+    socket.request.max.bytes=104857600
+    
+    # Log retention (7 days for staging)
+    log.retention.hours=168
+    log.segment.bytes=1073741824
+    log.retention.check.interval.ms=300000
+    log.cleanup.policy=delete
+    
+    # Replication and durability
+    default.replication.factor=3
+    min.insync.replicas=2
+    unclean.leader.election.enable=false
+    
+    # Performance tuning
+    num.partitions=6
+    offsets.topic.replication.factor=3
+    transaction.state.log.replication.factor=3
+    transaction.state.log.min.isr=2
+    
+    # Compression
+    compression.type=lz4
+    
+    # JVM settings
+    auto.create.topics.enable=false
+    delete.topic.enable=true
+    
+    # Monitoring
+    jmx.port=9999
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-ha
+  namespace: netskope-staging
+  labels:
+    app: zookeeper-ha
+    environment: staging
+spec:
+  serviceName: zookeeper-ha-headless
+  replicas: 5
+  selector:
+    matchLabels:
+      app: zookeeper-ha
+  template:
+    metadata:
+      labels:
+        app: zookeeper-ha
+        environment: staging
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:7.4.0
+        ports:
+        - containerPort: 2181
+          name: client
+        - containerPort: 2888
+          name: server
+        - containerPort: 3888
+          name: leader-election
+        - containerPort: 8080
+          name: metrics
+        env:
+        - name: ZOOKEEPER_CLIENT_PORT
+          value: "2181"
+        - name: ZOOKEEPER_TICK_TIME
+          value: "2000"
+        - name: ZOOKEEPER_INIT_LIMIT
+          value: "10"
+        - name: ZOOKEEPER_SYNC_LIMIT
+          value: "5"
+        - name: ZOOKEEPER_SERVERS
+          value: "zookeeper-ha-0.zookeeper-ha-headless:2888:3888;zookeeper-ha-1.zookeeper-ha-headless:2888:3888;zookeeper-ha-2.zookeeper-ha-headless:2888:3888;zookeeper-ha-3.zookeeper-ha-headless:2888:3888;zookeeper-ha-4.zookeeper-ha-headless:2888:3888"
+        - name: ZOOKEEPER_SERVER_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL
+          value: "24"
+        - name: ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT
+          value: "10"
+        - name: ZOOKEEPER_MAX_CLIENT_CNXNS
+          value: "300"
+        - name: ZOOKEEPER_JMX_HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: ZOOKEEPER_JMX_PORT
+          value: "9999"
+        volumeMounts:
+        - name: zookeeper-ha-data
+          mountPath: /var/lib/zookeeper/data
+        - name: zookeeper-ha-logs
+          mountPath: /var/lib/zookeeper/log
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 2Gi
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "echo ruok | nc localhost 2181 | grep imok"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "echo ruok | nc localhost 2181 | grep imok"
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      initContainers:
+      - name: init-zookeeper-id
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          SERVER_ID=$(echo $HOSTNAME | sed 's/.*-//')
+          echo $((SERVER_ID + 1)) > /var/lib/zookeeper/data/myid
+          echo "Zookeeper ID: $(cat /var/lib/zookeeper/data/myid)"
+        volumeMounts:
+        - name: zookeeper-ha-data
+          mountPath: /var/lib/zookeeper/data
+  volumeClaimTemplates:
+  - metadata:
+      name: zookeeper-ha-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 10Gi
+  - metadata:
+      name: zookeeper-ha-logs
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka-ha-cluster
+  namespace: netskope-staging
+  labels:
+    app: kafka-ha
+    environment: staging
+spec:
+  serviceName: kafka-ha-headless
+  replicas: 5
+  selector:
+    matchLabels:
+      app: kafka-ha
+  template:
+    metadata:
+      labels:
+        app: kafka-ha
+        environment: staging
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9308"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:7.4.0
+        ports:
+        - containerPort: 9092
+          name: sasl
+        - containerPort: 9093
+          name: plaintext
+        - containerPort: 9999
+          name: jmx
+        env:
+        - name: KAFKA_BROKER_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kafka-ha-secret
+              key: password
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zookeeper-ha-service:2181"
+        - name: KAFKA_LISTENERS
+          value: "SASL_PLAINTEXT://0.0.0.0:9092,PLAINTEXT://0.0.0.0:9093"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "SASL_PLAINTEXT://$(POD_NAME).kafka-ha-headless:9092,PLAINTEXT://$(POD_NAME).kafka-ha-headless:9093"
+        - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+          value: "SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT:PLAINTEXT"
+        - name: KAFKA_INTER_BROKER_LISTENER_NAME
+          value: "PLAINTEXT"
+        - name: KAFKA_SASL_ENABLED_MECHANISMS
+          value: "PLAIN"
+        - name: KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL
+          value: "PLAIN"
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "3"
+        - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+          value: "3"
+        - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+          value: "2"
+        - name: KAFKA_DEFAULT_REPLICATION_FACTOR
+          value: "3"
+        - name: KAFKA_MIN_INSYNC_REPLICAS
+          value: "2"
+        - name: KAFKA_NUM_PARTITIONS
+          value: "6"
+        - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+          value: "false"
+        - name: KAFKA_DELETE_TOPIC_ENABLE
+          value: "true"
+        - name: KAFKA_COMPRESSION_TYPE
+          value: "lz4"
+        - name: KAFKA_JMX_PORT
+          value: "9999"
+        - name: KAFKA_JMX_HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KAFKA_HEAP_OPTS
+          value: "-Xmx2G -Xms2G"
+        - name: KAFKA_LOG4J_LOGGERS
+          value: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+        volumeMounts:
+        - name: kafka-ha-data
+          mountPath: /var/lib/kafka/data
+        - name: kafka-ha-config
+          mountPath: /etc/kafka-config
+        resources:
+          requests:
+            cpu: 1
+            memory: 3Gi
+          limits:
+            cpu: 4
+            memory: 6Gi
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "kafka-broker-api-versions --bootstrap-server localhost:9093"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "kafka-broker-api-versions --bootstrap-server localhost:9093"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      - name: kafka-exporter
+        image: danielqsj/kafka-exporter:v1.6.0
+        ports:
+        - containerPort: 9308
+          name: metrics
+        args:
+        - --kafka.server=localhost:9093
+        - --web.listen-address=:9308
+        - --log.level=info
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      volumes:
+      - name: kafka-ha-config
+        configMap:
+          name: kafka-ha-config
+      initContainers:
+      - name: wait-for-zookeeper
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z zookeeper-ha-service 2181; do
+            echo "Waiting for Zookeeper..."
+            sleep 5
+          done
+          echo "Zookeeper is ready!"
+      - name: init-kafka-id
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          BROKER_ID=$(echo $HOSTNAME | sed 's/.*-//')
+          echo "broker.id=$BROKER_ID" > /var/lib/kafka/data/meta.properties
+          echo "Kafka Broker ID: $BROKER_ID"
+        volumeMounts:
+        - name: kafka-ha-data
+          mountPath: /var/lib/kafka/data
+  volumeClaimTemplates:
+  - metadata:
+      name: kafka-ha-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-ha-headless
+  namespace: netskope-staging
+  labels:
+    app: zookeeper-ha
+spec:
+  clusterIP: None
+  ports:
+  - port: 2181
+    name: client
+  - port: 2888
+    name: server
+  - port: 3888
+    name: leader-election
+  - port: 8080
+    name: metrics
+  selector:
+    app: zookeeper-ha
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-ha-service
+  namespace: netskope-staging
+  labels:
+    app: zookeeper-ha
+spec:
+  type: ClusterIP
+  ports:
+  - port: 2181
+    targetPort: 2181
+    name: client
+  - port: 8080
+    targetPort: 8080
+    name: metrics
+  selector:
+    app: zookeeper-ha
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-ha-headless
+  namespace: netskope-staging
+  labels:
+    app: kafka-ha
+spec:
+  clusterIP: None
+  ports:
+  - port: 9092
+    name: sasl
+  - port: 9093
+    name: plaintext
+  - port: 9308
+    name: metrics
+  - port: 9999
+    name: jmx
+  selector:
+    app: kafka-ha
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-ha-service
+  namespace: netskope-staging
+  labels:
+    app: kafka-ha
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9092
+    targetPort: 9092
+    name: sasl
+  - port: 9093
+    targetPort: 9093
+    name: plaintext
+  - port: 9308
+    targetPort: 9308
+    name: metrics
+  selector:
+    app: kafka-ha

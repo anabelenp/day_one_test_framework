@@ -1,0 +1,606 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: staging-api-config
+  namespace: netskope-staging
+data:
+  config.yaml: |
+    # Staging API Configuration - Production-like Environment
+    server:
+      host: "0.0.0.0"
+      port: 8080
+      debug: false
+      read_timeout: 30
+      write_timeout: 30
+      idle_timeout: 120
+    
+    api:
+      base_path: "/api/v2"
+      rate_limit: 5000  # Higher rate limit for staging
+      burst_limit: 1000
+      auth_required: true
+      jwt_enabled: true
+      api_versioning: true
+      cors_enabled: true
+      
+    security:
+      tls_enabled: true
+      cert_file: "/etc/tls/tls.crt"
+      key_file: "/etc/tls/tls.key"
+      min_tls_version: "1.2"
+      cipher_suites: ["TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"]
+      
+    responses:
+      delay_ms: 10  # Minimal delay for staging
+      error_rate: 0.001  # Very low error rate (0.1%)
+      cache_enabled: true
+      cache_ttl: 300
+      compression_enabled: true
+    
+    database:
+      connection_pool_size: 50
+      max_idle_connections: 10
+      connection_timeout: 30
+      query_timeout: 15
+      
+    logging:
+      level: "INFO"
+      format: "json"
+      structured: true
+      audit_enabled: true
+      
+    metrics:
+      enabled: true
+      port: 9090
+      path: "/metrics"
+      detailed_metrics: true
+      
+    tracing:
+      enabled: true
+      jaeger_endpoint: "http://jaeger-ha-service:14268/api/traces"
+      sampling_rate: 0.1
+      
+    health:
+      enabled: true
+      path: "/health"
+      detailed: true
+      
+    features:
+      async_processing: true
+      batch_operations: true
+      data_validation: strict
+      audit_logging: true
+      
+  mock_responses.json: |
+    {
+      "events": {
+        "data": [
+          {
+            "event_id": "evt_staging_001",
+            "timestamp": "2024-12-18T10:00:00Z",
+            "event_type": "swg",
+            "severity": "high",
+            "user": "staging.user@company.com",
+            "action": "blocked",
+            "url": "malicious-staging-site.com",
+            "category": "malware",
+            "source_ip": "192.168.100.50",
+            "user_agent": "Mozilla/5.0 (Staging Browser)",
+            "threat_score": 95,
+            "geo_location": "US-CA",
+            "device_id": "staging-device-001"
+          },
+          {
+            "event_id": "evt_staging_002",
+            "timestamp": "2024-12-18T10:05:00Z",
+            "event_type": "dlp",
+            "severity": "critical",
+            "user": "staging.admin@company.com",
+            "action": "quarantined",
+            "file": "staging_sensitive_data.xlsx",
+            "violation": "PII and financial data detected",
+            "data_types": ["ssn", "credit_card", "bank_account"],
+            "match_count": 250,
+            "file_size": "5.2MB",
+            "department": "Finance"
+          }
+        ],
+        "total": 2,
+        "page": 1,
+        "per_page": 100,
+        "has_more": false
+      },
+      "policies": {
+        "data": [
+          {
+            "policy_id": "pol_staging_001",
+            "name": "Staging Block Social Media",
+            "type": "swg",
+            "enabled": true,
+            "version": 2,
+            "rules": [
+              {
+                "action": "block",
+                "categories": ["social_media", "entertainment"],
+                "users": ["all"],
+                "time_restrictions": "business_hours",
+                "exceptions": ["staging.admin@company.com"]
+              }
+            ],
+            "created_by": "staging.admin@company.com",
+            "created_at": "2024-12-01T09:00:00Z",
+            "updated_at": "2024-12-15T14:30:00Z"
+          },
+          {
+            "policy_id": "pol_staging_002",
+            "name": "Staging DLP - Financial Data Protection",
+            "type": "dlp",
+            "enabled": true,
+            "version": 3,
+            "rules": [
+              {
+                "action": "quarantine",
+                "patterns": ["credit_card", "ssn", "bank_account"],
+                "severity": "critical",
+                "notification": true,
+                "encryption_required": true
+              }
+            ],
+            "compliance": ["PCI-DSS", "SOX", "GDPR"],
+            "created_by": "compliance.officer@company.com"
+          }
+        ],
+        "total": 2
+      },
+      "users": {
+        "data": [
+          {
+            "user_id": "usr_staging_001",
+            "email": "staging.user@company.com",
+            "name": "Staging Test User",
+            "department": "Engineering",
+            "risk_score": 35,
+            "status": "active",
+            "last_activity": "2024-12-18T09:30:00Z",
+            "device_count": 3,
+            "location": "San Francisco, CA",
+            "role": "developer",
+            "manager": "staging.manager@company.com"
+          },
+          {
+            "user_id": "usr_staging_002",
+            "email": "staging.admin@company.com",
+            "name": "Staging Admin User",
+            "department": "IT Security",
+            "risk_score": 15,
+            "status": "active",
+            "last_activity": "2024-12-18T10:00:00Z",
+            "device_count": 2,
+            "location": "New York, NY",
+            "role": "admin",
+            "clearance_level": "high"
+          }
+        ],
+        "total": 2
+      },
+      "alerts": {
+        "data": [
+          {
+            "alert_id": "alt_staging_001",
+            "timestamp": "2024-12-18T10:10:00Z",
+            "type": "security_incident",
+            "severity": "critical",
+            "title": "Multiple failed login attempts - Staging",
+            "description": "User staging.user@company.com has 8 failed login attempts from suspicious IP",
+            "status": "investigating",
+            "assigned_to": "staging.security@company.com",
+            "source_ip": "203.0.113.45",
+            "affected_systems": ["VPN", "Email", "CRM"],
+            "mitigation_steps": ["Account locked", "IP blocked", "Security team notified"]
+          }
+        ],
+        "total": 1
+      },
+      "reports": {
+        "data": [
+          {
+            "report_id": "rpt_staging_001",
+            "name": "Staging Security Summary - Weekly",
+            "type": "security",
+            "period": "weekly",
+            "generated_at": "2024-12-18T08:00:00Z",
+            "status": "completed",
+            "metrics": {
+              "total_events": 15420,
+              "blocked_threats": 342,
+              "policy_violations": 28,
+              "user_risk_changes": 15
+            },
+            "trends": {
+              "threat_increase": "12%",
+              "policy_compliance": "94%",
+              "user_training_completion": "87%"
+            }
+          }
+        ],
+        "total": 1
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: staging-api-service
+  namespace: netskope-staging
+  labels:
+    app: staging-api
+    environment: staging
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: staging-api
+  template:
+    metadata:
+      labels:
+        app: staging-api
+        environment: staging
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: staging-api
+        image: python:3.11-slim
+        ports:
+        - containerPort: 8080
+          name: api
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: staging-api-secret
+              key: api-key
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: staging-api-secret
+              key: jwt-secret
+        - name: ENVIRONMENT
+          value: "staging"
+        - name: LOG_LEVEL
+          value: "INFO"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install flask prometheus-client pyyaml cryptography pyjwt
+          
+          cat > /app/staging_api.py << 'EOF'
+          import json
+          import yaml
+          import time
+          import random
+          import jwt
+          import hashlib
+          from datetime import datetime, timedelta
+          from flask import Flask, request, jsonify, g
+          from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+          from functools import wraps
+          
+          app = Flask(__name__)
+          
+          # Enhanced metrics
+          REQUEST_COUNT = Counter('api_requests_total', 'Total API requests', ['method', 'endpoint', 'status', 'user'])
+          REQUEST_DURATION = Histogram('api_request_duration_seconds', 'API request duration', ['endpoint'])
+          ACTIVE_CONNECTIONS = Gauge('api_active_connections', 'Active API connections')
+          ERROR_RATE = Counter('api_errors_total', 'Total API errors', ['error_type'])
+          
+          # Load configuration
+          with open('/etc/config/config.yaml', 'r') as f:
+              config = yaml.safe_load(f)
+          
+          with open('/etc/config/mock_responses.json', 'r') as f:
+              mock_data = json.load(f)
+          
+          def generate_jwt_token(user_id, api_key):
+              payload = {
+                  'user_id': user_id,
+                  'api_key_hash': hashlib.sha256(api_key.encode()).hexdigest()[:16],
+                  'exp': datetime.utcnow() + timedelta(hours=24),
+                  'iat': datetime.utcnow(),
+                  'iss': 'netskope-staging-api'
+              }
+              return jwt.encode(payload, config['security']['jwt_secret'], algorithm='HS256')
+          
+          def verify_jwt_token(token):
+              try:
+                  payload = jwt.decode(token, config['security']['jwt_secret'], algorithms=['HS256'])
+                  return payload
+              except jwt.ExpiredSignatureError:
+                  return None
+              except jwt.InvalidTokenError:
+                  return None
+          
+          def authenticate():
+              auth_header = request.headers.get('Authorization')
+              api_key = request.headers.get('X-API-Key')
+              
+              if not config['api']['auth_required']:
+                  return True
+              
+              # JWT Authentication
+              if auth_header and auth_header.startswith('Bearer '):
+                  token = auth_header.split(' ')[1]
+                  payload = verify_jwt_token(token)
+                  if payload:
+                      g.user_id = payload.get('user_id', 'unknown')
+                      return True
+              
+              # API Key Authentication
+              if api_key == config['api']['default_api_key']:
+                  g.user_id = 'api_user'
+                  return True
+              
+              return False
+          
+          def rate_limit():
+              # Simple rate limiting implementation
+              client_ip = request.remote_addr
+              current_time = time.time()
+              
+              # In production, use Redis for distributed rate limiting
+              # For staging, use in-memory store
+              if not hasattr(g, 'rate_limit_store'):
+                  g.rate_limit_store = {}
+              
+              if client_ip not in g.rate_limit_store:
+                  g.rate_limit_store[client_ip] = []
+              
+              # Clean old requests
+              g.rate_limit_store[client_ip] = [
+                  req_time for req_time in g.rate_limit_store[client_ip]
+                  if current_time - req_time < 60  # 1 minute window
+              ]
+              
+              if len(g.rate_limit_store[client_ip]) >= config['api']['rate_limit']:
+                  return False
+              
+              g.rate_limit_store[client_ip].append(current_time)
+              return True
+          
+          def require_auth(f):
+              @wraps(f)
+              def decorated_function(*args, **kwargs):
+                  if not authenticate():
+                      ERROR_RATE.labels(error_type='authentication').inc()
+                      return jsonify({"error": "Unauthorized", "code": 401}), 401
+                  
+                  if not rate_limit():
+                      ERROR_RATE.labels(error_type='rate_limit').inc()
+                      return jsonify({"error": "Rate limit exceeded", "code": 429}), 429
+                  
+                  return f(*args, **kwargs)
+              return decorated_function
+          
+          @app.before_request
+          def before_request():
+              request.start_time = time.time()
+              ACTIVE_CONNECTIONS.inc()
+              g.user_id = 'anonymous'
+          
+          @app.after_request
+          def after_request(response):
+              duration = time.time() - request.start_time
+              REQUEST_DURATION.labels(endpoint=request.endpoint or 'unknown').observe(duration)
+              REQUEST_COUNT.labels(
+                  method=request.method,
+                  endpoint=request.endpoint or 'unknown',
+                  status=response.status_code,
+                  user=getattr(g, 'user_id', 'anonymous')
+              ).inc()
+              ACTIVE_CONNECTIONS.dec()
+              
+              # Add security headers
+              response.headers['X-Content-Type-Options'] = 'nosniff'
+              response.headers['X-Frame-Options'] = 'DENY'
+              response.headers['X-XSS-Protection'] = '1; mode=block'
+              response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+              
+              return response
+          
+          def simulate_delay():
+              if config['responses']['delay_ms'] > 0:
+                  time.sleep(config['responses']['delay_ms'] / 1000.0)
+          
+          def simulate_error():
+              if random.random() < config['responses']['error_rate']:
+                  return True
+              return False
+          
+          @app.route('/health')
+          def health():
+              return jsonify({
+                  "status": "healthy",
+                  "timestamp": datetime.utcnow().isoformat(),
+                  "version": "1.0.0",
+                  "environment": "staging",
+                  "uptime": time.time() - app.start_time
+              })
+          
+          @app.route('/metrics')
+          def metrics():
+              return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+          
+          @app.route('/api/v2/auth/token', methods=['POST'])
+          def get_token():
+              data = request.get_json()
+              api_key = data.get('api_key')
+              
+              if api_key == config['api']['default_api_key']:
+                  token = generate_jwt_token('staging_user', api_key)
+                  return jsonify({
+                      "token": token,
+                      "expires_in": 86400,
+                      "token_type": "Bearer"
+                  })
+              
+              return jsonify({"error": "Invalid API key"}), 401
+          
+          @app.route('/api/v2/events')
+          @require_auth
+          def get_events():
+              simulate_delay()
+              if simulate_error():
+                  ERROR_RATE.labels(error_type='server_error').inc()
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              page = int(request.args.get('page', 1))
+              per_page = int(request.args.get('per_page', 100))
+              
+              return jsonify(mock_data['events'])
+          
+          @app.route('/api/v2/policies')
+          @require_auth
+          def get_policies():
+              simulate_delay()
+              if simulate_error():
+                  ERROR_RATE.labels(error_type='server_error').inc()
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['policies'])
+          
+          @app.route('/api/v2/users')
+          @require_auth
+          def get_users():
+              simulate_delay()
+              if simulate_error():
+                  ERROR_RATE.labels(error_type='server_error').inc()
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['users'])
+          
+          @app.route('/api/v2/users', methods=['POST'])
+          @require_auth
+          def create_user():
+              simulate_delay()
+              if simulate_error():
+                  ERROR_RATE.labels(error_type='server_error').inc()
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              user_data = request.get_json()
+              
+              # Validate required fields
+              required_fields = ['email', 'name', 'department']
+              for field in required_fields:
+                  if field not in user_data:
+                      ERROR_RATE.labels(error_type='validation_error').inc()
+                      return jsonify({"error": f"Missing required field: {field}"}), 400
+              
+              user_data['user_id'] = f"usr_staging_{random.randint(1000, 9999)}"
+              user_data['status'] = 'active'
+              user_data['risk_score'] = random.randint(1, 100)
+              user_data['created_at'] = datetime.utcnow().isoformat()
+              
+              return jsonify({"status": "created", "user": user_data}), 201
+          
+          @app.route('/api/v2/alerts')
+          @require_auth
+          def get_alerts():
+              simulate_delay()
+              if simulate_error():
+                  ERROR_RATE.labels(error_type='server_error').inc()
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['alerts'])
+          
+          @app.route('/api/v2/reports')
+          @require_auth
+          def get_reports():
+              simulate_delay()
+              if simulate_error():
+                  ERROR_RATE.labels(error_type='server_error').inc()
+                  return jsonify({"error": "Internal server error"}), 500
+              
+              return jsonify(mock_data['reports'])
+          
+          if __name__ == '__main__':
+              app.start_time = time.time()
+              app.run(
+                  host=config['server']['host'],
+                  port=config['server']['port'],
+                  debug=config['server']['debug']
+              )
+          EOF
+          
+          cd /app && python staging_api.py
+        
+        volumeMounts:
+        - name: staging-api-config
+          mountPath: /etc/config
+        - name: tls-certs
+          mountPath: /etc/tls
+          readOnly: true
+        
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 2Gi
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      
+      volumes:
+      - name: staging-api-config
+        configMap:
+          name: staging-api-config
+      - name: tls-certs
+        secret:
+          secretName: staging-api-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: staging-api-service
+  namespace: netskope-staging
+  labels:
+    app: staging-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: api
+  - port: 9090
+    targetPort: 9090
+    name: metrics
+  selector:
+    app: staging-api

@@ -1,0 +1,34 @@
+{
+  "status": "success",
+  "data": {
+    "policies": [
+      {
+        "policy_id": "ztna_001",
+        "name": "Engineering Apps Access",
+        "applications": ["jenkins", "gitlab", "jira"],
+        "allowed_users": ["john.doe", "jane.smith"],
+        "allowed_groups": ["engineering", "devops"],
+        "conditions": {
+          "device_posture": "compliant",
+          "mfa_required": true,
+          "location": ["US", "EU"]
+        },
+        "action": "allow"
+      },
+      {
+        "policy_id": "ztna_002", 
+        "name": "Admin Portal Access",
+        "applications": ["admin-portal"],
+        "allowed_users": ["jane.smith"],
+        "allowed_groups": ["admins"],
+        "conditions": {
+          "device_posture": "compliant",
+          "mfa_required": true,
+          "location": ["US"]
+        },
+        "action": "allow"
+      }
+    ]
+  },
+  "timestamp": "2024-12-18T10:30:00Z"
+}

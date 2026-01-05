@@ -1,0 +1,118 @@
+# Integration Environment Configuration
+# Kubernetes-based production-like environment for E2E testing
+
+ENVIRONMENT: integration
+MOCK_MODE: false
+
+# Service Endpoints (Kubernetes services)
+REDIS_HOST: redis-service.netskope-integration.svc.cluster.local
+REDIS_PORT: 6379
+REDIS_PASSWORD: integration-redis-2024
+REDIS_DB: 0
+REDIS_SSL: false
+
+KAFKA_BOOTSTRAP_SERVERS: kafka-service.netskope-integration.svc.cluster.local:9092
+KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+KAFKA_SASL_MECHANISM: null
+KAFKA_CONSUMER_GROUP: netskope-integration-tests
+KAFKA_AUTO_OFFSET_RESET: earliest
+
+MONGODB_HOST: mongodb-service.netskope-integration.svc.cluster.local
+MONGODB_PORT: 27017
+MONGODB_USERNAME: netskope_app
+MONGODB_PASSWORD: netskope-app-2024
+MONGODB_DATABASE: netskope_integration
+MONGODB_AUTH_SOURCE: netskope_integration
+MONGODB_REPLICA_SET: rs0
+MONGODB_SSL: false
+
+# Mock Netskope API (for integration testing)
+NETSKOPE_BASE_URL: http://mock-api-service.netskope-integration.svc.cluster.local:8080
+API_KEY: integration-api-key-2024
+API_TIMEOUT: 30
+API_RETRIES: 3
+
+# AWS Services (LocalStack - optional)
+AWS_REGION: us-east-1
+AWS_ENDPOINT_URL: http://localstack-service.netskope-integration.svc.cluster.local:4566
+AWS_ACCESS_KEY_ID: test
+AWS_SECRET_ACCESS_KEY: test
+AWS_S3_BUCKET: netskope-integration-test
+
+# GCP Services (Mock)
+GCP_PROJECT_ID: netskope-integration-test
+GOOGLE_APPLICATION_CREDENTIALS: /etc/gcp/credentials.json
+GCP_STORAGE_BUCKET: netskope-integration-test
+
+# Monitoring and Observability
+PROMETHEUS_URL: http://prometheus-service.netskope-integration.svc.cluster.local:9090
+GRAFANA_URL: http://grafana-service.netskope-integration.svc.cluster.local:3000
+JAEGER_URL: http://jaeger-service.netskope-integration.svc.cluster.local:16686
+
+# Metrics Collection
+METRICS_ENABLED: true
+METRICS_PORT: 9090
+METRICS_PATH: /metrics
+
+# Distributed Tracing
+TRACING_ENABLED: true
+JAEGER_AGENT_HOST: jaeger-service.netskope-integration.svc.cluster.local
+JAEGER_AGENT_PORT: 6831
+JAEGER_SAMPLER_TYPE: const
+JAEGER_SAMPLER_PARAM: 1
+
+# Test Configuration
+TEST_TIMEOUT: 300
+TEST_RETRIES: 3
+TEST_PARALLEL_WORKERS: 4
+TEST_FAIL_FAST: false
+TEST_VERBOSE: true
+
+# Logging Configuration
+LOG_LEVEL: INFO
+LOG_FORMAT: json
+LOG_OUTPUT: stdout
+LOG_FILE: /var/log/netskope-sdet/integration.log
+
+# Performance Testing
+PERFORMANCE_TEST_DURATION: 60
+PERFORMANCE_TEST_USERS: 10
+PERFORMANCE_TEST_RAMP_UP: 10
+
+# Security Testing
+SECURITY_SCAN_ENABLED: true
+SECURITY_SCAN_DEPTH: medium
+SECURITY_SCAN_TIMEOUT: 300
+
+# Feature Flags
+FEATURE_DISTRIBUTED_TRACING: true
+FEATURE_METRICS_COLLECTION: true
+FEATURE_ADVANCED_LOGGING: true
+FEATURE_CHAOS_TESTING: false
+
+# Resource Limits
+MAX_CONNECTIONS: 100
+CONNECTION_POOL_SIZE: 10
+REQUEST_TIMEOUT: 30
+MAX_RETRIES: 3
+
+# Health Check Configuration
+HEALTH_CHECK_INTERVAL: 30
+HEALTH_CHECK_TIMEOUT: 5
+HEALTH_CHECK_RETRIES: 3
+
+# Kubernetes Configuration
+KUBERNETES_NAMESPACE: netskope-integration
+KUBERNETES_SERVICE_ACCOUNT: test-runner-sa
+KUBERNETES_IN_CLUSTER: true
+
+# Test Data Configuration
+TEST_DATA_SEED: 12345
+TEST_DATA_CLEANUP: true
+TEST_DATA_ISOLATION: true
+
+# Notification Configuration (optional)
+SLACK_WEBHOOK_URL: null
+EMAIL_NOTIFICATIONS: false
+NOTIFICATION_ON_FAILURE: true
+NOTIFICATION_ON_SUCCESS: false

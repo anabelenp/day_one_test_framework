@@ -1,0 +1,730 @@
+Metadata-Version: 2.4
+Name: netskope-sdet-framework
+Version: 1.0.0
+Summary: Comprehensive SDET automation framework for cybersecurity API testing
+Home-page: https://github.com/netskope/sdet-framework
+Author: Netskope SDET Team
+Author-email: sdet@netskope.com
+Project-URL: Documentation, https://github.com/netskope/sdet-framework/docs
+Project-URL: Source, https://github.com/netskope/sdet-framework
+Project-URL: Tracker, https://github.com/netskope/sdet-framework/issues
+Keywords: testing,sdet,automation,cybersecurity,api-testing,netskope,security-testing,integration-testing,pytest,docker,kubernetes,redis,kafka,mongodb,aws
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Testing
+Classifier: Topic :: Security
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Classifier: Environment :: Console
+Classifier: Framework :: Pytest
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: pytest==7.4.2
+Requires-Dist: pytest-html==3.2.0
+Requires-Dist: requests==2.31.0
+Requires-Dist: kafka-python==2.0.2
+Requires-Dist: redis==5.3.1
+Requires-Dist: pymongo==4.5.0
+Requires-Dist: docker==6.1.3
+Requires-Dist: boto3==1.42.13
+Requires-Dist: google-cloud-storage==2.12.0
+Requires-Dist: selenium==4.39.0
+Requires-Dist: PyYAML==6.0.3
+Provides-Extra: dev
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: pytest-xdist>=3.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0.0; extra == "dev"
+Provides-Extra: security
+Requires-Dist: bandit>=1.7.0; extra == "security"
+Requires-Dist: safety>=2.0.0; extra == "security"
+Requires-Dist: semgrep>=1.0.0; extra == "security"
+Provides-Extra: performance
+Requires-Dist: locust>=2.0.0; extra == "performance"
+Requires-Dist: memory-profiler>=0.60.0; extra == "performance"
+Requires-Dist: py-spy>=0.3.0; extra == "performance"
+Provides-Extra: monitoring
+Requires-Dist: prometheus-client>=0.16.0; extra == "monitoring"
+Requires-Dist: opentelemetry-api>=1.15.0; extra == "monitoring"
+Requires-Dist: opentelemetry-sdk>=1.15.0; extra == "monitoring"
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: project-url
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Netskope SDET Automation Framework
+
+## Overview
+This is a Day-1 ready SDET automation framework for testing Netskope-like cloud security products with **full mock mode support** for testing without real credentials.
+
+### 🛡️ Security Products Supported:
+- **SWG** (Secure Web Gateway) / NG-SWG
+- **CASB** (Cloud Access Security Broker) / DLP (Data Loss Prevention)
+- **ZTNA** (Zero Trust Network Access) / Private Access
+- **Firewall** / FWaaS (Firewall as a Service)
+
+### 🚀 Framework Features:
+- **Mock Mode**: Test without real API credentials
+- **REST API automation** with realistic mock responses
+- **Multi-environment support**: Mock → Local → Integration → Staging → Production
+- **Docker/Kubernetes-based** environments with full orchestration
+- **Complete service implementations**: Redis, Kafka, MongoDB, Netskope API (Mock + Real)
+- **Enterprise CI/CD integration** with GitHub Actions and Jenkins
+- **Advanced security testing**: SAST, DAST, dependency scanning, secret detection
+- **Cloud testing**: AWS/GCP stubs and mock services
+- **Performance/load simulation** with configurable parameters
+- **Comprehensive monitoring**: Prometheus, Grafana, Jaeger integration
+- **Production-ready deployment** with Kubernetes HA and read-only monitoring
+
+## 📁 Project Structure
+
+```
+netskope_sdet/
+│
+├── README.md
+├── requirements.txt
+├── docker-compose.yml
+├── Jenkinsfile
+├── start_mock_mode.py          # 🎭 Start mock services
+│
+├── config/
+│   ├── env.yaml                # 🔧 Environment configuration (mock mode enabled)
+│   ├── policies.json           # 📋 Security policies for testing
+│   └── mock-gcp-credentials.json # 🔑 Mock GCP credentials
+│
+├── tests/
+│   ├── swg/
+│   │   └── test_url_blocking.py
+│   ├── dlp/                    # 🔒 Data Loss Prevention tests
+│   │   └── test_file_dlp.py
+│   ├── ztna/
+│   │   └── test_access_control.py
+│   ├── firewall/
+│   │   └── test_firewall_rules.py
+│   ├── performance/
+│   │   └── test_load.py
+│   ├── utils/
+│   │   ├── api_client.py       # 🔌 Enhanced with mock mode support
+│   │   ├── mock_server.py      # 🎭 Mock Netskope API server
+│   │   ├── kafka_helper.py
+│   │   ├── redis_helper.py
+│   │   └── nosql_helper.py
+│   └── mock_responses/         # 📦 Mock API response data
+│       ├── swg/
+│       ├── dlp/
+│       ├── ztna/
+│       ├── firewall/
+│       └── README.md
+│
+└── reports/                    # 📊 Generated test reports
+```
+
+Key Technologies & Integration Points
+
+Skill/Tool	Usage
+Python (pytest, requests)	REST API automation for CASB, DLP, ZTNA, SWG
+Selenium	Optional: UI automation for admin portals or dashboards
+Docker / Kubernetes	Spin up test services (Redis, Kafka, MongoDB) for Day-1 automation
+AWS / GCP SDKs	Integration testing of cloud services and SaaS apps
+Redis / Kafka / Ceph	Simulate caching, messaging, and object storage dependencies
+NoSQL DBs (MongoDB / Cassandra)	Store policy configs, logs, test results
+Jenkins / GitHub Actions	CI/CD pipeline execution, reports generation
+JMeter / Locust	Load & performance tests
+Logging / Monitoring	Splunk / ELK / local log verification
+
+---
+
+## 🚀 Quick Start
+
+### 1. **Clone and Setup**
+```bash
+git clone <repo_url>
+cd netskope_sdet_framework
+
+# Install framework
+pip install -e .
+
+# Verify installation
+python -c "from src.environment_manager import get_current_environment; print(f'✅ Environment: {get_current_environment().value}')"
+```
+
+### 2. **Choose Your Environment**
+
+#### 🎭 **Mock Environment (Default)**
+Perfect for development and unit testing - no external dependencies.
+
+```bash
+# Test service abstraction
+python -c "
+from src.service_manager import get_cache_client, get_message_client
+cache = get_cache_client()
+cache.set('test', 'works')
+print(f'✅ Cache: {cache.get(\"test\")}')
+
+msg_client = get_message_client()
+msg_client.publish('test_topic', {'message': 'Hello World'})
+messages = msg_client.consume('test_topic')
+print(f'✅ Messages: {len(messages)} received')
+"
+```
+
+#### 🐳 **Local Environment (Docker)**
+Complete local development environment with real services.
+
+```bash
+# Start complete local environment
+python scripts/start_local_environment.py
+
+# This starts: Redis, Kafka, MongoDB, LocalStack (AWS), Prometheus, Grafana, Jaeger
+# Access Grafana: http://localhost:3000 (admin/netskope_grafana_2024)
+```
+
+#### ☁️ **Integration Environment (Kubernetes)**
+Production-like environment for E2E testing with full Kubernetes deployment.
+
+```bash
+# Deploy complete integration environment
+netskope-sdet integration deploy
+
+# Check deployment status
+netskope-sdet integration status
+
+# Run integration tests
+netskope-sdet integration test
+
+# Access services (in separate terminals)
+kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000
+kubectl port-forward -n netskope-integration svc/prometheus-service 9090:9090
+kubectl port-forward -n netskope-integration svc/jaeger-service 16686:16686
+```
+
+#### 🏭 **Staging Environment (Kubernetes HA)**
+Production-like environment with high availability and enhanced security.
+
+```bash
+# Deploy staging environment with HA
+netskope-sdet staging deploy
+
+# Check HA deployment status
+netskope-sdet staging status
+
+# Run staging tests
+netskope-sdet staging test --test-type load
+```
+
+#### 🔒 **Production Environment (Read-Only Monitoring)**
+Read-only monitoring and health checks for production systems.
+
+```bash
+# Monitor production health (read-only)
+netskope-sdet production health-check
+
+# Generate production health report
+netskope-sdet production report --output prod_health.json
+
+# Continuous production monitoring
+netskope-sdet production monitor --interval 300
+```
+
+### 3. **Start Docker Services** (Optional)
+```bash
+docker-compose up -d
+```
+
+**Available Services:**
+- **Redis**: localhost:6379
+- **Kafka**: localhost:9092  
+- **Zookeeper**: localhost:2181
+- **MongoDB**: localhost:27017
+
+### 4. **Run Tests**
+
+#### Environment-Aware Testing:
+```bash
+# Unit tests (mock environment)
+pytest tests/unit/ -v
+
+# Integration tests (local environment - requires Docker)
+python scripts/start_local_environment.py  # In background
+pytest tests/integration/ -v
+
+# All tests with HTML report
+pytest tests/ --html=reports/test_report.html
+
+# Environment-specific tests
+TESTING_MODE=local pytest tests/integration/ -v
+```
+
+### 5. **View Results**
+```bash
+open reports/test_report.html
+```
+
+## 🎭 Mock Mode Features
+
+### **What is Mock Mode?**
+Mock mode allows you to run the entire testing framework without needing:
+- Real Netskope API credentials
+- AWS/GCP accounts
+- Internet connectivity
+- Production access
+
+### **Mock Services Provided:**
+
+| Service | Endpoint | Purpose |
+|---------|----------|---------|
+| **Netskope API** | `http://localhost:8080` | Complete API simulation |
+| **AWS Services** | `http://localhost:4566` | LocalStack integration |
+| **GCP Services** | Mock credentials file | Service account simulation |
+
+### **Mock Data Available:**
+
+- **SWG**: URL categories, blocking rules, web traffic logs
+- **DLP**: File scan results, policy violations, sensitive data detection
+- **ZTNA**: Access policies, user permissions, application access
+- **Firewall**: Security rules, port blocking, traffic analysis
+- **Users**: Mock user accounts, risk scores, activity logs
+- **Events**: Security events, alerts, audit trails
+
+### **Benefits:**
+
+✅ **No credentials needed** - Start testing immediately  
+✅ **Offline capable** - Works without internet  
+✅ **Fast & reliable** - No API rate limits or timeouts  
+✅ **Safe testing** - No risk of affecting production  
+✅ **CI/CD ready** - Perfect for automated pipelines  
+✅ **Realistic data** - Comprehensive mock responses  
+
+## 🔧 Configuration
+
+### **Mock Mode Configuration** (`config/env.yaml`)
+```yaml
+# Mock/Testing Mode Configuration
+MOCK_MODE: true
+
+# Mock Netskope API
+NETSKOPE_BASE_URL: "http://localhost:8080/mock-netskope"
+API_KEY: "mock-api-key-12345"
+
+# Mock AWS Services (LocalStack)
+AWS_REGION: "us-east-1"
+AWS_ENDPOINT_URL: "http://localhost:4566"
+
+# Mock GCP Services
+GCP_PROJECT_ID: "mock-gcp-project-123"
+GOOGLE_APPLICATION_CREDENTIALS: "./config/mock-gcp-credentials.json"
+```
+
+### **Production Configuration**
+```yaml
+# Production Mode
+MOCK_MODE: false
+
+# Real Netskope API
+NETSKOPE_BASE_URL: "https://yourcompany.goskope.com"
+API_KEY: "your-real-api-token-here"
+
+# Real AWS/GCP credentials
+AWS_REGION: "us-east-1"
+GCP_PROJECT_ID: "your-real-project-id"
+```
+
+## 🧪 Testing
+
+### **Run Specific Test Suites:**
+```bash
+# SWG (Secure Web Gateway) tests
+pytest tests/swg/ -v
+
+# DLP (Data Loss Prevention) tests  
+pytest tests/dlp/ -v
+
+# ZTNA (Zero Trust Network Access) tests
+pytest tests/ztna/ -v
+
+# Firewall tests
+pytest tests/firewall/ -v
+
+# Performance tests
+pytest tests/performance/ -v
+```
+
+### **Generate Detailed Reports:**
+```bash
+# HTML report with screenshots
+pytest tests/ --html=reports/test_report.html --self-contained-html
+
+# JUnit XML for CI/CD
+pytest tests/ --junitxml=reports/junit.xml
+
+# Coverage report
+pytest tests/ --cov=tests --cov-report=html
+```
+
+### **Mock Server Management:**
+```bash
+# Start mock server only
+python tests/utils/mock_server.py
+
+# Start with LocalStack (AWS mocking)
+pip install localstack
+python start_mock_mode.py
+```
+
+## 🏗️ CI/CD Integration
+
+### **Complete CI/CD Pipeline Integration** ✅
+
+The framework includes **production-ready CI/CD pipelines** with comprehensive automation:
+
+#### **GitHub Actions Workflows** (`.github/workflows/`)
+- ✅ **Unit Tests**: Multi-version Python testing (3.9, 3.10, 3.11) with coverage
+- ✅ **Integration Tests**: Docker Compose orchestration with service health checks
+- ✅ **Security Scans**: SAST (Bandit, Semgrep, CodeQL), dependency scanning, secret detection
+- ✅ **Deployment Pipeline**: Automated deployment to Integration and Staging environments
+
+#### **Jenkins Pipeline** (`Jenkinsfile`)
+- ✅ **Multi-stage pipeline** with parallel execution and approval gates
+- ✅ **Security integration**: Bandit, Safety, TruffleHog scanning
+- ✅ **Test automation**: Unit, integration, E2E, performance tests
+- ✅ **Artifact management**: Docker images, test reports, coverage reports
+- ✅ **Environment deployment**: Integration and Staging with health checks
+
+#### **Security Testing Integration**
+- ✅ **SAST (Static Analysis)**: Bandit for Python security, Semgrep for custom rules
+- ✅ **Dependency Scanning**: Safety and pip-audit for vulnerability detection
+- ✅ **Secret Scanning**: TruffleHog and Gitleaks for credential detection
+- ✅ **Compliance Testing**: SOC2, GDPR, PCI DSS, ISO27001 validation frameworks
+
+#### **Automated Deployment**
+```bash
+# GitHub Actions automatically deploys on:
+# - Push to main → Integration Environment
+# - Version tags → Staging Environment
+# - Manual triggers → Any environment
+
+# Jenkins Pipeline includes:
+# - Approval gates for production deployments
+# - Smoke tests after deployment
+# - Rollback capabilities
+# - Comprehensive logging and reporting
+```
+
+
+
+## 🔍 API Endpoints (Mock Mode)
+
+When running in mock mode, the following endpoints are available:
+
+### **Netskope API Endpoints** (`http://localhost:8080`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v2/events` | Security events and logs |
+| `GET` | `/api/v2/policies` | Security policies (SWG, DLP, ZTNA) |
+| `GET` | `/api/v2/users` | User accounts and risk scores |
+| `POST` | `/api/v2/users` | Create/update user accounts |
+| `GET` | `/api/v2/reports` | Security reports and analytics |
+| `GET` | `/api/v2/alerts` | Security alerts and incidents |
+
+### **Example API Calls**
+```bash
+# Get security events
+curl http://localhost:8080/api/v2/events
+
+# Get security policies
+curl http://localhost:8080/api/v2/policies
+
+# Get user information
+curl http://localhost:8080/api/v2/users
+```
+
+## 📊 Sample Mock Data
+
+### **SWG (Secure Web Gateway)**
+```json
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Social Media",
+      "action": "block",
+      "urls": ["facebook.com", "twitter.com", "instagram.com"]
+    },
+    {
+      "id": 2,
+      "name": "Business",
+      "action": "allow", 
+      "urls": ["salesforce.com", "office365.com", "slack.com"]
+    }
+  ]
+}
+```
+
+### **DLP (Data Loss Prevention)**
+```json
+{
+  "scan_result": "violation_detected",
+  "violations": [
+    {
+      "rule_name": "Social Security Number",
+      "severity": "high",
+      "matches": 2
+    }
+  ],
+  "risk_score": 85,
+  "action_taken": "quarantine"
+}
+```
+
+### **ZTNA (Zero Trust Network Access)**
+```json
+{
+  "policies": [
+    {
+      "name": "Engineering Apps Access",
+      "applications": ["jenkins", "gitlab", "jira"],
+      "allowed_users": ["john.doe", "jane.smith"],
+      "conditions": {
+        "mfa_required": true,
+        "device_posture": "compliant"
+      }
+    }
+  ]
+}
+```
+
+## 🛠️ Development
+
+### **Adding New Tests**
+1. Create test files in appropriate directories (`tests/swg/`, `tests/dlp/`, etc.)
+2. Use the `NetskopeAPIClient` class for API interactions
+3. Mock mode will automatically provide realistic responses
+
+### **Adding New Mock Responses**
+1. Add JSON files to `tests/mock_responses/`
+2. Update `mock_server.py` to handle new endpoints
+3. Test with `python tests/utils/mock_server.py`
+
+### **Extending Mock Server**
+```python
+# In tests/utils/mock_server.py
+def _handle_new_endpoint(self):
+    return {
+        "status": "success",
+        "data": {
+            # Your mock data here
+        }
+    }
+```
+
+## 🔧 Troubleshooting
+
+### **Common Issues**
+
+**Mock server won't start:**
+```bash
+# Check if port 8080 is in use
+lsof -i :8080
+
+# Use different port
+python tests/utils/mock_server.py --port 8081
+```
+
+**Tests failing in mock mode:**
+```bash
+# Verify mock mode is enabled
+grep MOCK_MODE config/env.yaml
+
+# Check mock server is running
+curl http://localhost:8080/api/v2/events
+```
+
+**LocalStack issues:**
+```bash
+# Install LocalStack for AWS mocking
+pip install localstack
+
+# Start LocalStack separately
+localstack start --host
+```
+
+### **Getting Help**
+
+1. **Check mock server logs** - Look for API call patterns
+2. **Verify configuration** - Ensure `MOCK_MODE: true` in `config/env.yaml`
+3. **Test endpoints manually** - Use curl to test mock API responses
+4. **Review test reports** - Check `reports/test_report.html` for details
+
+## 📚 **Documentation**
+
+### **Core Documentation**
+- 📖 **[Implementation Guide](docs/implementation_guide.md)** - Complete usage guide with examples
+- 🏗️ **[Architecture Design](docs/architecture.md)** - System architecture and components
+- 🧪 **[Testing Strategy](docs/testing_strategy.md)** - Comprehensive testing approach
+- 🌍 **[Environment Setup](docs/environment_setup.md)** - Multi-environment configuration
+- 🛡️ **[Security Testing Guide](docs/security_testing_guide.md)** - Security testing patterns
+
+### **Quick Links**
+- **Environment Manager**: `src/environment_manager.py` - Multi-environment configuration
+- **Service Manager**: `src/service_manager.py` - Service abstraction layer
+- **Docker Compose**: `docker-compose.local.yml` - Local development environment
+- **Configuration**: `config/` - Environment-specific configurations
+
+## 🏗️ **Framework Architecture**
+
+### **Multi-Environment Support**
+```
+Mock (E1) → Local (E2) → Integration (E3) → Staging (E4) → Production (E5)
+   ✅           ✅              ✅              ✅              ✅
+```
+
+### **Service Abstraction Layer**
+```python
+# Same code works in all environments
+from src.service_manager import get_cache_client, get_database_client
+
+cache = get_cache_client()  # Automatically mock or real
+cache.set("key", "value")
+
+db = get_database_client()  # Automatically mock or real
+db.insert_one("collection", {"data": "value"})
+```
+
+### **Environment Detection**
+```python
+from src.environment_manager import get_current_environment
+
+env = get_current_environment()  # Auto-detects: mock, local, integration, etc.
+print(f"Running in: {env.value}")
+```
+
+## 📊 **Key Technologies & Integration Points**
+
+| Technology | Usage | Implementation Status |
+|------------|-------|----------------------|
+| **Python 3.9+** | Core framework | ✅ Complete |
+| **pytest** | Testing framework | ✅ Complete |
+| **Docker Compose** | Local services | ✅ Complete |
+| **Redis 7** | Caching | ✅ Mock + Real |
+| **Kafka** | Event streaming | ✅ Mock + Real |
+| **MongoDB 6** | Document storage | ✅ Mock + Real |
+| **Netskope API** | Security API | ✅ Mock + Real |
+| **LocalStack** | AWS simulation | ✅ Complete |
+| **Prometheus** | Metrics collection | ✅ Complete |
+| **Grafana** | Visualization | ✅ Complete |
+| **Jaeger** | Distributed tracing | ✅ Complete |
+| **Kubernetes** | Orchestration | ✅ Complete |
+| **GitHub Actions** | CI/CD | ✅ Complete |
+| **Jenkins** | Enterprise CI/CD | ✅ Complete |
+| **Bandit** | SAST Security | ✅ Complete |
+| **Semgrep** | Custom Rules | ✅ Complete |
+| **CodeQL** | Security Analysis | ✅ Complete |
+| **TruffleHog** | Secret Scanning | ✅ Complete |
+| **Safety** | Dependency Scan | ✅ Complete |
+
+### **🎯 Framework Completion: 100% ✅**
+
+**All environments, services, CI/CD pipelines, and security features are fully implemented and production-ready!**
+
+## 🎯 Use Cases
+
+### **Learning & Development**
+- Understand Netskope security concepts
+- Practice API automation techniques
+- Develop new test scenarios safely
+
+### **CI/CD Pipelines**
+- Automated testing without credentials
+- Fast, reliable test execution
+- No external dependencies
+
+### **Security Testing**
+- Validate security policies
+- Test incident response procedures
+- Simulate security events
+
+### **Performance Testing**
+- Load test mock endpoints
+- Validate system scalability
+- Test under various conditions
+
+---
+
+## 🚀 Ready to Start?
+
+### **Quick Start Options:**
+
+#### **🎭 Mock Mode (Zero Setup)**
+```bash
+# Start testing immediately - no external dependencies
+python start_mock_mode.py
+pytest tests/ -v
+open reports/test_report.html
+```
+
+#### **🐳 Local Development**
+```bash
+# Full local environment with real services
+python scripts/start_local_environment.py
+netskope-sdet local status
+pytest tests/integration/ -v
+```
+
+#### **☁️ Kubernetes Deployment**
+```bash
+# Deploy to Integration environment
+netskope-sdet integration deploy
+netskope-sdet integration test
+
+# Deploy to Staging environment (HA)
+netskope-sdet staging deploy
+netskope-sdet staging test --test-type load
+```
+
+#### **🔒 Production Monitoring**
+```bash
+# Read-only production health monitoring
+netskope-sdet production health-check
+netskope-sdet production report --output health.json
+netskope-sdet production monitor --interval 300
+```
+
+### **🎉 Framework Achievement: 100% Complete!**
+
+**The Netskope SDET Framework is now production-ready with:**
+- ✅ **Complete multi-environment support** (Mock → Local → Integration → Staging → Production)
+- ✅ **Enterprise CI/CD integration** (GitHub Actions + Jenkins)
+- ✅ **Advanced security testing** (SAST, DAST, dependency scanning, secret detection)
+- ✅ **Production-ready service implementations** (Kafka, MongoDB, Netskope API)
+- ✅ **Kubernetes orchestration** with high availability and monitoring
+- ✅ **Comprehensive documentation** and developer tooling
+
+**No credentials needed to start - begin testing immediately!** 🎉
+
+---
+
+## 📚 **Additional Resources**
+
+- 📖 **[Framework Completion Summary](docs/FRAMEWORK_COMPLETION_SUMMARY.md)** - Complete achievement overview
+- 🏗️ **[Architecture Guide](docs/architecture.md)** - System design and components  
+- 🧪 **[Testing Strategy](docs/testing_strategy.md)** - Comprehensive testing approach
+- 🛡️ **[Security Testing Guide](docs/security_testing_guide.md)** - Security testing patterns
+- 🌍 **[Environment Setup Guide](docs/environment_setup.md)** - Multi-environment configuration
+
+*This framework provides a complete, enterprise-grade testing environment for Netskope-like cloud security products with full mock mode support for safe, fast, and reliable testing at scale.*

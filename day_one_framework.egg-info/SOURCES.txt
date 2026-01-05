@@ -1,0 +1,16 @@
+README.md
+setup.py
+./tests/__init__.py
+./tests/utils/__init__.py
+./tests/utils/api_client.py
+./tests/utils/kafka_helper.py
+./tests/utils/mock_server.py
+./tests/utils/nosql_helper.py
+./tests/utils/redis_helper.py
+netskope_sdet_framework.egg-info/PKG-INFO
+netskope_sdet_framework.egg-info/SOURCES.txt
+netskope_sdet_framework.egg-info/dependency_links.txt
+netskope_sdet_framework.egg-info/entry_points.txt
+netskope_sdet_framework.egg-info/not-zip-safe
+netskope_sdet_framework.egg-info/requires.txt
+netskope_sdet_framework.egg-info/top_level.txt

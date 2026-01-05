@@ -1,0 +1,70 @@
+# Prometheus Configuration for Netskope SDET Framework
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'netskope-local'
+    environment: 'local'
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          instance: 'netskope-redis'
+
+  # Kafka metrics
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+        labels:
+          service: 'kafka'
+          instance: 'netskope-kafka'
+
+  # MongoDB metrics
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+        labels:
+          service: 'mongodb'
+          instance: 'netskope-mongodb'
+
+  # LocalStack metrics (if available)
+  - job_name: 'localstack'
+    static_configs:
+      - targets: ['localstack:4566']
+        labels:
+          service: 'localstack'
+          instance: 'netskope-localstack'
+    metrics_path: '/_localstack/health'
+
+  # Test Runner metrics (when available)
+  - job_name: 'test-runner'
+    static_configs:
+      - targets: ['test-runner:8080']
+        labels:
+          service: 'test-runner'
+          instance: 'netskope-test-runner'
+    scrape_interval: 30s

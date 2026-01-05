@@ -1,0 +1,41 @@
+{
+  "status": "success",
+  "data": {
+    "rules": [
+      {
+        "rule_id": "fw_001",
+        "name": "Block High Risk Ports",
+        "source": "any",
+        "destination": "any", 
+        "ports": [23, 135, 139, 445, 1433, 3389],
+        "protocol": "tcp",
+        "action": "deny",
+        "enabled": true,
+        "priority": 100
+      },
+      {
+        "rule_id": "fw_002",
+        "name": "Allow Web Traffic",
+        "source": "internal_network",
+        "destination": "any",
+        "ports": [80, 443],
+        "protocol": "tcp", 
+        "action": "allow",
+        "enabled": true,
+        "priority": 200
+      },
+      {
+        "rule_id": "fw_003",
+        "name": "Allow DNS",
+        "source": "any",
+        "destination": "dns_servers",
+        "ports": [53],
+        "protocol": "udp",
+        "action": "allow", 
+        "enabled": true,
+        "priority": 150
+      }
+    ]
+  },
+  "timestamp": "2024-12-18T10:30:00Z"
+}

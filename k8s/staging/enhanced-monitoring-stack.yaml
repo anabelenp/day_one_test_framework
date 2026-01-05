@@ -1,0 +1,300 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-ha-config
+  namespace: netskope-staging
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'staging'
+        environment: 'staging'
+    
+    rule_files:
+      - "alert_rules.yml"
+      - "recording_rules.yml"
+    
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager-service:9093
+    
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+      
+      - job_name: 'redis-ha'
+        static_configs:
+          - targets: 
+            - 'redis-ha-master-headless:9121'
+            - 'redis-ha-replica-headless:9121'
+        metrics_path: /metrics
+        scrape_interval: 30s
+      
+      - job_name: 'kafka-ha'
+        static_configs:
+          - targets: ['kafka-ha-headless:9308']
+        scrape_interval: 30s
+      
+      - job_name: 'mongodb-ha'
+        static_configs:
+          - targets: ['mongodb-ha-headless:9216']
+        scrape_interval: 30s
+      
+      - job_name: 'zookeeper-ha'
+        static_configs:
+          - targets: ['zookeeper-ha-headless:8080']
+        scrape_interval: 30s
+      
+      - job_name: 'staging-api'
+        static_configs:
+          - targets: ['staging-api-service:9090']
+        scrape_interval: 15s
+      
+      - job_name: 'test-runner'
+        static_configs:
+          - targets: ['test-runner-service:8080']
+        scrape_interval: 60s
+      
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - netskope-staging
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+      
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+  
+  alert_rules.yml: |
+    groups:
+      - name: staging-critical-alerts
+        rules:
+          - alert: ServiceDown
+            expr: up == 0
+            for: 2m
+            labels:
+              severity: critical
+              environment: staging
+            annotations:
+              summary: "Service {{ $labels.instance }} is down"
+              description: "Service {{ $labels.instance }} has been down for more than 2 minutes."
+          
+          - alert: HighMemoryUsage
+            expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+            for: 5m
+            labels:
+              severity: warning
+              environment: staging
+            annotations:
+              summary: "High memory usage on {{ $labels.instance }}"
+              description: "Memory usage is above 85% for more than 5 minutes."
+          
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+              environment: staging
+            annotations:
+              summary: "High CPU usage on {{ $labels.instance }}"
+              description: "CPU usage is above 80% for more than 5 minutes."
+          
+          - alert: DiskSpaceLow
+            expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 15
+            for: 5m
+            labels:
+              severity: critical
+              environment: staging
+            annotations:
+              summary: "Low disk space on {{ $labels.instance }}"
+              description: "Disk space is below 15% on {{ $labels.instance }}."
+          
+          - alert: RedisDown
+            expr: redis_up == 0
+            for: 1m
+            labels:
+              severity: critical
+              environment: staging
+            annotations:
+              summary: "Redis instance is down"
+              description: "Redis instance {{ $labels.instance }} is down."
+          
+          - alert: KafkaDown
+            expr: kafka_server_BrokerState != 3
+            for: 2m
+            labels:
+              severity: critical
+              environment: staging
+            annotations:
+              summary: "Kafka broker is not running"
+              description: "Kafka broker {{ $labels.instance }} is not in running state."
+          
+          - alert: MongoDBDown
+            expr: mongodb_up == 0
+            for: 1m
+            labels:
+              severity: critical
+              environment: staging
+            annotations:
+              summary: "MongoDB instance is down"
+              description: "MongoDB instance {{ $labels.instance }} is down."
+          
+          - alert: TestFailureRateHigh
+            expr: rate(test_failures_total[10m]) > 0.2
+            for: 5m
+            labels:
+              severity: warning
+              environment: staging
+            annotations:
+              summary: "High test failure rate"
+              description: "Test failure rate is above 20% for the last 10 minutes."
+  
+  recording_rules.yml: |
+    groups:
+      - name: staging-recording-rules
+        interval: 30s
+        rules:
+          - record: staging:redis_memory_usage_percent
+            expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100
+          
+          - record: staging:kafka_consumer_lag_sum
+            expr: sum by (consumergroup) (kafka_consumer_lag_sum)
+          
+          - record: staging:mongodb_connections_percent
+            expr: (mongodb_connections{state="current"} / mongodb_connections{state="available"}) * 100
+          
+          - record: staging:test_success_rate
+            expr: rate(test_passed_total[5m]) / (rate(test_passed_total[5m]) + rate(test_failures_total[5m])) * 100
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus-ha
+  namespace: netskope-staging
+  labels:
+    app: prometheus-ha
+    environment: staging
+spec:
+  serviceName: prometheus-ha-headless
+  replicas: 2
+  selector:
+    matchLabels:
+      app: prometheus-ha
+  template:
+    metadata:
+      labels:
+        app: prometheus-ha
+        environment: staging
+    spec:
+      securityContext:
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.45.0
+        ports:
+        - containerPort: 9090
+          name: prometheus
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus/
+        - --web.console.libraries=/etc/prometheus/console_libraries
+        - --web.console.templates=/etc/prometheus/consoles
+        - --storage.tsdb.retention.time=30d
+        - --storage.tsdb.retention.size=50GB
+        - --web.enable-lifecycle
+        - --web.enable-admin-api
+        - --storage.tsdb.wal-compression
+        volumeMounts:
+        - name: prometheus-ha-config
+          mountPath: /etc/prometheus
+        - name: prometheus-ha-data
+          mountPath: /prometheus
+        resources:
+          requests:
+            cpu: 1
+            memory: 4Gi
+          limits:
+            cpu: 4
+            memory: 8Gi
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: prometheus-ha-config
+        configMap:
+          name: prometheus-ha-config
+  volumeClaimTemplates:
+  - metadata:
+      name: prometheus-ha-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-ha-headless
+  namespace: netskope-staging
+  labels:
+    app: prometheus-ha
+spec:
+  clusterIP: None
+  ports:
+  - port: 9090
+    name: prometheus
+  selector:
+    app: prometheus-ha
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-ha-service
+  namespace: netskope-staging
+  labels:
+    app: prometheus-ha
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9090
+    targetPort: 9090
+    name: prometheus
+  selector:
+    app: prometheus-ha

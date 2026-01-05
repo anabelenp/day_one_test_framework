@@ -1,0 +1,26 @@
+{
+  "status": "success",
+  "data": {
+    "categories": [
+      {
+        "id": 1,
+        "name": "Social Media",
+        "action": "block",
+        "urls": ["facebook.com", "twitter.com", "instagram.com"]
+      },
+      {
+        "id": 2,
+        "name": "Malware",
+        "action": "block", 
+        "urls": ["malicious-site.com", "phishing-example.net"]
+      },
+      {
+        "id": 3,
+        "name": "Business",
+        "action": "allow",
+        "urls": ["salesforce.com", "office365.com", "slack.com"]
+      }
+    ]
+  },
+  "timestamp": "2024-12-18T10:30:00Z"
+}

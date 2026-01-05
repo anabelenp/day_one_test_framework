@@ -1,0 +1,360 @@
+# Default values for netskope-sdet integration environment
+# This is a YAML-formatted file.
+
+# Global configuration
+global:
+  environment: integration
+  namespace: netskope-integration
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Environment configuration
+environment:
+  name: integration
+  mockMode: false
+  testTimeout: 300
+  testRetries: 3
+  parallelWorkers: 4
+
+# Redis configuration
+redis:
+  enabled: true
+  replicas: 3
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  
+  auth:
+    enabled: true
+    password: "integration-redis-2024"
+  
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  
+  service:
+    type: ClusterIP
+    port: 6379
+
+# Kafka configuration
+kafka:
+  enabled: true
+  replicas: 3
+  
+  zookeeper:
+    enabled: true
+    replicas: 3
+    image:
+      repository: confluentinc/cp-zookeeper
+      tag: "7.4.0"
+      pullPolicy: IfNotPresent
+    
+    persistence:
+      enabled: true
+      dataSize: 5Gi
+      logSize: 2Gi
+      storageClass: ""
+    
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  
+  image:
+    repository: confluentinc/cp-kafka
+    tag: "7.4.0"
+    pullPolicy: IfNotPresent
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  
+  config:
+    defaultReplicationFactor: 2
+    minInsyncReplicas: 1
+    numPartitions: 3
+    offsetsTopicReplicationFactor: 2
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  
+  service:
+    type: ClusterIP
+    port: 9092
+
+# MongoDB configuration
+mongodb:
+  enabled: true
+  replicas: 3
+  image:
+    repository: mongo
+    tag: "6"
+    pullPolicy: IfNotPresent
+  
+  auth:
+    enabled: true
+    rootUsername: integration_admin
+    rootPassword: integration-mongo-2024
+    username: netskope_app
+    password: netskope-app-2024
+    database: netskope_integration
+  
+  replicaSet:
+    enabled: true
+    name: rs0
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  
+  service:
+    type: ClusterIP
+    port: 27017
+
+# Mock API configuration
+mockApi:
+  enabled: true
+  replicas: 2
+  image:
+    repository: python
+    tag: "3.11-slim"
+    pullPolicy: IfNotPresent
+  
+  config:
+    apiKey: "integration-api-key-2024"
+    rateLimit: 1000
+    errorRate: 0.01
+    delayMs: 50
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 9090
+
+# Monitoring stack configuration
+monitoring:
+  enabled: true
+  
+  prometheus:
+    enabled: true
+    image:
+      repository: prom/prometheus
+      tag: "v2.45.0"
+      pullPolicy: IfNotPresent
+    
+    retention: "7d"
+    
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    
+    service:
+      type: ClusterIP
+      port: 9090
+  
+  grafana:
+    enabled: true
+    image:
+      repository: grafana/grafana
+      tag: "10.0.0"
+      pullPolicy: IfNotPresent
+    
+    auth:
+      adminUser: admin
+      adminPassword: integration-grafana-2024
+    
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    
+    service:
+      type: ClusterIP
+      port: 3000
+  
+  jaeger:
+    enabled: true
+    image:
+      repository: jaegertracing/all-in-one
+      tag: "1.47"
+      pullPolicy: IfNotPresent
+    
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    
+    service:
+      type: ClusterIP
+      uiPort: 16686
+      collectorPort: 14268
+
+# Test runner configuration
+testRunner:
+  enabled: true
+  image:
+    repository: netskope-sdet
+    tag: "integration"
+    pullPolicy: IfNotPresent
+  
+  job:
+    enabled: true
+    parallelism: 1
+    completions: 1
+    backoffLimit: 3
+    restartPolicy: Never
+  
+  cronjob:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    suspend: false
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  
+  serviceAccount:
+    create: true
+    name: test-runner-sa
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  
+  hosts:
+    - host: netskope-integration.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: mock-api-service
+          port: 8080
+        - path: /grafana
+          pathType: Prefix
+          service: grafana-service
+          port: 3000
+        - path: /prometheus
+          pathType: Prefix
+          service: prometheus-service
+          port: 9090
+        - path: /jaeger
+          pathType: Prefix
+          service: jaeger-service
+          port: 16686
+  
+  tls: []
+
+# Resource quotas and limits
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "10"
+    services: "20"
+    secrets: "10"
+    configmaps: "10"
+
+limitRange:
+  enabled: true
+  limits:
+    - default:
+        cpu: "1"
+        memory: "2Gi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
+
+# Network policies
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Pod security policies
+podSecurityPolicy:
+  enabled: false
+
+# Service mesh integration (optional)
+serviceMesh:
+  enabled: false
+  type: istio  # istio, linkerd, consul
+
+# Backup configuration
+backup:
+  enabled: false
+  schedule: "0 3 * * *"
+  retention: "7d"
+
+# Secrets management
+secrets:
+  create: true
+  redis:
+    password: "integration-redis-2024"
+  mongodb:
+    password: "netskope-app-2024"
+  api:
+    key: "integration-api-key-2024"
+  grafana:
+    adminPassword: "integration-grafana-2024"
+
+# ConfigMaps
+configMaps:
+  create: true

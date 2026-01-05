@@ -1,0 +1,6 @@
+{
+  "swg": {"blocked_urls": ["example.com", "malware.com"]},
+  "dlp": {"blocked_patterns": ["SSN", "CreditCard"]},
+  "ztna": {"restricted_apps": ["admin_portal", "finance_app"]},
+  "firewall": {"blocked_ports": [22, 3389]}
+}

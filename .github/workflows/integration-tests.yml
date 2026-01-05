@@ -1,0 +1,145 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run integration tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-html pytest-xvfb docker-compose
+
+    - name: Start local environment
+      run: |
+        # Start Docker Compose services in background
+        docker-compose -f docker-compose.local.yml up -d
+        
+        # Wait for services to be ready
+        echo "Waiting for services to start..."
+        sleep 30
+        
+        # Verify services are running
+        docker-compose -f docker-compose.local.yml ps
+
+    - name: Wait for services to be healthy
+      run: |
+        # Wait for Redis
+        timeout 60 bash -c 'until redis-cli -h localhost -p 6379 ping; do sleep 2; done'
+        
+        # Wait for Kafka (check if port is open)
+        timeout 60 bash -c 'until nc -z localhost 9092; do sleep 2; done'
+        
+        # Wait for MongoDB
+        timeout 60 bash -c 'until nc -z localhost 27017; do sleep 2; done'
+        
+        echo "All services are ready!"
+
+    - name: Verify environment setup
+      run: |
+        python -c "
+        from src.environment_manager import get_current_environment
+        from src.service_manager import get_service_manager
+        
+        env = get_current_environment()
+        print(f'Environment: {env.value}')
+        
+        # Test service connections
+        sm = get_service_manager()
+        health = sm.health_check_all()
+        print(f'Service health: {health}')
+        "
+
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -v \
+          --html=reports/integration-test-report.html \
+          --self-contained-html \
+          --junitxml=reports/integration-test-results.xml \
+          -x
+
+    - name: Run E2E tests
+      run: |
+        pytest tests/e2e/ -v \
+          --html=reports/e2e-test-report.html \
+          --self-contained-html \
+          --junitxml=reports/e2e-test-results.xml \
+          -x
+
+    - name: Collect service logs
+      if: failure()
+      run: |
+        echo "=== Docker Compose Services ==="
+        docker-compose -f docker-compose.local.yml ps
+        
+        echo "=== Redis Logs ==="
+        docker-compose -f docker-compose.local.yml logs redis
+        
+        echo "=== Kafka Logs ==="
+        docker-compose -f docker-compose.local.yml logs kafka
+        
+        echo "=== MongoDB Logs ==="
+        docker-compose -f docker-compose.local.yml logs mongodb
+
+    - name: Stop local environment
+      if: always()
+      run: |
+        docker-compose -f docker-compose.local.yml down -v
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          reports/
+          
+    - name: Notify on failure
+      if: failure() && github.event_name == 'schedule'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Integration Tests Failed - ' + new Date().toISOString().split('T')[0],
+            body: 'The scheduled integration tests have failed. Please check the workflow logs for details.\n\nWorkflow: ' + context.workflow + '\nRun: ' + context.runNumber,
+            labels: ['bug', 'ci-failure']
+          });
