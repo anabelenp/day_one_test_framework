@@ -1,6 +1,6 @@
 # Day-1 SDET Automation Framework
 
-Python testing framework for Netskope-like cloud security products (SWG, CASB, DLP, ZTNA, Firewall). The same test code runs against in-memory mocks, local Docker services, or Kubernetes clusters — controlled by a single environment variable.
+Python testing framework for cloud security products (SWG, CASB, DLP, ZTNA, Firewall). The same test code runs against in-memory mocks, local Docker services, or Kubernetes clusters — controlled by a single environment variable.
 
 ## Prerequisites
 
