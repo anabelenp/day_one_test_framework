@@ -230,7 +230,6 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for additional scenarios.
 
 | Document | Contents |
 |----------|----------|
-| [TUTORIAL.md](docs/TUTORIAL.md) | Full framework walkthrough — architecture, all test types, E2E trace, CI/CD, SDLC |
 | [architecture.md](docs/architecture.md) | System design and component diagrams |
 | [testing_strategy.md](docs/testing_strategy.md) | Test pyramid and testing approach |
 | [environment_setup.md](docs/environment_setup.md) | Per-environment configuration detail |
@@ -243,4 +242,3 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for additional scenarios.
 | [MONITORING_AND_REPORTS_GUIDE.md](docs/MONITORING_AND_REPORTS_GUIDE.md) | Prometheus, Grafana, Jaeger |
 | [TEST_MONITORING_MONGODB.md](docs/TEST_MONITORING_MONGODB.md) | Test result analytics queries |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and fixes |
-| [code_review.md](docs/code_review.md) | Code review findings and recommendations |
