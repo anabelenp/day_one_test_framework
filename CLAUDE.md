@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Essential Commands
 
 ```bash
-# Install (required before using the netskope-sdet CLI)
+# Install (required before using the day1-sdet CLI)
 pip install -e .
 
 # Unit tests — always prefix with TESTING_MODE=mock (see Gotchas)
@@ -28,7 +28,7 @@ TESTING_MODE=mock pytest tests/unit/ --cov=src --cov-report=term-missing
 
 # Local environment (Docker Compose)
 docker-compose -f docker-compose.local.yml up -d   # NOT docker-compose.yml (that file is legacy)
-TESTING_MODE=local pytest tests/integration/ -v
+TESTING_MODE=local pytest tests/integration/test_local_environment.py -v
 
 # Security, domain, and all other pytest-based tests
 TESTING_MODE=mock pytest tests/security/ -v
@@ -41,10 +41,10 @@ TESTING_MODE=integration pytest tests/e2e/ -v
 TESTING_MODE=mock pytest -m "not slow" -v
 TESTING_MODE=mock pytest -m "security or unit" -v
 
-# CLI (netskope-sdet == python src/cli.py, both take identical arguments)
-netskope-sdet env detect
-netskope-sdet services health
-netskope-sdet test unit --html-report --coverage
+# CLI (day1-sdet == python src/cli.py, both take identical arguments)
+day1-sdet env detect
+day1-sdet services health
+day1-sdet test unit --html-report --coverage
 ```
 
 Markers defined in `pytest.ini`: `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
@@ -57,10 +57,10 @@ Markers defined in `pytest.ini`: `unit`, `integration`, `e2e`, `performance`, `s
 
 ```
 Test code
-   get_cache_client() / get_message_client() / get_database_client() / get_api_client()
-        ServiceManager  reads  EnvironmentManager.get_current_environment()
-             MOCK  →  MockCacheClient / MockMessageClient / MockDatabaseClient / MockAPIClient
-             other →  RealCacheClient (redis) / RealMessageClient (kafka) /
+  └─ get_cache_client() / get_message_client() / get_database_client() / get_api_client()
+       └─ ServiceManager  ──reads──  EnvironmentManager.get_current_environment()
+            ├─ MOCK  →  MockCacheClient / MockMessageClient / MockDatabaseClient / MockAPIClient
+            └─ other →  RealCacheClient (redis) / RealMessageClient (kafka) /
                         RealDatabaseClient (mongodb) / RealAPIClient (http)
                         all implemented in src/real_service_clients.py
 ```
@@ -96,6 +96,10 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 **Use `docker-compose.local.yml`, not `docker-compose.yml`.** The root `docker-compose.yml` is a legacy file using Zookeeper-based Kafka. `docker-compose.local.yml` is the current full stack (KRaft Kafka, Redis 7, MongoDB 6, LocalStack, Prometheus, Grafana, Jaeger, nginx mock API).
 
 **E2E tests auto-skip outside the integration environment.** The `setup_integration_environment` autouse fixture in `tests/e2e/test_integration_e2e.py` calls `pytest.skip()` unless `TESTING_MODE=integration`.
+
+**Integration tests have two variants:**
+- `tests/integration/test_local_environment.py` — requires `TESTING_MODE=local` (Docker Compose)
+- `tests/integration/test_integration_environment.py` — requires `TESTING_MODE=integration` (Kubernetes)
 
 **Mock `aggregate()` is incomplete.** `MockDatabaseClient.aggregate()` supports only `$match` and `$group` stages. Tests relying on `$project`, `$sort`, `$limit`, or `$avg` will silently return wrong results in mock mode.
 

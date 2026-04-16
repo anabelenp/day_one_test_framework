@@ -63,7 +63,7 @@ class TestDataEncryption:
 
             manager = EnvironmentManager()
 
-            for service_name in ["redis", "kafka", "mongodb", "netskope_api"]:
+            for service_name in ["redis", "kafka", "mongodb", "target_api"]:
                 config = manager.get_service_config(service_name)
 
 

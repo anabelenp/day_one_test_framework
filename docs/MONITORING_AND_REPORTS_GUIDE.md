@@ -9,10 +9,10 @@ The Day-1 Framework includes a comprehensive monitoring stack with multiple plat
 ### **Service URLs (Local Environment)**
 | Service | URL | Credentials | Purpose |
 |---------|-----|-------------|---------|
-| **Grafana** | http://localhost:3000 | admin/netskope_grafana_2024 | Dashboards & Visualization |
+| **Grafana** | http://localhost:3000 | admin/grafana_2024 | Dashboards & Visualization |
 | **Prometheus** | http://localhost:9090 | None | Metrics Collection |
 | **Jaeger** | http://localhost:16686 | None | Distributed Tracing |
-| **MongoDB** | mongodb://localhost:27017 | admin/netskope_admin_2024 | Database Queries |
+| **MongoDB** | mongodb://localhost:27017 | admin/admin_2024 | Database Queries |
 | **Redis** | localhost:6379 | None | Cache Monitoring |
 | **Kafka** | localhost:9092 | None | Message Streaming |
 
@@ -41,7 +41,7 @@ open http://localhost:3000
 
 # Login credentials
 Username: admin
-Password: netskope_grafana_2024
+Password: grafana_2024
 ```
 
 ### **Default Dashboards**
@@ -334,19 +334,19 @@ def test_with_tracing():
 #### **Command Line Access**
 ```bash
 # Connect using mongosh
-mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin"
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local?authSource=admin"
 
 # Or connect to admin database first
 mongosh mongodb://localhost:27017
 use admin
-db.auth("admin", "netskope_admin_2024")
-use netskope_local
+db.auth("admin", "admin_2024")
+use day1_local
 ```
 
 #### **GUI Tools**
 ```bash
 # MongoDB Compass (Official GUI)
-# Connection string: mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin
+# Connection string: mongodb://admin:admin_2024@localhost:27017/day1_local?authSource=admin
 
 # Other options:
 # - Studio 3T
@@ -551,7 +551,7 @@ import matplotlib.pyplot as plt
 from pymongo import MongoClient
 
 # Connect to MongoDB
-client = MongoClient("mongodb://admin:netskope_admin_2024@localhost:27017/")
+client = MongoClient("mongodb://admin:admin_2024@localhost:27017/")
 db = client.netskope_local
 
 # Analyze test results

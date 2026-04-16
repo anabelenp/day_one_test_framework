@@ -1,8 +1,8 @@
-# Netskope SDET Framework - Security Testing Guide
+# Day-1 Test Framework - Security Testing Guide
 
 ##  Overview
 
-This guide provides comprehensive security testing methodologies specifically designed for cybersecurity API testing within the Netskope SDET Framework. It covers threat modeling, security test patterns, compliance validation, and incident response testing.
+This guide provides comprehensive security testing methodologies specifically designed for cybersecurity API testing within the Day-1 Test Framework. It covers threat modeling, security test patterns, compliance validation, and incident response testing.
 
 ##  Security Testing Objectives
 

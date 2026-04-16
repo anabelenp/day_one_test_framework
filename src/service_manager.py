@@ -920,7 +920,7 @@ class ServiceManager:
     def _create_api_client(self) -> APIClient:
         """Create appropriate API client based on environment"""
         environment = self.env_manager.get_current_environment()
-        config = self.env_manager.get_service_config("netskope_api")
+        config = self.env_manager.get_service_config("target_api")
 
         if environment == Environment.MOCK:
             return MockAPIClient(config, environment)

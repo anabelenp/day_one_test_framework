@@ -63,7 +63,7 @@ class EnvironmentConfig:
     redis: ServiceConfig
     kafka: ServiceConfig
     mongodb: ServiceConfig
-    netskope_api: ServiceConfig
+    target_api: ServiceConfig
     aws_config: Dict[str, Any]
     monitoring: Dict[str, Any]
     security: Dict[str, Any]
@@ -218,7 +218,7 @@ class EnvironmentManager:
         Get configuration for a specific service
 
         Args:
-            service_name: Name of the service (redis, kafka, mongodb, netskope_api)
+            service_name: Name of the service (redis, kafka, mongodb, target_api)
             environment: Target environment (defaults to current)
 
         Returns:
@@ -230,7 +230,7 @@ class EnvironmentManager:
             "redis": config.redis,
             "kafka": config.kafka,
             "mongodb": config.mongodb,
-            "netskope_api": config.netskope_api,
+            "target_api": config.target_api,
         }
 
         if service_name not in service_configs:
@@ -276,10 +276,10 @@ class EnvironmentManager:
                     "port": config.mongodb.port,
                     "database": config.mongodb.database,
                 },
-                "netskope_api": {
-                    "host": config.netskope_api.host,
-                    "port": config.netskope_api.port,
-                    "ssl_enabled": config.netskope_api.ssl_enabled,
+                "target_api": {
+                    "host": config.target_api.host,
+                    "port": config.target_api.port,
+                    "ssl_enabled": config.target_api.ssl_enabled,
                 },
             },
             "aws_config": config.aws_config,
@@ -337,12 +337,12 @@ class EnvironmentManager:
             "mongodb": {
                 "host": "localhost",
                 "port": 27017,
-                "database": "netskope_test",
+                "database": "day1_test",
                 "ssl_enabled": False,
                 "connection_pool_size": 10,
                 "timeout": 30,
             },
-            "netskope_api": {
+            "target_api": {
                 "host": "localhost",
                 "port": 8080,
                 "ssl_enabled": False,
@@ -382,7 +382,7 @@ class EnvironmentManager:
         redis_config = ServiceConfig(**config.get("redis", {}))
         kafka_config = ServiceConfig(**config.get("kafka", {}))
         mongodb_config = ServiceConfig(**config.get("mongodb", {}))
-        netskope_config = ServiceConfig(**config.get("netskope_api", {}))
+        target_config = ServiceConfig(**config.get("target_api", {}))
 
         return EnvironmentConfig(
             name=config.get("name", f"{environment.value.title()} Environment"),
@@ -390,7 +390,7 @@ class EnvironmentManager:
             redis=redis_config,
             kafka=kafka_config,
             mongodb=mongodb_config,
-            netskope_api=netskope_config,
+            target_api=target_config,
             aws_config=config.get("aws_config", {}),
             monitoring=config.get("monitoring", {}),
             security=config.get("security", {}),
@@ -433,7 +433,7 @@ class EnvironmentManager:
 
     def _validate_config_completeness(self, config: EnvironmentConfig) -> bool:
         """Validate that configuration has all required fields"""
-        required_fields = ["redis", "kafka", "mongodb", "netskope_api"]
+        required_fields = ["redis", "kafka", "mongodb", "target_api"]
 
         for field in required_fields:
             if not hasattr(config, field):
@@ -453,10 +453,10 @@ class EnvironmentManager:
             ("MongoDB", config.mongodb.host, config.mongodb.port),
         ]
 
-        # Only check Netskope API for non-local environments
+        # Only check Target API for non-local environments
         if config.environment != Environment.LOCAL:
             services_to_check.append(
-                ("Netskope API", config.netskope_api.host, config.netskope_api.port)
+                ("Target API", config.target_api.host, config.target_api.port)
             )
 
         self.logger.info(

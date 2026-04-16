@@ -1,8 +1,8 @@
-# Netskope SDET Framework - Environment Setup Guide
+# Day-1 Test Framework - Environment Setup Guide
 
 ##  Overview
 
-This guide provides comprehensive instructions for setting up and configuring all testing environments in the Netskope SDET Framework, from local development to production validation.
+This guide provides comprehensive instructions for setting up and configuring all testing environments in the Day-1 Test Framework, from local development to production validation.
 
 ##  Environment Architecture
 
@@ -66,7 +66,7 @@ pip install -r requirements.txt
 ```bash
 # 1. Clone repository
 git clone <repository-url>
-cd netskope_sdet_framework
+cd day_one_test_framework
 
 # 2. Create virtual environment
 python -m venv .venv
@@ -90,7 +90,7 @@ TESTING_MODE: "mock"
 MOCK_MODE: true
 
 # Mock Services
-NETSKOPE_BASE_URL: "http://localhost:8080/mock-netskope"
+TARGET_API_BASE_URL: "http://localhost:8080/mock-netskope"
 API_KEY: "mock-api-key-12345"
 
 # Mock Data Sources
@@ -113,7 +113,7 @@ pytest tests/unit/ -v -m mock
 
 | Service | Endpoint | Purpose |
 |---------|----------|---------|
-| Netskope API | `localhost:8080` | Security policy simulation |
+| Target API | `localhost:8080` | Security policy simulation |
 | Redis Mock | In-memory | Caching simulation |
 | Kafka Mock | In-memory | Event streaming simulation |
 | MongoDB Mock | In-memory | Data persistence simulation |
@@ -214,7 +214,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: netskope_local
+      MONGO_INITDB_DATABASE: day1_local
     volumes:
       - mongodb_data:/data/db
       - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
@@ -281,7 +281,7 @@ MOCK_MODE: false
 # Service Endpoints
 REDIS_URL: "redis://localhost:6379"
 KAFKA_BROKERS: "localhost:9092"
-MONGODB_URL: "mongodb://admin:password@localhost:27017/netskope_local?authSource=admin"
+MONGODB_URL: "mongodb://admin:password@localhost:27017/day1_local?authSource=admin"
 AWS_ENDPOINT_URL: "http://localhost:4566"
 
 # AWS LocalStack Configuration
@@ -338,18 +338,18 @@ open http://localhost:9090  # Prometheus
 #### **Kubernetes Deployment**
 ```bash
 # 1. Create namespace
-kubectl create namespace netskope-integration
+kubectl create namespace day1-integration
 
 # 2. Deploy infrastructure services
-helm install redis bitnami/redis -n netskope-integration \
+helm install redis bitnami/redis -n day1-integration \
   --set auth.password=redis-password \
   --set master.persistence.size=10Gi
 
-helm install kafka bitnami/kafka -n netskope-integration \
+helm install kafka bitnami/kafka -n day1-integration \
   --set persistence.size=20Gi \
   --set zookeeper.persistence.size=10Gi
 
-helm install mongodb bitnami/mongodb -n netskope-integration \
+helm install mongodb bitnami/mongodb -n day1-integration \
   --set auth.rootPassword=mongo-password \
   --set persistence.size=50Gi
 
@@ -357,7 +357,7 @@ helm install mongodb bitnami/mongodb -n netskope-integration \
 kubectl apply -f k8s/integration/
 
 # 4. Verify deployment
-kubectl get pods -n netskope-integration
+kubectl get pods -n day1-integration
 ```
 
 #### **Kubernetes Manifests**
@@ -367,7 +367,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: netskope-test-runner
-  namespace: netskope-integration
+  namespace: day1-integration
 spec:
   replicas: 3
   selector:
@@ -421,7 +421,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: netskope-config
-  namespace: netskope-integration
+  namespace: day1-integration
 data:
   env.yaml: |
     TESTING_MODE: "integration"
@@ -430,10 +430,10 @@ data:
     # Service Discovery
     REDIS_URL: "redis://redis-master:6379"
     KAFKA_BROKERS: "kafka:9092"
-    MONGODB_URL: "mongodb://mongodb:27017/netskope_integration"
+    MONGODB_URL: "mongodb://mongodb:27017/day1_integration"
     
     # External Services
-    NETSKOPE_BASE_URL: "https://demo.goskope.com"
+    TARGET_API_BASE_URL: "https://demo.goskope.com"
     AWS_REGION: "us-east-1"
     
     # Performance Settings
@@ -449,7 +449,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: netskope-secrets
-  namespace: netskope-integration
+  namespace: day1-integration
 type: Opaque
 data:
   api-key: <base64-encoded-api-key>
@@ -462,16 +462,16 @@ data:
 #### **Validation**
 ```bash
 # Run E2E tests
-kubectl exec -it deployment/netskope-test-runner -n netskope-integration -- \
+kubectl exec -it deployment/netskope-test-runner -n day1-integration -- \
   pytest tests/e2e/ -v --html=reports/e2e-report.html
 
 # Check service health
-kubectl get pods -n netskope-integration
-kubectl logs -f deployment/netskope-test-runner -n netskope-integration
+kubectl get pods -n day1-integration
+kubectl logs -f deployment/netskope-test-runner -n day1-integration
 
 # Monitor resources
-kubectl top pods -n netskope-integration
-kubectl describe hpa netskope-test-runner -n netskope-integration
+kubectl top pods -n day1-integration
+kubectl describe hpa netskope-test-runner -n day1-integration
 ```
 
 ---
@@ -531,7 +531,7 @@ MONGODB_REPLICA_SET:
     - "mongo-secondary-2.staging.internal:27017"
 
 # External Services
-NETSKOPE_BASE_URL: "https://staging.goskope.com"
+TARGET_API_BASE_URL: "https://staging.goskope.com"
 AWS_REGION: "us-east-1"
 
 # Performance Configuration

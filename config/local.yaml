@@ -1,4 +1,4 @@
-# Local Environment Configuration for Netskope SDET Framework
+# Local Environment Configuration for Day-1 Test Framework
 # NOTE: Sensitive values should be set via environment variables
 
 name: "Local Development Environment"
@@ -24,12 +24,12 @@ mongodb:
   port: 27017
   username: ${MONGO_USERNAME:-admin}
   password: ${MONGO_PASSWORD:-}
-  database: "netskope_local"
+  database: "day1_local"
   ssl_enabled: false
   connection_pool_size: 10
   timeout: 30
 
-netskope_api:
+target_api:
   host: "localhost"
   port: 8080
   ssl_enabled: false

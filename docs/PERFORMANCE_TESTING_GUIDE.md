@@ -331,7 +331,7 @@ def test_load_simulation():
 docker-compose -f docker-compose.local.yml up -d
 
 # Access monitoring dashboards during tests
-open http://localhost:3000    # Grafana (admin/netskope_grafana_2024)
+open http://localhost:3000    # Grafana (admin/grafana_2024)
 open http://localhost:9090    # Prometheus
 open http://localhost:16686   # Jaeger
 ```
@@ -452,11 +452,11 @@ jobs:
 kubectl apply -f k8s/staging/
 
 # 2. Wait for deployment
-kubectl rollout status deployment/netskope-api -n netskope-staging
+kubectl rollout status deployment/target-api -n day1-staging
 
 # 3. Run comprehensive load tests
 locust -f tests/performance/locust/netskope_load_test.py \
-       --host=https://staging-api.netskope.internal \
+       --host=https://staging-api.day1.internal \
        --users=200 --spawn-rate=10 --run-time=1800s \
        --headless --csv=reports/staging_load_test
 

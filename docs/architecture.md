@@ -1,10 +1,86 @@
-# Netskope SDET Framework - Architecture Design
+# Day-1 Test Framework - Architecture Design
 
-##  Overview
+## Big-Picture Architecture
 
-The Netskope SDET (Software Development Engineer in Test) Framework is a comprehensive, multi-environment testing platform designed for cybersecurity API testing. It supports progressive complexity from mock testing to full production validation.
+```mermaid
+graph TB
+    subgraph "Test Code"
+        TC[Unit Tests]
+        TI[Integration Tests]
+        TE[E2E Tests]
+        TP[Performance Tests]
+        TS[Security Tests]
+    end
 
-##  Design Principles
+    subgraph "Service Manager"
+        SM[ServiceManager]
+        MC[Mock Clients]
+        RC[Real Clients]
+    end
+
+    subgraph "Environment Manager"
+        EM[EnvironmentManager]
+        DET[detect_environment]
+        LOAD[load_configuration]
+    end
+
+    subgraph "Infrastructure"
+        K8S[Kubernetes]
+        DC[Docker Compose]
+        MOCK[In-Memory]
+    end
+
+    subgraph "Services"
+        REDIS[(Redis)]
+        KAFKA[(Kafka)]
+        MONGO[(MongoDB)]
+        API[Target API]
+        AWS[AWS/LocalStack]
+    end
+
+    TC --> SM
+    TI --> SM
+    TE --> SM
+    TP --> SM
+    TS --> SM
+
+    SM --> MC
+    SM --> RC
+
+    EM --> DET
+    EM --> LOAD
+
+    MC --> MOCK
+    RC --> K8S
+    RC --> DC
+
+    K8S --> REDIS
+    K8S --> KAFKA
+    K8S --> MONGO
+    K8S --> API
+    K8S --> AWS
+
+    DC --> REDIS
+    DC --> KAFKA
+    DC --> MONGO
+    DC --> API
+    DC --> AWS
+
+    MOCK --> REDIS
+    MOCK --> KAFKA
+    MOCK --> MONGO
+    MOCK --> API
+
+    style TC fill:#e1f5fe
+    style EM fill:#fff3e0
+    style SM fill:#e8f5e8
+```
+
+## Overview
+
+The SDET Framework is a comprehensive, multi-environment testing platform designed for cybersecurity API testing. It supports progressive complexity from mock testing to full production validation.
+
+## Design Principles
 
 ### **1. Progressive Complexity**
 - Start simple with mocks, scale to real services
@@ -26,30 +102,7 @@ The Netskope SDET (Software Development Engineer in Test) Framework is a compreh
 - Efficient resource utilization
 - Automated cleanup and teardown
 
-##  Architecture Layers
-
-```mermaid
-# Netskope SDET Framework — Architecture (reviewed)
-
-This document has been updated to reflect the current implementation found in `src/` and the CI orchestration in `Jenkinsfile` and `docker-compose.local.yml`.
-
-**Summary of changes:**
-- Clarified environment detection behavior and precedence implemented in `src/environment_manager.py`.
-- Documented the service abstraction pattern and factories present in `src/service_manager.py` and `src/real_service_clients.py`.
-- Added explicit notes about pytest integration and automatic MongoDB logging via `src/test_result_logger.py`.
-- Captured CI behaviour implemented in `Jenkinsfile` (venv setup, docker-compose local integration, test reporting).
-- Enumerated local services from `docker-compose.local.yml` and noted healthchecks and ports.
-
-**Quick links:**
-- Environment manager: [src/environment_manager.py](src/environment_manager.py)
-- Service manager: [src/service_manager.py](src/service_manager.py)
-- Real service clients: [src/real_service_clients.py](src/real_service_clients.py)
-- Test result logger & pytest hooks: [src/test_result_logger.py](src/test_result_logger.py)
-- CLI entry: [src/cli.py](src/cli.py)
-- Jenkins pipeline: [Jenkinsfile](Jenkinsfile)
-- Local compose: [docker-compose.local.yml](docker-compose.local.yml)
-
-## Architecture highlights (implementation-level)
+## Architecture Layers
 
 **Environment detection (actual behavior)**
 - Implemented in `EnvironmentManager.detect_environment()` with this precedence:
@@ -98,7 +151,7 @@ This document has been updated to reflect the current implementation found in `s
   - Grafana: 3000
   - Jaeger: 16686
   - LocalStack: 4566
-  - Mock Netskope API (nginx): 8080
+  - Mock Target API (nginx): 8080
   - Test runner (container with code mounted)
 - Each service includes healthchecks and persistent volumes; exporters are included for Prometheus integration.
 
@@ -264,7 +317,7 @@ services:
   prometheus: prom/prometheus:v2.45.0     #  Metrics collection
   grafana: grafana/grafana:10.0.0         #  Visualization dashboards
   jaeger: jaegertracing/all-in-one:1.47   #  Distributed tracing
-  netskope-api-mock: nginx:alpine         #  Mock Netskope API
+  target-api-mock: nginx:alpine         #  Mock Target API
 ```
 
 #### **Integration Environment**  **IMPLEMENTED**
@@ -398,12 +451,12 @@ class ResultLogger:
 #### **Monitoring Integration**
 ```bash
 # Access monitoring platforms
-open http://localhost:3000    # Grafana (admin/netskope_grafana_2024)
+open http://localhost:3000    # Grafana (admin/grafana_2024)
 open http://localhost:9090    # Prometheus
 open http://localhost:16686   # Jaeger
 
 # MongoDB test analytics
-mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin"
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local?authSource=admin"
 db.test_results.find().sort({start_time: -1}).limit(10)
 ```
 

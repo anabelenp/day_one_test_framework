@@ -4,12 +4,12 @@ description: Day-1 Framework - Integration Environment Helm Chart
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
-home: https://github.com/netskope/sdet-framework
+home: https://github.com/anabelenp/day_one_test_framework/
 sources:
-  - https://github.com/netskope/sdet-framework
+  - https://github.com/anabelenp/day_one_test_framework/
 maintainers:
   - name: Day-1 Team
-    email: sdet-team@netskope.com
+    email: dev@thinkastra.com
 keywords:
   - netskope
   - sdet

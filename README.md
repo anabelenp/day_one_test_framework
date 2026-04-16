@@ -16,7 +16,7 @@ cd day_one_test_framework
 
 python -m venv .venv && source .venv/bin/activate
 
-pip install -e .                 # registers the netskope-sdet CLI command
+pip install -e .                 # registers the day1-sdet CLI command
 pip install -r requirements.txt
 ```
 
@@ -25,7 +25,7 @@ Verify:
 python -c "from src.environment_manager import get_current_environment; print(get_current_environment().value)"
 ```
 
-> `netskope-sdet <cmd>` and `python src/cli.py <cmd>` are equivalent. Use `python src/cli.py` if the package is not installed.
+> `day1-sdet <cmd>` and `python src/cli.py <cmd>` are equivalent. Use `python src/cli.py` if the package is not installed.
 
 ## Run Tests
 
@@ -67,8 +67,8 @@ Markers (`pytest.ini`): `unit`, `integration`, `e2e`, `performance`, `security`,
 Switch environment:
 ```bash
 export TESTING_MODE=mock          # or local / integration / staging / production
-netskope-sdet env detect          # confirm what was detected
-netskope-sdet env validate        # check config completeness + TCP connectivity
+day1-sdet env detect          # confirm what was detected
+day1-sdet env validate        # check config completeness + TCP connectivity
 ```
 
 ## Local Environment (Docker Compose)
@@ -81,10 +81,10 @@ docker-compose -f docker-compose.local.yml up -d
 
 # Check services are healthy
 docker-compose -f docker-compose.local.yml ps
-TESTING_MODE=local netskope-sdet services health
+TESTING_MODE=local day1-sdet services health
 
-# Run integration tests
-TESTING_MODE=local pytest tests/integration/ -v -x
+# Run local integration tests (requires Docker Compose)
+TESTING_MODE=local pytest tests/integration/test_local_environment.py -v
 
 # Run E2E tests (auto-skip if TESTING_MODE != integration)
 TESTING_MODE=integration pytest tests/e2e/ -v
@@ -100,37 +100,37 @@ Services started:
 |---------|------|-------------|
 | Redis 7 | 6379 | — |
 | Kafka (KRaft) | 9092 | — |
-| MongoDB 6 | 27017 | admin / netskope_admin_2024 |
-| Mock Netskope API (nginx) | 8080 | — |
+| MongoDB 6 | 27017 | admin / admin_2024 |
+| Mock Target API (nginx) | 8080 | — |
 | LocalStack (AWS) | 4566 | — |
 | Prometheus | 9090 | — |
-| Grafana | 3000 | admin / netskope_grafana_2024 |
+| Grafana | 3000 | admin / grafana_2024 |
 | Jaeger | 16686 | — |
 
 ## Kubernetes Environments
 
 ```bash
 # Integration
-netskope-sdet integration deploy
-netskope-sdet integration status
+day1-sdet integration deploy
+day1-sdet integration status
 TESTING_MODE=integration pytest tests/e2e/ -v
-netskope-sdet integration undeploy
+day1-sdet integration undeploy
 
 # Staging (HA)
-netskope-sdet staging deploy
-netskope-sdet staging test --test-type load
-netskope-sdet staging undeploy
+day1-sdet staging deploy
+day1-sdet staging test --test-type load
+day1-sdet staging undeploy
 
 # Production (read-only)
-netskope-sdet production health-check
-netskope-sdet production monitor --interval 300
-netskope-sdet production report --output health.json
+day1-sdet production health-check
+day1-sdet production monitor --interval 300
+day1-sdet production report --output health.json
 ```
 
 Port-forward services from K8s to localhost:
 ```bash
-kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000
-kubectl port-forward -n netskope-integration svc/prometheus-service 9090:9090
+kubectl port-forward -n day1-integration svc/grafana-service 3000:3000
+kubectl port-forward -n day1-integration svc/prometheus-service 9090:9090
 ```
 
 ## Performance Tests
@@ -166,7 +166,7 @@ pytest tests/ --cov=src --cov-report=html
 All `pytest` runs automatically log results to MongoDB (`test_results` and `test_sessions` collections) when MongoDB is reachable; silently skipped otherwise.
 
 ```bash
-mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin"
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local?authSource=admin"
 
 # Recent failures
 db.test_results.find({status: "failed"}).sort({start_time: -1}).limit(10)
@@ -181,14 +181,14 @@ db.test_sessions.find().sort({timestamp: -1}).limit(5)
 ## CLI Reference
 
 ```bash
-netskope-sdet env detect|info|validate|list|set
-netskope-sdet services health|info|test <cache|message|database|api>
-netskope-sdet local start|stop|restart|status
-netskope-sdet integration deploy|status|test|undeploy
-netskope-sdet staging deploy|status|test|undeploy
-netskope-sdet production health-check|monitor|report
-netskope-sdet test <unit|integration|e2e|security|performance> [-e <env>] [--html-report] [--coverage] [--markers "<expr>"]
-netskope-sdet version
+day1-sdet env detect|info|validate|list|set
+day1-sdet services health|info|test <cache|message|database|api>
+day1-sdet local start|stop|restart|status
+day1-sdet integration deploy|status|test|undeploy
+day1-sdet staging deploy|status|test|undeploy
+day1-sdet production health-check|monitor|report
+day1-sdet test <unit|integration|e2e|security|performance> [-e <env>] [--html-report] [--coverage] [--markers "<expr>"]
+day1-sdet version
 ```
 
 ## CI/CD
@@ -241,4 +241,6 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for additional scenarios.
 | [CI_CD_INTEGRATION_GUIDE.md](docs/CI_CD_INTEGRATION_GUIDE.md) | GitHub Actions and Jenkins setup |
 | [MONITORING_AND_REPORTS_GUIDE.md](docs/MONITORING_AND_REPORTS_GUIDE.md) | Prometheus, Grafana, Jaeger |
 | [TEST_MONITORING_MONGODB.md](docs/TEST_MONITORING_MONGODB.md) | Test result analytics queries |
+| [REPORTING.md](docs/REPORTING.md) | HTML, coverage, JUnit, MongoDB test reports |
+| [TUTORIAL.md](docs/TUTORIAL.md) | Comprehensive framework tutorial |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and fixes |

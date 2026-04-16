@@ -250,7 +250,7 @@ class TestSSLSettings:
         ):
             manager = EnvironmentManager()
             env = manager.detect_environment()
-            config = manager.get_service_config("netskope_api")
+            config = manager.get_service_config("target_api")
 
             if env.value == "production":
                 assert config.ssl_enabled is True

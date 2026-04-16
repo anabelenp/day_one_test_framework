@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Integration Environment (E3) provides a production-like Kubernetes-based environment for comprehensive end-to-end testing of the Netskope SDET Framework. This environment includes all services running in a distributed, scalable configuration with full monitoring and observability.
+The Integration Environment (E3) provides a production-like Kubernetes-based environment for comprehensive end-to-end testing of the Day-1 Test Framework. This environment includes all services running in a distributed, scalable configuration with full monitoring and observability.
 
 ## Architecture
 
@@ -69,7 +69,7 @@ kubectl cluster-info
 kubectl top nodes
 
 # Verify permissions
-kubectl auth can-i create deployments --namespace=netskope-integration
+kubectl auth can-i create deployments --namespace=day1-integration
 ```
 
 ## Quick Start Deployment
@@ -79,36 +79,36 @@ kubectl auth can-i create deployments --namespace=netskope-integration
 ```bash
 # Clone the repository
 git clone <repo_url>
-cd netskope_sdet_framework
+cd day_one_test_framework
 
 # Deploy the complete integration environment
 python scripts/deploy_integration.py --action deploy
 
 # Or use the CLI
-netskope-sdet integration deploy
+day1-sdet integration deploy
 ```
 
 ### 2. Verify Deployment
 
 ```bash
 # Check deployment status
-netskope-sdet integration status
+day1-sdet integration status
 
 # Run health checks
-netskope-sdet integration health-check
+day1-sdet integration health-check
 
 # View service logs
-netskope-sdet integration logs --service redis
+day1-sdet integration logs --service redis
 ```
 
 ### 3. Access Services
 
 ```bash
 # Port forward to access services locally
-kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000 &
-kubectl port-forward -n netskope-integration svc/prometheus-service 9090:9090 &
-kubectl port-forward -n netskope-integration svc/jaeger-service 16686:16686 &
-kubectl port-forward -n netskope-integration svc/mock-api-service 8080:8080 &
+kubectl port-forward -n day1-integration svc/grafana-service 3000:3000 &
+kubectl port-forward -n day1-integration svc/prometheus-service 9090:9090 &
+kubectl port-forward -n day1-integration svc/jaeger-service 16686:16686 &
+kubectl port-forward -n day1-integration svc/mock-api-service 8080:8080 &
 
 # Access URLs
 # Grafana: http://localhost:3000 (admin/integration-grafana-2024)
@@ -121,13 +121,13 @@ kubectl port-forward -n netskope-integration svc/mock-api-service 8080:8080 &
 
 ```bash
 # Run integration tests
-netskope-sdet integration test --test-type integration
+day1-sdet integration test --test-type integration
 
 # Run E2E tests
-netskope-sdet integration test --test-type e2e
+day1-sdet integration test --test-type e2e
 
 # Run all tests
-netskope-sdet integration test
+day1-sdet integration test
 ```
 
 ## Detailed Deployment Options
@@ -155,37 +155,37 @@ python scripts/deploy_integration.py --action undeploy
 
 ```bash
 # Deploy with default settings
-netskope-sdet integration deploy
+day1-sdet integration deploy
 
 # Deploy with custom namespace
-netskope-sdet integration deploy --namespace my-integration-env
+day1-sdet integration deploy --namespace my-integration-env
 
 # Check status
-netskope-sdet integration status
+day1-sdet integration status
 
 # View logs
-netskope-sdet integration logs --follow
+day1-sdet integration logs --follow
 
 # Remove environment
-netskope-sdet integration undeploy
+day1-sdet integration undeploy
 ```
 
 ### Option 3: Using Helm Charts
 
 ```bash
 # Install using Helm
-helm install netskope-integration ./helm/netskope-sdet \
-  --namespace netskope-integration \
+helm install day1-integration ./helm/day1-sdet \
+  --namespace day1-integration \
   --create-namespace \
-  --values ./helm/netskope-sdet/values-integration.yaml
+  --values ./helm/day1-sdet/values-integration.yaml
 
 # Upgrade deployment
-helm upgrade netskope-integration ./helm/netskope-sdet \
-  --namespace netskope-integration \
-  --values ./helm/netskope-sdet/values-integration.yaml
+helm upgrade day1-integration ./helm/day1-sdet \
+  --namespace day1-integration \
+  --values ./helm/day1-sdet/values-integration.yaml
 
 # Uninstall
-helm uninstall netskope-integration --namespace netskope-integration
+helm uninstall day1-integration --namespace day1-integration
 ```
 
 ### Option 4: Manual kubectl Deployment
@@ -201,7 +201,7 @@ kubectl apply -f k8s/integration/monitoring-stack.yaml
 kubectl apply -f k8s/integration/test-runner-job.yaml
 
 # Check deployment
-kubectl get all -n netskope-integration
+kubectl get all -n day1-integration
 ```
 
 ## Configuration
@@ -216,15 +216,15 @@ ENVIRONMENT: integration
 MOCK_MODE: false
 
 # Service endpoints (Kubernetes DNS)
-REDIS_HOST: redis-service.netskope-integration.svc.cluster.local
-KAFKA_BOOTSTRAP_SERVERS: kafka-service.netskope-integration.svc.cluster.local:9092
-MONGODB_HOST: mongodb-service.netskope-integration.svc.cluster.local
-NETSKOPE_BASE_URL: http://mock-api-service.netskope-integration.svc.cluster.local:8080
+REDIS_HOST: redis-service.day1-integration.svc.cluster.local
+KAFKA_BOOTSTRAP_SERVERS: kafka-service.day1-integration.svc.cluster.local:9092
+MONGODB_HOST: mongodb-service.day1-integration.svc.cluster.local
+TARGET_API_BASE_URL: http://mock-api-service.day1-integration.svc.cluster.local:8080
 
 # Monitoring
-PROMETHEUS_URL: http://prometheus-service.netskope-integration.svc.cluster.local:9090
-GRAFANA_URL: http://grafana-service.netskope-integration.svc.cluster.local:3000
-JAEGER_URL: http://jaeger-service.netskope-integration.svc.cluster.local:16686
+PROMETHEUS_URL: http://prometheus-service.day1-integration.svc.cluster.local:9090
+GRAFANA_URL: http://grafana-service.day1-integration.svc.cluster.local:3000
+JAEGER_URL: http://jaeger-service.day1-integration.svc.cluster.local:16686
 ```
 
 ### Resource Allocation
@@ -260,7 +260,7 @@ Access Grafana at `http://localhost:3000` (after port forwarding):
 - **Password**: integration-grafana-2024
 
 Available dashboards:
-- **Netskope SDET Overview**: System health and test metrics
+- **Day-1 SDET Overview**: System health and test metrics
 - **Redis Metrics**: Cache performance and usage
 - **Kafka Metrics**: Message throughput and lag
 - **MongoDB Metrics**: Database performance
@@ -295,17 +295,17 @@ Access Jaeger at `http://localhost:16686`:
 
 ```bash
 # Run specific test type
-netskope-sdet integration test --test-type integration
+day1-sdet integration test --test-type integration
 
 # Run with custom parameters
 kubectl create job test-custom --from=cronjob/scheduled-integration-tests \
-  -n netskope-integration
+  -n day1-integration
 
 # Monitor test execution
-kubectl logs -n netskope-integration job/test-custom -f
+kubectl logs -n day1-integration job/test-custom -f
 
 # Get test results
-kubectl cp netskope-integration/test-custom-pod:/app/reports ./test-reports
+kubectl cp day1-integration/test-custom-pod:/app/reports ./test-reports
 ```
 
 ### Scheduled Tests
@@ -322,20 +322,20 @@ Tests run automatically on schedule:
 
 ```bash
 # Check pod status
-kubectl get pods -n netskope-integration
+kubectl get pods -n day1-integration
 
 # Describe problematic pod
-kubectl describe pod <pod-name> -n netskope-integration
+kubectl describe pod <pod-name> -n day1-integration
 
 # Check logs
-kubectl logs <pod-name> -n netskope-integration
+kubectl logs <pod-name> -n day1-integration
 ```
 
 #### 2. Service Connectivity Issues
 
 ```bash
 # Test service connectivity
-kubectl run test-pod --image=curlimages/curl -n netskope-integration --rm -it -- sh
+kubectl run test-pod --image=curlimages/curl -n day1-integration --rm -it -- sh
 
 # Inside the pod, test services:
 curl redis-service:6379
@@ -351,10 +351,10 @@ curl mock-api-service:8080/health
 kubectl top nodes
 
 # Check pod resources
-kubectl top pods -n netskope-integration
+kubectl top pods -n day1-integration
 
 # Describe resource quotas
-kubectl describe resourcequota -n netskope-integration
+kubectl describe resourcequota -n day1-integration
 ```
 
 #### 4. Storage Issues
@@ -364,34 +364,34 @@ kubectl describe resourcequota -n netskope-integration
 kubectl get pv
 
 # Check persistent volume claims
-kubectl get pvc -n netskope-integration
+kubectl get pvc -n day1-integration
 
 # Describe storage issues
-kubectl describe pvc <pvc-name> -n netskope-integration
+kubectl describe pvc <pvc-name> -n day1-integration
 ```
 
 ### Health Checks
 
 ```bash
 # Run comprehensive health check
-netskope-sdet integration health-check
+day1-sdet integration health-check
 
 # Check individual services
-kubectl exec -n netskope-integration deployment/redis-cluster -- redis-cli ping
-kubectl exec -n netskope-integration deployment/mongodb-replica -- mongosh --eval "db.adminCommand('ping')"
+kubectl exec -n day1-integration deployment/redis-cluster -- redis-cli ping
+kubectl exec -n day1-integration deployment/mongodb-replica -- mongosh --eval "db.adminCommand('ping')"
 ```
 
 ### Log Analysis
 
 ```bash
 # View all logs
-kubectl logs -n netskope-integration -l environment=integration --tail=100
+kubectl logs -n day1-integration -l environment=integration --tail=100
 
 # Follow specific service logs
-netskope-sdet integration logs --service redis --follow
+day1-sdet integration logs --service redis --follow
 
 # Export logs for analysis
-kubectl logs -n netskope-integration -l app=kafka > kafka-logs.txt
+kubectl logs -n day1-integration -l app=kafka > kafka-logs.txt
 ```
 
 ## Scaling and Performance
@@ -400,13 +400,13 @@ kubectl logs -n netskope-integration -l app=kafka > kafka-logs.txt
 
 ```bash
 # Scale Redis cluster
-kubectl scale statefulset redis-cluster --replicas=5 -n netskope-integration
+kubectl scale statefulset redis-cluster --replicas=5 -n day1-integration
 
 # Scale Kafka cluster
-kubectl scale statefulset kafka-cluster --replicas=5 -n netskope-integration
+kubectl scale statefulset kafka-cluster --replicas=5 -n day1-integration
 
 # Scale Mock API
-kubectl scale deployment mock-api-service --replicas=4 -n netskope-integration
+kubectl scale deployment mock-api-service --replicas=4 -n day1-integration
 ```
 
 ### Vertical Scaling
@@ -459,17 +459,17 @@ Sensitive data is stored in Kubernetes secrets:
 
 ```bash
 # Backup MongoDB data
-kubectl exec -n netskope-integration mongodb-replica-0 -- mongodump --out /tmp/backup
+kubectl exec -n day1-integration mongodb-replica-0 -- mongodump --out /tmp/backup
 
 # Backup Redis data
-kubectl exec -n netskope-integration redis-cluster-0 -- redis-cli BGSAVE
+kubectl exec -n day1-integration redis-cluster-0 -- redis-cli BGSAVE
 ```
 
 ### Configuration Backup
 
 ```bash
 # Export all configurations
-kubectl get all,configmaps,secrets -n netskope-integration -o yaml > integration-backup.yaml
+kubectl get all,configmaps,secrets -n day1-integration -o yaml > integration-backup.yaml
 ```
 
 ## Cleanup
@@ -478,16 +478,16 @@ kubectl get all,configmaps,secrets -n netskope-integration -o yaml > integration
 
 ```bash
 # Using CLI
-netskope-sdet integration undeploy
+day1-sdet integration undeploy
 
 # Using script
 python scripts/deploy_integration.py --action undeploy
 
 # Using kubectl
-kubectl delete namespace netskope-integration
+kubectl delete namespace day1-integration
 
 # Using Helm
-helm uninstall netskope-integration --namespace netskope-integration
+helm uninstall day1-integration --namespace day1-integration
 ```
 
 ## Advanced Configuration
@@ -498,14 +498,14 @@ Build and use custom images:
 
 ```bash
 # Build integration test runner image
-docker build -f Dockerfile.integration -t netskope-sdet:integration .
+docker build -f Dockerfile.integration -t day1-sdet:integration .
 
 # Push to registry
-docker tag netskope-sdet:integration your-registry/netskope-sdet:integration
-docker push your-registry/netskope-sdet:integration
+docker tag day1-sdet:integration your-registry/day1-sdet:integration
+docker push your-registry/day1-sdet:integration
 
 # Update deployment to use custom image
-kubectl set image deployment/test-runner-deployment test-runner=your-registry/netskope-sdet:integration -n netskope-integration
+kubectl set image deployment/test-runner-deployment test-runner=your-registry/day1-sdet:integration -n day1-integration
 ```
 
 ### Environment Customization
@@ -517,7 +517,7 @@ Create custom configuration files:
 cp config/integration.yaml config/my-integration.yaml
 
 # Update deployment to use custom config
-kubectl create configmap my-integration-config --from-file=config/my-integration.yaml -n netskope-integration
+kubectl create configmap my-integration-config --from-file=config/my-integration.yaml -n day1-integration
 ```
 
 ### Multi-Environment Setup
@@ -526,9 +526,9 @@ Deploy multiple integration environments:
 
 ```bash
 # Deploy to different namespaces
-netskope-sdet integration deploy --namespace integration-dev
-netskope-sdet integration deploy --namespace integration-staging
-netskope-sdet integration deploy --namespace integration-prod
+day1-sdet integration deploy --namespace integration-dev
+day1-sdet integration deploy --namespace integration-staging
+day1-sdet integration deploy --namespace integration-prod
 ```
 
 ## Support and Troubleshooting

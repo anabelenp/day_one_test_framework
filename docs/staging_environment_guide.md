@@ -116,13 +116,13 @@ kubectl get storageclass fast-ssd
 python scripts/deploy_staging.py --action deploy
 
 # Or use CLI
-netskope-sdet staging deploy
+day1-sdet staging deploy
 
 # Check deployment status
-netskope-sdet staging status
+day1-sdet staging status
 
 # Run health checks
-netskope-sdet staging health-check
+day1-sdet staging health-check
 ```
 
 ### Detailed Deployment Steps
@@ -137,7 +137,7 @@ kubectl cluster-info
 kubectl top nodes
 
 # Verify RBAC permissions
-kubectl auth can-i create deployments --namespace=netskope-staging
+kubectl auth can-i create deployments --namespace=day1-staging
 
 # Check storage classes
 kubectl get storageclass
@@ -163,26 +163,26 @@ python scripts/deploy_staging.py --confirm
 
 ```bash
 # Watch pod creation
-kubectl get pods -n netskope-staging -w
+kubectl get pods -n day1-staging -w
 
 # Check service status
-kubectl get services -n netskope-staging
+kubectl get services -n day1-staging
 
 # View deployment logs
-kubectl logs -n netskope-staging -l environment=staging --tail=100
+kubectl logs -n day1-staging -l environment=staging --tail=100
 ```
 
 #### 4. Verify Deployment
 
 ```bash
 # Run comprehensive health checks
-netskope-sdet staging health-check
+day1-sdet staging health-check
 
 # Check all pods are running
-kubectl get pods -n netskope-staging
+kubectl get pods -n day1-staging
 
 # Verify services are accessible
-kubectl get svc -n netskope-staging
+kubectl get svc -n day1-staging
 ```
 
 ## Configuration
@@ -196,11 +196,11 @@ ENVIRONMENT: staging
 MOCK_MODE: false
 
 # HA Service Endpoints
-REDIS_HOST: redis-ha-service.netskope-staging.svc.cluster.local
+REDIS_HOST: redis-ha-service.day1-staging.svc.cluster.local
 REDIS_SENTINEL_HOSTS: redis-sentinel-service:26379
 KAFKA_BOOTSTRAP_SERVERS: kafka-ha-service:9092
 KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
-MONGODB_HOST: mongodb-ha-service.netskope-staging.svc.cluster.local
+MONGODB_HOST: mongodb-ha-service.day1-staging.svc.cluster.local
 MONGODB_REPLICA_SET: rs0
 
 # Enhanced Security
@@ -236,10 +236,10 @@ Staging uses secure, auto-generated secrets:
 
 ```bash
 # View secrets (without decoding)
-kubectl get secrets -n netskope-staging
+kubectl get secrets -n day1-staging
 
 # Decode a secret (example)
-kubectl get secret redis-ha-secret -n netskope-staging -o jsonpath='{.data.password}' | base64 --decode
+kubectl get secret redis-ha-secret -n day1-staging -o jsonpath='{.data.password}' | base64 --decode
 ```
 
 #### Network Policies
@@ -248,10 +248,10 @@ Network policies restrict traffic between pods:
 
 ```bash
 # View network policies
-kubectl get networkpolicies -n netskope-staging
+kubectl get networkpolicies -n day1-staging
 
 # Describe network policy
-kubectl describe networkpolicy staging-network-policy -n netskope-staging
+kubectl describe networkpolicy staging-network-policy -n day1-staging
 ```
 
 ## Access and Usage
@@ -262,19 +262,19 @@ kubectl describe networkpolicy staging-network-policy -n netskope-staging
 
 ```bash
 # Grafana HA Dashboard
-kubectl port-forward -n netskope-staging svc/grafana-ha-service 3000:3000
+kubectl port-forward -n day1-staging svc/grafana-ha-service 3000:3000
 
 # Prometheus HA
-kubectl port-forward -n netskope-staging svc/prometheus-ha-service 9090:9090
+kubectl port-forward -n day1-staging svc/prometheus-ha-service 9090:9090
 
 # Staging API
-kubectl port-forward -n netskope-staging svc/staging-api-service 8080:8080
+kubectl port-forward -n day1-staging svc/staging-api-service 8080:8080
 
 # Redis HA Master
-kubectl port-forward -n netskope-staging svc/redis-ha-service 6379:6379
+kubectl port-forward -n day1-staging svc/redis-ha-service 6379:6379
 
 # MongoDB HA Primary
-kubectl port-forward -n netskope-staging svc/mongodb-ha-service 27017:27017
+kubectl port-forward -n day1-staging svc/mongodb-ha-service 27017:27017
 ```
 
 #### Service URLs (after port forwarding)
@@ -289,19 +289,19 @@ kubectl port-forward -n netskope-staging svc/mongodb-ha-service 27017:27017
 
 ```bash
 # Run integration tests
-netskope-sdet staging test --test-type integration
+day1-sdet staging test --test-type integration
 
 # Run E2E tests
-netskope-sdet staging test --test-type e2e
+day1-sdet staging test --test-type e2e
 
 # Run security tests
-netskope-sdet staging test --test-type security
+day1-sdet staging test --test-type security
 
 # Run load tests
-netskope-sdet staging test --test-type load
+day1-sdet staging test --test-type load
 
 # Run all tests
-netskope-sdet staging test
+day1-sdet staging test
 ```
 
 ### Monitoring and Observability
@@ -324,13 +324,13 @@ Access Prometheus at http://localhost:9090:
 
 ```bash
 # View all staging logs
-kubectl logs -n netskope-staging -l environment=staging --tail=100
+kubectl logs -n day1-staging -l environment=staging --tail=100
 
 # View specific service logs
-netskope-sdet staging logs --service redis-ha --follow
+day1-sdet staging logs --service redis-ha --follow
 
 # View logs for all pods
-kubectl logs -n netskope-staging --all-containers=true --tail=100
+kubectl logs -n day1-staging --all-containers=true --tail=100
 ```
 
 ## High Availability Features
@@ -362,13 +362,13 @@ kubectl logs -n netskope-staging --all-containers=true --tail=100
 
 ```bash
 # View backup CronJob
-kubectl get cronjob mongodb-backup -n netskope-staging
+kubectl get cronjob mongodb-backup -n day1-staging
 
 # Manually trigger backup
-kubectl create job --from=cronjob/mongodb-backup manual-backup-$(date +%Y%m%d) -n netskope-staging
+kubectl create job --from=cronjob/mongodb-backup manual-backup-$(date +%Y%m%d) -n day1-staging
 
 # View backup logs
-kubectl logs -n netskope-staging job/manual-backup-<date>
+kubectl logs -n day1-staging job/manual-backup-<date>
 ```
 
 ### Backup Schedule
@@ -383,10 +383,10 @@ kubectl logs -n netskope-staging job/manual-backup-<date>
 
 ```bash
 # List available backups
-kubectl exec -n netskope-staging mongodb-ha-cluster-0 -- ls -la /backup
+kubectl exec -n day1-staging mongodb-ha-cluster-0 -- ls -la /backup
 
 # Restore from backup
-kubectl exec -n netskope-staging mongodb-ha-cluster-0 -- mongorestore --uri="mongodb://..." /backup/mongodb_backup_<date>
+kubectl exec -n day1-staging mongodb-ha-cluster-0 -- mongorestore --uri="mongodb://..." /backup/mongodb_backup_<date>
 ```
 
 ## Troubleshooting
@@ -397,23 +397,23 @@ kubectl exec -n netskope-staging mongodb-ha-cluster-0 -- mongorestore --uri="mon
 
 ```bash
 # Check pod status
-kubectl get pods -n netskope-staging
+kubectl get pods -n day1-staging
 
 # Describe problematic pod
-kubectl describe pod <pod-name> -n netskope-staging
+kubectl describe pod <pod-name> -n day1-staging
 
 # Check events
-kubectl get events -n netskope-staging --sort-by='.lastTimestamp'
+kubectl get events -n day1-staging --sort-by='.lastTimestamp'
 ```
 
 #### 2. Service Connectivity Issues
 
 ```bash
 # Test service DNS resolution
-kubectl run test-dns --image=busybox -n netskope-staging --rm -it -- nslookup redis-ha-service
+kubectl run test-dns --image=busybox -n day1-staging --rm -it -- nslookup redis-ha-service
 
 # Test service connectivity
-kubectl run test-conn --image=curlimages/curl -n netskope-staging --rm -it -- curl -v redis-ha-service:6379
+kubectl run test-conn --image=curlimages/curl -n day1-staging --rm -it -- curl -v redis-ha-service:6379
 ```
 
 #### 3. Resource Constraints
@@ -423,20 +423,20 @@ kubectl run test-conn --image=curlimages/curl -n netskope-staging --rm -it -- cu
 kubectl top nodes
 
 # Check pod resources
-kubectl top pods -n netskope-staging
+kubectl top pods -n day1-staging
 
 # Check resource quotas
-kubectl describe resourcequota -n netskope-staging
+kubectl describe resourcequota -n day1-staging
 ```
 
 #### 4. Storage Issues
 
 ```bash
 # Check PVCs
-kubectl get pvc -n netskope-staging
+kubectl get pvc -n day1-staging
 
 # Describe PVC
-kubectl describe pvc <pvc-name> -n netskope-staging
+kubectl describe pvc <pvc-name> -n day1-staging
 
 # Check storage class
 kubectl get storageclass fast-ssd
@@ -446,12 +446,12 @@ kubectl get storageclass fast-ssd
 
 ```bash
 # Comprehensive health check
-netskope-sdet staging health-check
+day1-sdet staging health-check
 
 # Check individual services
-kubectl exec -n netskope-staging redis-ha-master-0 -- redis-cli -a <password> ping
-kubectl exec -n netskope-staging mongodb-ha-cluster-0 -- mongosh --eval "rs.status()"
-kubectl exec -n netskope-staging kafka-ha-cluster-0 -- kafka-broker-api-versions --bootstrap-server localhost:9093
+kubectl exec -n day1-staging redis-ha-master-0 -- redis-cli -a <password> ping
+kubectl exec -n day1-staging mongodb-ha-cluster-0 -- mongosh --eval "rs.status()"
+kubectl exec -n day1-staging kafka-ha-cluster-0 -- kafka-broker-api-versions --bootstrap-server localhost:9093
 ```
 
 ## Scaling
@@ -460,16 +460,16 @@ kubectl exec -n netskope-staging kafka-ha-cluster-0 -- kafka-broker-api-versions
 
 ```bash
 # Scale Redis replicas
-kubectl scale statefulset redis-ha-replica --replicas=3 -n netskope-staging
+kubectl scale statefulset redis-ha-replica --replicas=3 -n day1-staging
 
 # Scale Kafka brokers
-kubectl scale statefulset kafka-ha-cluster --replicas=7 -n netskope-staging
+kubectl scale statefulset kafka-ha-cluster --replicas=7 -n day1-staging
 
 # Scale MongoDB replica set
-kubectl scale statefulset mongodb-ha-cluster --replicas=7 -n netskope-staging
+kubectl scale statefulset mongodb-ha-cluster --replicas=7 -n day1-staging
 
 # Scale API service
-kubectl scale deployment staging-api-service --replicas=5 -n netskope-staging
+kubectl scale deployment staging-api-service --replicas=5 -n day1-staging
 ```
 
 ### Vertical Scaling
@@ -486,23 +486,23 @@ kubectl apply -f k8s/staging/<updated-manifest>.yaml
 
 ```bash
 # Using CLI (with confirmation)
-netskope-sdet staging undeploy
+day1-sdet staging undeploy
 
 # Using script
 python scripts/deploy_staging.py --action undeploy
 
 # Using kubectl (immediate deletion)
-kubectl delete namespace netskope-staging
+kubectl delete namespace day1-staging
 ```
 
 ### Backup Before Deletion
 
 ```bash
 # Backup all configurations
-kubectl get all,configmaps,secrets,pvc -n netskope-staging -o yaml > staging-backup.yaml
+kubectl get all,configmaps,secrets,pvc -n day1-staging -o yaml > staging-backup.yaml
 
 # Backup data
-kubectl create job --from=cronjob/mongodb-backup final-backup -n netskope-staging
+kubectl create job --from=cronjob/mongodb-backup final-backup -n day1-staging
 ```
 
 ## Best Practices
@@ -540,9 +540,9 @@ kubectl create job --from=cronjob/mongodb-backup final-backup -n netskope-stagin
 ## Support
 
 For issues or questions:
-1. Check logs: `netskope-sdet staging logs`
-2. Run health checks: `netskope-sdet staging health-check`
-3. Check status: `netskope-sdet staging status`
+1. Check logs: `day1-sdet staging logs`
+2. Run health checks: `day1-sdet staging health-check`
+3. Check status: `day1-sdet staging status`
 4. Review documentation: `docs/staging_environment_guide.md`
 
 ---

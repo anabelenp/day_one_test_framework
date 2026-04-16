@@ -98,13 +98,15 @@ class TestCmdEnvironment:
     def test_environment_validate_failure(self):
         """Test environment validation failure"""
         from src.cli import cmd_environment
+        from src.environment_manager import reset_environment_manager
         from argparse import Namespace
 
-        with patch("src.cli.EnvironmentManager") as mock_manager:
+        reset_environment_manager()
+        with patch("src.cli.get_environment_manager") as mock_get_manager:
             mock_instance = MagicMock()
             mock_instance.validate_environment.return_value = False
             mock_instance.get_current_environment.return_value = MagicMock(value="mock")
-            mock_manager.return_value = mock_instance
+            mock_get_manager.return_value = mock_instance
 
             args = Namespace(env_action="validate", environment=None)
 

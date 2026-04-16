@@ -182,9 +182,9 @@ class TestEnvironmentManager:
             mock_config.mongodb.host = "localhost"
             mock_config.mongodb.port = 27017
             mock_config.mongodb.database = "test"
-            mock_config.netskope_api.host = "localhost"
-            mock_config.netskope_api.port = 8080
-            mock_config.netskope_api.ssl_enabled = False
+            mock_config.target_api.host = "localhost"
+            mock_config.target_api.port = 8080
+            mock_config.target_api.ssl_enabled = False
             mock_config.aws_config = {}
             mock_config.monitoring = {}
             mock_config.security = {}
@@ -206,7 +206,7 @@ class TestEnvironmentManager:
             mock_config.redis = ServiceConfig(host="redis.local", port=6379)
             mock_config.kafka = MagicMock()
             mock_config.mongodb = MagicMock()
-            mock_config.netskope_api = MagicMock()
+            mock_config.target_api = MagicMock()
             mock_load.return_value = mock_config
 
             config = self.manager.get_service_config("redis")
@@ -292,7 +292,7 @@ class TestEnvironmentManager:
         valid_config.redis = True
         valid_config.kafka = True
         valid_config.mongodb = True
-        valid_config.netskope_api = True
+        valid_config.target_api = True
 
         result = self.manager._validate_config_completeness(valid_config)
         assert result is True

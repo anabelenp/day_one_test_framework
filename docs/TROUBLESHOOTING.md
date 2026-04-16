@@ -1,4 +1,4 @@
-# Netskope SDET Framework - Troubleshooting Guide
+# Day-1 Test Framework - Troubleshooting Guide
 
 ##  Common Issues and Solutions
 
@@ -80,13 +80,13 @@ docker-compose -f docker-compose.local.yml ps
 grep -A 5 "mongodb:" config/local.yaml
 grep -A 5 "MONGO_INITDB" docker-compose.local.yml
 
-# Should match: admin/netskope_admin_2024
+# Should match: admin/admin_2024
 ```
 
 **Solution 3**: Check for missing services
 ```bash
 # Ensure Mock API service is running
-docker-compose -f docker-compose.local.yml up -d netskope-api-mock
+docker-compose -f docker-compose.local.yml up -d target-api-mock
 
 # Test Mock API
 curl http://localhost:8080/health
@@ -111,7 +111,7 @@ python src/cli.py services health
 #### **Problem**: LocalStack keeps restarting
 ```bash
 docker-compose -f docker-compose.local.yml ps
-# Shows: netskope-localstack ... Restarting (1) 55 seconds ago
+# Shows: day1-localstack ... Restarting (1) 55 seconds ago
 ```
 
 **Solution**: Check LocalStack logs and fix volume issues
@@ -133,8 +133,8 @@ docker ps | grep zookeeper
 **Solution**: Clean up old containers
 ```bash
 # Stop and remove old Zookeeper
-docker stop netskope-zookeeper
-docker rm netskope-zookeeper
+docker stop day1-zookeeper
+docker rm day1-zookeeper
 
 # Restart with clean KRaft setup
 docker-compose -f docker-compose.local.yml down
@@ -154,8 +154,8 @@ mongodb:
   host: "localhost"
   port: 27017
   username: "admin"  # Must match Docker Compose
-  password: "netskope_admin_2024"  # Must match Docker Compose
-  database: "netskope_local"
+  password: "admin_2024"  # Must match Docker Compose
+  database: "day1_local"
 ```
 
 #### **Problem**: Redis connection refused
@@ -169,7 +169,7 @@ mongodb:
 docker-compose -f docker-compose.local.yml ps redis
 
 # Check port mapping
-docker port netskope-redis
+docker port day1-redis
 # Should show: 6379/tcp -> 0.0.0.0:6379
 
 # Test Redis directly
@@ -187,7 +187,7 @@ docker-compose -f docker-compose.local.yml exec redis redis-cli ping
 **Solution**: Check Docker network and port mappings
 ```bash
 # Check Docker network
-docker network ls | grep netskope
+docker network ls | grep day1
 
 # Check port mappings for all services
 docker-compose -f docker-compose.local.yml ps --format "table {{.Name}}\t{{.Ports}}"
@@ -289,7 +289,7 @@ docker-compose -f docker-compose.local.yml logs kafka
 docker-compose -f docker-compose.local.yml logs mongodb
 
 # Check container health
-docker inspect netskope-redis | grep -A 10 "Health"
+docker inspect day1-redis | grep -A 10 "Health"
 ```
 
 ### **Network Debugging**
@@ -317,7 +317,7 @@ docker system prune -f
 docker volume prune -f
 
 # Remove any old containers
-docker ps -a | grep netskope | awk '{print $1}' | xargs docker rm -f
+docker ps -a | grep day1 | awk '{print $1}' | xargs docker rm -f
 
 # Start fresh
 docker-compose -f docker-compose.local.yml up -d
@@ -335,24 +335,10 @@ python src/cli.py services health
 ```bash
 docker-compose -f docker-compose.local.yml stop redis
 docker-compose -f docker-compose.local.yml rm -f redis
-docker volume rm netskope_day_one_test_framework_redis_data
-docker-compose -f docker-compose.local.yml up -d redis
-```
-
-#### **Kafka Recovery**
-```bash
-docker-compose -f docker-compose.local.yml stop kafka
-docker-compose -f docker-compose.local.yml rm -f kafka
-docker volume rm netskope_day_one_test_framework_kafka_data
-docker-compose -f docker-compose.local.yml up -d kafka
-```
-
-#### **MongoDB Recovery**
-```bash
-docker-compose -f docker-compose.local.yml stop mongodb
-docker-compose -f docker-compose.local.yml rm -f mongodb
-docker volume rm netskope_day_one_test_framework_mongodb_data
-docker volume rm netskope_day_one_test_framework_mongodb_config
+docker volume rm day1_test_framework_redis_data
+docker volume rm day1_test_framework_kafka_data
+docker volume rm day1_test_framework_mongodb_data
+docker volume rm day1_test_framework_mongodb_config
 docker-compose -f docker-compose.local.yml up -d mongodb
 ```
 
