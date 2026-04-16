@@ -1,5 +1,0 @@
-[console_scripts]
-netskope-env = src.environment_manager:main
-netskope-local = scripts.start_local_environment:main
-netskope-sdet = src.cli:main
-netskope-services = src.service_manager:main
