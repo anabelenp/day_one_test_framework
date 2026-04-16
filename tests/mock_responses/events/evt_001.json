@@ -1,0 +1,69 @@
+{
+  "id": "evt_single_001",
+  "type": "file_upload",
+  "severity": "low",
+  "timestamp": "2024-01-15T11:00:00Z",
+  "user": {
+    "id": "usr_001",
+    "email": "john.doe@example.com",
+    "name": "John Doe",
+    "department": "Engineering",
+    "role": "Software Engineer"
+  },
+  "device": {
+    "id": "dev_001",
+    "hostname": "workstation-01",
+    "ip_address": "192.168.1.100",
+    "os": "Windows 11",
+    "os_version": "22H2",
+    "domain": "CORP",
+    "managed": true
+  },
+  "app": {
+    "id": "app_gdrive",
+    "name": "Google Drive",
+    "category": "Cloud Storage",
+    "version": "3.0",
+    "vendor": "Google"
+  },
+  "destination": {
+    "type": "cloud",
+    "name": "Google Drive",
+    "domain": "drive.google.com",
+    "shared": true,
+    "shared_with": ["team@example.com"]
+  },
+  "file": {
+    "name": "project_spec.pdf",
+    "size": 2048576,
+    "type": "application/pdf",
+    "hash": "sha256:abc123def456...",
+    "md5": "md5:789xyz..."
+  },
+  "policy": {
+    "id": "pol_001",
+    "name": "Cloud Storage Policy",
+    "rules_matched": ["sanctioned_vendors", "file_size_limit"]
+  },
+  "action": "allowed",
+  "bytes": 2048576,
+  "classification": {
+    "level": "internal",
+    "confidence": 0.92
+  },
+  "metadata": {
+    "browser": "Chrome 120",
+    "location": {
+      "country": "United States",
+      "city": "San Francisco",
+      "latitude": 37.7749,
+      "longitude": -122.4194
+    },
+    "network": {
+      "type": "corporate_wifi",
+      "ssid": "CORP-WIFI",
+      "proxy": false,
+      "gateway": "192.168.1.1"
+    }
+  }
+}

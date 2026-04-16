@@ -50,7 +50,7 @@ class ProductionMonitoring:
         
         try:
             config = yaml.safe_load(content)
-            print("✅ Production configuration loaded")
+            print(" Production configuration loaded")
             return config
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid production config: {e}")
@@ -77,11 +77,11 @@ class ProductionMonitoring:
     
     def check_prerequisites(self) -> bool:
         """Check if monitoring prerequisites are met"""
-        print("🔍 Checking production monitoring prerequisites...")
+        print(" Checking production monitoring prerequisites...")
         
         # Check read-only mode
         if not self.config.get('READ_ONLY_MODE', False):
-            print("❌ Production config must have READ_ONLY_MODE: true")
+            print(" Production config must have READ_ONLY_MODE: true")
             return False
         
         # Check required environment variables
@@ -100,24 +100,24 @@ class ProductionMonitoring:
                 missing_vars.append(var)
         
         if missing_vars:
-            print(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
-            print("💡 Set these variables or use external secret management")
+            print(f" Missing required environment variables: {', '.join(missing_vars)}")
+            print(" Set these variables or use external secret management")
             return False
         
         # Check network connectivity
         try:
             response = requests.get('https://www.google.com', timeout=5)
-            print("✅ Network connectivity available")
+            print(" Network connectivity available")
         except requests.RequestException:
-            print("❌ No network connectivity")
+            print(" No network connectivity")
             return False
         
-        print("✅ Production monitoring prerequisites met")
+        print(" Production monitoring prerequisites met")
         return True
     
     def health_check_redis(self) -> Dict[str, Any]:
         """Health check for production Redis"""
-        print("🔍 Checking Redis production health...")
+        print(" Checking Redis production health...")
         
         try:
             import redis
@@ -164,7 +164,7 @@ class ProductionMonitoring:
     
     def health_check_kafka(self) -> Dict[str, Any]:
         """Health check for production Kafka"""
-        print("🔍 Checking Kafka production health...")
+        print(" Checking Kafka production health...")
         
         try:
             # Import kafka modules (may not be available in test environment)
@@ -225,7 +225,7 @@ class ProductionMonitoring:
     
     def health_check_mongodb(self) -> Dict[str, Any]:
         """Health check for production MongoDB"""
-        print("🔍 Checking MongoDB production health...")
+        print(" Checking MongoDB production health...")
         
         try:
             # Import pymongo (may not be available in test environment)
@@ -294,7 +294,7 @@ class ProductionMonitoring:
     
     def health_check_api(self) -> Dict[str, Any]:
         """Health check for production Netskope API"""
-        print("🔍 Checking Netskope API production health...")
+        print(" Checking Netskope API production health...")
         
         try:
             base_url = self.config['NETSKOPE_BASE_URL']
@@ -338,7 +338,7 @@ class ProductionMonitoring:
     
     def health_check_monitoring(self) -> Dict[str, Any]:
         """Health check for production monitoring services"""
-        print("🔍 Checking production monitoring services...")
+        print(" Checking production monitoring services...")
         
         monitoring_services = {
             'prometheus': self.config.get('PROMETHEUS_URL'),
@@ -384,8 +384,8 @@ class ProductionMonitoring:
     
     def run_comprehensive_health_check(self) -> Dict[str, Any]:
         """Run comprehensive health check on all production services"""
-        print("🏥 Running comprehensive production health check...")
-        print("⚠️  This is read-only monitoring - no changes will be made")
+        print(" Running comprehensive production health check...")
+        print("  This is read-only monitoring - no changes will be made")
         
         health_results = {
             'environment': 'production',
@@ -408,7 +408,7 @@ class ProductionMonitoring:
                 result = check_func()
                 health_results['services'][service_name] = result
                 
-                status_icon = "✅" if result['status'] == 'healthy' else "❌"
+                status_icon = "" if result['status'] == 'healthy' else ""
                 print(f"  {status_icon} {service_name}: {result['status']}")
                 
             except Exception as e:
@@ -417,14 +417,14 @@ class ProductionMonitoring:
                     'error': str(e),
                     'timestamp': datetime.now().isoformat()
                 }
-                print(f"  ❌ {service_name}: error - {e}")
+                print(f"   {service_name}: error - {e}")
         
         # Check monitoring services
         monitoring_results = self.health_check_monitoring()
         health_results['monitoring'] = monitoring_results
         
         for service, result in monitoring_results.items():
-            status_icon = "✅" if result.get('status') == 'healthy' else "❌"
+            status_icon = "" if result.get('status') == 'healthy' else ""
             print(f"  {status_icon} {service}: {result.get('status', 'unknown')}")
         
         # Calculate overall health
@@ -439,15 +439,15 @@ class ProductionMonitoring:
             'health_percentage': (healthy_count / total_count * 100) if total_count > 0 else 0
         }
         
-        print(f"\n📊 Overall Health: {health_results['overall_health']['status']}")
-        print(f"📈 Health Score: {health_results['overall_health']['health_percentage']:.1f}%")
-        print(f"🔢 Services: {healthy_count}/{total_count} healthy")
+        print(f"\n Overall Health: {health_results['overall_health']['status']}")
+        print(f" Health Score: {health_results['overall_health']['health_percentage']:.1f}%")
+        print(f" Services: {healthy_count}/{total_count} healthy")
         
         return health_results
     
     def get_production_metrics(self) -> Dict[str, Any]:
         """Get production metrics from monitoring systems"""
-        print("📊 Collecting production metrics...")
+        print(" Collecting production metrics...")
         
         metrics = {
             'timestamp': datetime.now().isoformat(),
@@ -491,10 +491,10 @@ class ProductionMonitoring:
                     except Exception as e:
                         metrics['prometheus'][metric_name] = f"error: {e}"
                 
-                print("✅ Prometheus metrics collected")
+                print(" Prometheus metrics collected")
                 
             except Exception as e:
-                print(f"❌ Failed to collect Prometheus metrics: {e}")
+                print(f" Failed to collect Prometheus metrics: {e}")
                 metrics['prometheus'] = {'error': str(e)}
         
         # Add custom metrics
@@ -508,7 +508,7 @@ class ProductionMonitoring:
     
     def generate_health_report(self, output_file: Optional[str] = None) -> str:
         """Generate comprehensive health report"""
-        print("📋 Generating production health report...")
+        print(" Generating production health report...")
         
         # Run health checks
         health_data = self.run_comprehensive_health_check()
@@ -541,7 +541,7 @@ class ProductionMonitoring:
             with open(output_path, 'w') as f:
                 f.write(report_json)
             
-            print(f"✅ Health report saved to: {output_path}")
+            print(f" Health report saved to: {output_path}")
         
         return report_json
     
@@ -552,60 +552,60 @@ class ProductionMonitoring:
         # Check service health
         for service, data in health_data.get('services', {}).items():
             if data.get('status') != 'healthy':
-                recommendations.append(f"🔴 {service.upper()}: Service is {data.get('status')} - investigate immediately")
+                recommendations.append(f" {service.upper()}: Service is {data.get('status')} - investigate immediately")
         
         # Check monitoring services
         for service, data in health_data.get('monitoring', {}).items():
             if data.get('status') != 'healthy':
-                recommendations.append(f"🟡 {service.upper()}: Monitoring service is {data.get('status')} - check configuration")
+                recommendations.append(f" {service.upper()}: Monitoring service is {data.get('status')} - check configuration")
         
         # Check Prometheus metrics
         prometheus_metrics = metrics_data.get('prometheus', {})
         
         if isinstance(prometheus_metrics.get('cpu_usage'), (int, float)):
             if prometheus_metrics['cpu_usage'] > 80:
-                recommendations.append("🔴 HIGH CPU USAGE: CPU usage is above 80% - scale resources")
+                recommendations.append(" HIGH CPU USAGE: CPU usage is above 80% - scale resources")
             elif prometheus_metrics['cpu_usage'] > 70:
-                recommendations.append("🟡 ELEVATED CPU USAGE: CPU usage is above 70% - monitor closely")
+                recommendations.append(" ELEVATED CPU USAGE: CPU usage is above 70% - monitor closely")
         
         if isinstance(prometheus_metrics.get('memory_usage'), (int, float)):
             if prometheus_metrics['memory_usage'] > 85:
-                recommendations.append("🔴 HIGH MEMORY USAGE: Memory usage is above 85% - scale resources")
+                recommendations.append(" HIGH MEMORY USAGE: Memory usage is above 85% - scale resources")
             elif prometheus_metrics['memory_usage'] > 75:
-                recommendations.append("🟡 ELEVATED MEMORY USAGE: Memory usage is above 75% - monitor closely")
+                recommendations.append(" ELEVATED MEMORY USAGE: Memory usage is above 75% - monitor closely")
         
         if isinstance(prometheus_metrics.get('api_error_rate'), (int, float)):
             if prometheus_metrics['api_error_rate'] > 0.01:  # 1%
-                recommendations.append("🔴 HIGH ERROR RATE: API error rate is above 1% - investigate errors")
+                recommendations.append(" HIGH ERROR RATE: API error rate is above 1% - investigate errors")
             elif prometheus_metrics['api_error_rate'] > 0.005:  # 0.5%
-                recommendations.append("🟡 ELEVATED ERROR RATE: API error rate is above 0.5% - monitor closely")
+                recommendations.append(" ELEVATED ERROR RATE: API error rate is above 0.5% - monitor closely")
         
         # Overall health recommendations
         overall_health = health_data.get('overall_health', {})
         health_percentage = overall_health.get('health_percentage', 0)
         
         if health_percentage < 80:
-            recommendations.append("🔴 CRITICAL: Overall system health is below 80% - immediate action required")
+            recommendations.append(" CRITICAL: Overall system health is below 80% - immediate action required")
         elif health_percentage < 95:
-            recommendations.append("🟡 WARNING: Overall system health is below 95% - investigate degraded services")
+            recommendations.append(" WARNING: Overall system health is below 95% - investigate degraded services")
         else:
-            recommendations.append("✅ HEALTHY: All systems operating normally")
+            recommendations.append(" HEALTHY: All systems operating normally")
         
         return recommendations
     
     def monitor_continuous(self, interval: int = 300, duration: int = 3600) -> None:
         """Run continuous monitoring for specified duration"""
-        print(f"🔄 Starting continuous production monitoring...")
-        print(f"📊 Interval: {interval} seconds")
-        print(f"⏱️ Duration: {duration} seconds")
-        print("⚠️  Press Ctrl+C to stop monitoring")
+        print(f" Starting continuous production monitoring...")
+        print(f" Interval: {interval} seconds")
+        print(f"⏱ Duration: {duration} seconds")
+        print("  Press Ctrl+C to stop monitoring")
         
         start_time = time.time()
         
         try:
             while time.time() - start_time < duration:
                 print(f"\n{'='*60}")
-                print(f"🕐 Monitoring cycle at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f" Monitoring cycle at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 
                 # Run health check
                 health_data = self.run_comprehensive_health_check()
@@ -617,22 +617,22 @@ class ProductionMonitoring:
                         critical_issues.append(f"{service}: {data.get('error', 'unknown error')}")
                 
                 if critical_issues:
-                    print(f"\n🚨 CRITICAL ISSUES DETECTED:")
+                    print(f"\n CRITICAL ISSUES DETECTED:")
                     for issue in critical_issues:
-                        print(f"  ❌ {issue}")
+                        print(f"   {issue}")
                 else:
-                    print(f"\n✅ No critical issues detected")
+                    print(f"\n No critical issues detected")
                 
                 # Wait for next cycle
                 print(f"\n⏳ Waiting {interval} seconds for next check...")
                 time.sleep(interval)
                 
         except KeyboardInterrupt:
-            print(f"\n🛑 Monitoring stopped by user")
+            print(f"\n Monitoring stopped by user")
         except Exception as e:
-            print(f"\n❌ Monitoring error: {e}")
+            print(f"\n Monitoring error: {e}")
         
-        print(f"\n📊 Monitoring completed after {time.time() - start_time:.1f} seconds")
+        print(f"\n Monitoring completed after {time.time() - start_time:.1f} seconds")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -672,7 +672,7 @@ def main():
         monitor = ProductionMonitoring(config_file=args.config)
         
         if not monitor.check_prerequisites():
-            print("❌ Prerequisites not met")
+            print(" Prerequisites not met")
             sys.exit(1)
         
         if args.action == "health-check":
@@ -694,7 +694,7 @@ def main():
             monitor.monitor_continuous(interval=args.interval, duration=args.duration)
         
     except Exception as e:
-        print(f"❌ Production monitoring error: {e}")
+        print(f" Production monitoring error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

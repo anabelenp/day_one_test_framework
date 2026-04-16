@@ -7,28 +7,28 @@ The Integration Environment (E3) provides a production-like Kubernetes-based env
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Integration Environment (E3)                 │
-│                         Kubernetes Cluster                      │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │    Redis    │  │    Kafka    │  │  MongoDB    │             │
-│  │   Cluster   │  │   Cluster   │  │  Replica    │             │
-│  │  (3 nodes)  │  │  (3 nodes)  │  │    Set      │             │
-│  └─────────────┘  └─────────────┘  └─────────────┘             │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │   Mock API  │  │ Prometheus  │  │   Grafana   │             │
-│  │   Service   │  │  Metrics    │  │ Dashboard   │             │
-│  │ (2 replicas)│  │ Collection  │  │   & Alerts  │             │
-│  └─────────────┘  └─────────────┘  └─────────────┘             │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │   Jaeger    │  │ Test Runner │  │   Ingress   │             │
-│  │  Tracing    │  │    Jobs     │  │ Controller  │             │
-│  │   Service   │  │ (Scheduled) │  │   (nginx)   │             │
-│  └─────────────┘  └─────────────┘  └─────────────┘             │
-└─────────────────────────────────────────────────────────────────┘
+
+                    Integration Environment (E3)                 
+                         Kubernetes Cluster                      
+
+                   
+      Redis          Kafka        MongoDB                 
+     Cluster        Cluster       Replica                 
+    (3 nodes)      (3 nodes)        Set                   
+                   
+                                                                 
+                   
+     Mock API     Prometheus       Grafana                
+     Service       Metrics       Dashboard                
+   (2 replicas)   Collection       & Alerts               
+                   
+                                                                 
+                   
+     Jaeger       Test Runner      Ingress                
+    Tracing          Jobs        Controller               
+     Service      (Scheduled)      (nginx)                
+                   
+
 ```
 
 ## Prerequisites

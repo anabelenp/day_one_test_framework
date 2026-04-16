@@ -1,10 +1,10 @@
 # Performance Testing Guide - Day-1 Framework
 
-## 🚀 Overview
+##  Overview
 
 The Day-1 Framework includes comprehensive performance testing capabilities using both **JMeter** and **Locust** to validate system performance, scalability, and reliability under various load conditions.
 
-## 📊 Performance Testing Stack
+##  Performance Testing Stack
 
 ### **Testing Tools**
 - **JMeter 5.5+**: GUI-based load testing with comprehensive reporting
@@ -17,7 +17,7 @@ The Day-1 Framework includes comprehensive performance testing capabilities usin
 - **Jaeger**: Distributed tracing for performance bottlenecks
 - **MongoDB**: Test result storage and analytics
 
-## 🛠️ Installation & Setup
+##  Installation & Setup
 
 ### **Prerequisites**
 ```bash
@@ -47,7 +47,7 @@ docker-compose -f docker-compose.local.yml up -d
 python src/cli.py services health
 ```
 
-## 🎯 Performance Testing Scenarios
+##  Performance Testing Scenarios
 
 ### **Test Categories**
 
@@ -76,28 +76,28 @@ python src/cli.py services health
 - **Scope**: Auto-scaling and recovery
 - **Success Criteria**: Quick recovery to baseline
 
-## 🔧 JMeter Performance Testing
+##  JMeter Performance Testing
 
 ### **JMeter Test Plan Structure**
 ```
 netskope_api_load_test.jmx
-├── Test Plan Configuration
-│   ├── User Variables (BASE_URL, API_KEY, USERS, DURATION)
-│   ├── Thread Group (Load simulation)
-│   └── HTTP Request Defaults
-├── Security Service Tests
-│   ├── SWG - URL Check (40% of requests)
-│   ├── DLP - File Scan (30% of requests)
-│   ├── ZTNA - Access Check (20% of requests)
-│   └── Firewall - Rule Check (10% of requests)
-├── Assertions & Validations
-│   ├── Response Code Assertions (200 OK)
-│   ├── Response Time Assertions (<1000ms)
-│   └── Content Validation
-└── Reporting & Listeners
-    ├── Summary Report
-    ├── Results Tree (disabled in load tests)
-    └── CSV Results Export
+ Test Plan Configuration
+    User Variables (BASE_URL, API_KEY, USERS, DURATION)
+    Thread Group (Load simulation)
+    HTTP Request Defaults
+ Security Service Tests
+    SWG - URL Check (40% of requests)
+    DLP - File Scan (30% of requests)
+    ZTNA - Access Check (20% of requests)
+    Firewall - Rule Check (10% of requests)
+ Assertions & Validations
+    Response Code Assertions (200 OK)
+    Response Time Assertions (<1000ms)
+    Content Validation
+ Reporting & Listeners
+     Summary Report
+     Results Tree (disabled in load tests)
+     CSV Results Export
 ```
 
 Additional plans:
@@ -191,26 +191,26 @@ open reports/jmeter_html_report/index.html
 # - Resource Utilization
 ```
 
-## 🐍 Locust Performance Testing
+##  Locust Performance Testing
 
 ### **Locust Test Structure**
 ```python
 # tests/performance/locust/netskope_load_test.py
-├── NetskopeSecurityUser (Main user simulation)
-│   ├── check_url_swg() - 40% of requests
-│   ├── scan_file_dlp() - 30% of requests  
-│   ├── check_access_ztna() - 20% of requests
-│   └── check_firewall_rules() - 10% of requests
-├── AdminUser (Administrative operations)
-│   ├── get_security_events()
-│   ├── get_security_reports()
-│   └── get_system_health()
-└── LoadTestScenarios (Predefined configurations)
-    ├── SMOKE_TEST (5 users, 60s)
-    ├── NORMAL_LOAD (50 users, 300s)
-    ├── PEAK_LOAD (200 users, 600s)
-    ├── STRESS_TEST (500 users, 900s)
-    └── ENDURANCE_TEST (100 users, 3600s)
+ NetskopeSecurityUser (Main user simulation)
+    check_url_swg() - 40% of requests
+    scan_file_dlp() - 30% of requests  
+    check_access_ztna() - 20% of requests
+    check_firewall_rules() - 10% of requests
+ AdminUser (Administrative operations)
+    get_security_events()
+    get_security_reports()
+    get_system_health()
+ LoadTestScenarios (Predefined configurations)
+     SMOKE_TEST (5 users, 60s)
+     NORMAL_LOAD (50 users, 300s)
+     PEAK_LOAD (200 users, 600s)
+     STRESS_TEST (500 users, 900s)
+     ENDURANCE_TEST (100 users, 3600s)
 ```
 
 ### **Running Locust Tests**
@@ -298,7 +298,7 @@ locust -f tests/performance/locust/netskope_load_test.py \
 python scripts/analyze_locust_results.py reports/locust_results_stats.csv
 ```
 
-## 📈 Python Load Testing
+##  Python Load Testing
 
 ### **Custom Performance Tests**
 ```bash
@@ -323,7 +323,7 @@ def test_load_simulation():
     # Performance metrics collection
 ```
 
-## 📊 Performance Monitoring During Tests
+##  Performance Monitoring During Tests
 
 ### **Real-Time Monitoring**
 ```bash
@@ -373,7 +373,7 @@ open http://localhost:16686   # Jaeger
 # Grafana → Import → Upload JSON dashboard files
 ```
 
-## 🎯 Performance Test Execution Workflows
+##  Performance Test Execution Workflows
 
 ### **Development Workflow**
 ```bash
@@ -469,7 +469,7 @@ python scripts/generate_performance_report.py \
        --output reports/staging_performance_report.html
 ```
 
-## 📋 Performance Test Scripts
+##  Performance Test Scripts
 
 ### **Automated Test Execution**
 ```bash
@@ -489,43 +489,43 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 # Create results directory
 mkdir -p $RESULTS_DIR
 
-echo "🚀 Starting Performance Test Suite - $TIMESTAMP"
+echo " Starting Performance Test Suite - $TIMESTAMP"
 
 # 1. Smoke Test (Quick validation)
-echo "📋 Running Smoke Test..."
+echo " Running Smoke Test..."
 locust -f tests/performance/locust/netskope_load_test.py \
        --host=$HOST --users=5 --spawn-rate=1 --run-time=60s \
        --headless --csv=$RESULTS_DIR/smoke_test_$TIMESTAMP
 
 # 2. Load Test (Normal usage)
-echo "📊 Running Load Test..."
+echo " Running Load Test..."
 locust -f tests/performance/locust/netskope_load_test.py \
        --host=$HOST --users=50 --spawn-rate=5 --run-time=300s \
        --headless --csv=$RESULTS_DIR/load_test_$TIMESTAMP
 
 # 3. Stress Test (High load)
-echo "⚡ Running Stress Test..."
+echo " Running Stress Test..."
 locust -f tests/performance/locust/netskope_load_test.py \
        --host=$HOST --users=200 --spawn-rate=10 --run-time=600s \
        --headless --csv=$RESULTS_DIR/stress_test_$TIMESTAMP
 
 # 4. JMeter Test (Alternative tool validation)
-echo "🔧 Running JMeter Test..."
+echo " Running JMeter Test..."
 jmeter -n -t tests/performance/jmeter/netskope_api_load_test.jmx \
        -Jbase_url=$HOST -Jusers=50 -Jramp_time=60 -Jduration=300 \
        -l $RESULTS_DIR/jmeter_test_$TIMESTAMP.jtl \
        -e -o $RESULTS_DIR/jmeter_report_$TIMESTAMP
 
 # 5. Generate Summary Report
-echo "📈 Generating Performance Report..."
+echo " Generating Performance Report..."
 python scripts/generate_performance_summary.py \
        --results-dir $RESULTS_DIR \
        --timestamp $TIMESTAMP \
        --output $RESULTS_DIR/performance_summary_$TIMESTAMP.html
 
-echo "✅ Performance Test Suite Completed!"
-echo "📊 Results available in: $RESULTS_DIR"
-echo "🌐 Open report: $RESULTS_DIR/performance_summary_$TIMESTAMP.html"
+echo " Performance Test Suite Completed!"
+echo " Results available in: $RESULTS_DIR"
+echo " Open report: $RESULTS_DIR/performance_summary_$TIMESTAMP.html"
 EOF
 
 chmod +x scripts/run_performance_tests.sh
@@ -615,7 +615,7 @@ def main():
     generate_performance_charts(args.stats_file, args.output_dir)
     
     # Print summary
-    print("🚀 Performance Test Analysis Summary")
+    print(" Performance Test Analysis Summary")
     print("=" * 50)
     print(f"Total Requests: {analysis['total_requests']:,}")
     print(f"Total Failures: {analysis['total_failures']:,}")
@@ -627,21 +627,21 @@ def main():
     
     # Performance assessment
     if analysis['failure_rate'] < 2.0:
-        print("✅ PASS: Failure rate within acceptable limits")
+        print(" PASS: Failure rate within acceptable limits")
     else:
-        print("❌ FAIL: High failure rate detected")
+        print(" FAIL: High failure rate detected")
         
     if analysis['avg_response_time'] < 1000:
-        print("✅ PASS: Response times within acceptable limits")
+        print(" PASS: Response times within acceptable limits")
     else:
-        print("⚠️  WARNING: High response times detected")
+        print("  WARNING: High response times detected")
     
     # Save detailed analysis
     with open(f"{args.output_dir}/performance_analysis.json", "w") as f:
         json.dump(analysis, f, indent=2)
     
-    print(f"\n📊 Detailed analysis saved to: {args.output_dir}/performance_analysis.json")
-    print(f"📈 Charts saved to: {args.output_dir}/performance_charts.png")
+    print(f"\n Detailed analysis saved to: {args.output_dir}/performance_analysis.json")
+    print(f" Charts saved to: {args.output_dir}/performance_charts.png")
 
 if __name__ == "__main__":
     main()
@@ -650,7 +650,7 @@ EOF
 chmod +x scripts/analyze_performance_results.py
 ```
 
-## 🎯 Performance Benchmarks & SLAs
+##  Performance Benchmarks & SLAs
 
 ### **Service Level Agreements (SLAs)**
 
@@ -692,7 +692,7 @@ python scripts/compare_performance.py \
        --threshold 10  # 10% degradation threshold
 ```
 
-## 🔍 Troubleshooting Performance Issues
+##  Troubleshooting Performance Issues
 
 ### **Common Performance Problems**
 
@@ -754,7 +754,7 @@ python -m memory_profiler tests/performance/test_load.py
 - Monitor resource utilization
 - Validate test environment
 
-## 📚 Additional Resources
+##  Additional Resources
 
 ### **Documentation**
 - **[JMeter User Manual](https://jmeter.apache.org/usermanual/index.html)**: Official JMeter documentation
@@ -769,38 +769,38 @@ python -m memory_profiler tests/performance/test_load.py
 ### **Performance Testing Checklist**
 ```bash
 # Pre-test checklist
-□ Environment is stable and healthy
-□ Baseline performance metrics established
-□ Test data is prepared and realistic
-□ Monitoring systems are active
-□ Test duration and load levels defined
+ Environment is stable and healthy
+ Baseline performance metrics established
+ Test data is prepared and realistic
+ Monitoring systems are active
+ Test duration and load levels defined
 
 # During test checklist
-□ Monitor system resources (CPU, memory, network)
-□ Watch for error rates and response times
-□ Check application logs for issues
-□ Validate test is running as expected
-□ Document any anomalies or issues
+ Monitor system resources (CPU, memory, network)
+ Watch for error rates and response times
+ Check application logs for issues
+ Validate test is running as expected
+ Document any anomalies or issues
 
 # Post-test checklist
-□ Analyze test results and metrics
-□ Compare against baselines and SLAs
-□ Generate performance report
-□ Document findings and recommendations
-□ Clean up test data and resources
+ Analyze test results and metrics
+ Compare against baselines and SLAs
+ Generate performance report
+ Document findings and recommendations
+ Clean up test data and resources
 ```
 
 ---
 
-## 🎉 Performance Testing Success
+##  Performance Testing Success
 
 The Day-1 Framework now includes **comprehensive performance testing capabilities** with:
 
-✅ **JMeter Integration**: GUI and command-line load testing  
-✅ **Locust Implementation**: Python-based distributed testing  
-✅ **Monitoring Integration**: Real-time performance monitoring  
-✅ **CI/CD Integration**: Automated performance validation  
-✅ **Comprehensive Reporting**: Detailed analysis and visualization  
-✅ **Multiple Test Scenarios**: Smoke, load, stress, and endurance testing  
+ **JMeter Integration**: GUI and command-line load testing  
+ **Locust Implementation**: Python-based distributed testing  
+ **Monitoring Integration**: Real-time performance monitoring  
+ **CI/CD Integration**: Automated performance validation  
+ **Comprehensive Reporting**: Detailed analysis and visualization  
+ **Multiple Test Scenarios**: Smoke, load, stress, and endurance testing  
 
-**Start performance testing immediately with zero configuration!** 🚀
+**Start performance testing immediately with zero configuration!** 

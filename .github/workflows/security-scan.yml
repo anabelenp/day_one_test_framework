@@ -173,11 +173,11 @@ jobs:
         echo "# Security Scan Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ SAST (Bandit): ${{ needs.sast-bandit.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ SAST (Semgrep): ${{ needs.sast-semgrep.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Dependency Scan: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Secret Scan: ${{ needs.secret-scan.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ CodeQL Analysis: ${{ needs.codeql-analysis.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  SAST (Bandit): ${{ needs.sast-bandit.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  SAST (Semgrep): ${{ needs.sast-semgrep.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  Dependency Scan: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  Secret Scan: ${{ needs.secret-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  CodeQL Analysis: ${{ needs.codeql-analysis.result }}" >> $GITHUB_STEP_SUMMARY
 
     - name: Fail if any security scan failed
       if: |

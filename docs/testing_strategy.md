@@ -1,10 +1,10 @@
 # Netskope SDET Framework - Testing Strategy
 
-## 🎯 Executive Summary
+##  Executive Summary
 
 This document outlines the comprehensive testing strategy for the Netskope SDET Framework, designed to ensure robust, secure, and scalable cybersecurity API testing across multiple environments.
 
-## 📋 Testing Objectives
+##  Testing Objectives
 
 ### **Primary Objectives**
 1. **Security Assurance**: Validate all security controls and compliance requirements
@@ -19,7 +19,7 @@ This document outlines the comprehensive testing strategy for the Netskope SDET 
 3. **Risk Mitigation**: Early detection of security vulnerabilities and performance issues
 4. **Quality Metrics**: Maintain >95% test coverage and <1% false positive rate
 
-## 🏗️ Testing Framework Architecture
+##  Testing Framework Architecture
 
 ### **Multi-Environment Testing Strategy**
 
@@ -48,7 +48,7 @@ graph TD
 | **Staging** | Performance, Load | <60 min | Weekly | Production readiness |
 | **Production** | Monitoring, Health | <5 min | Continuous | Live validation |
 
-## 🧪 Test Categories & Strategies
+##  Test Categories & Strategies
 
 ### **1. Unit Testing Strategy**
 
@@ -332,7 +332,7 @@ class TestGDPRCompliance:
         assert "preferences" in export_data
 ```
 
-## 📊 Test Data Management Strategy
+##  Test Data Management Strategy
 
 ### **Test Data Categories**
 
@@ -392,7 +392,7 @@ class DataAnonymizer:
 - **Local**: Weekly refresh from anonymized production data
 - **Integration**: Daily refresh with latest anonymized data
 
-## 🚀 CI/CD Integration Strategy
+##  CI/CD Integration Strategy
 
 ### **Pipeline Stages**
 
@@ -462,7 +462,7 @@ jobs:
 - Security compliance verified
 - Documentation updated
 
-## 📈 Metrics & Monitoring Strategy
+##  Metrics & Monitoring Strategy
 
 ### **Test Metrics**
 
@@ -517,7 +517,7 @@ SECURITY_METRICS = {
 - Test flakiness increase
 - Resource utilization spikes
 
-## 🔄 Continuous Improvement Strategy
+##  Continuous Improvement Strategy
 
 ### **Test Optimization**
 - **Parallel Execution**: Reduce test execution time
@@ -539,24 +539,24 @@ SECURITY_METRICS = {
 
 ---
 
-## 🎯 Success Criteria
+##  Success Criteria
 
 ### **Short-term Goals (3 months)**
-- ✅ 90% unit test coverage
-- ✅ <5 minute feedback loop
-- ✅ Zero critical security vulnerabilities
-- ✅ 95% test reliability
+-  90% unit test coverage
+-  <5 minute feedback loop
+-  Zero critical security vulnerabilities
+-  95% test reliability
 
 ### **Medium-term Goals (6 months)**
-- ✅ Full CI/CD integration
-- ✅ Automated performance regression detection
-- ✅ Complete compliance test coverage
-- ✅ 99.9% API availability
+-  Full CI/CD integration
+-  Automated performance regression detection
+-  Complete compliance test coverage
+-  99.9% API availability
 
 ### **Long-term Goals (12 months)**
-- ✅ Industry-leading security posture
-- ✅ 50% reduction in production incidents
-- ✅ 30% improvement in developer productivity
-- ✅ Full regulatory compliance automation
+-  Industry-leading security posture
+-  50% reduction in production incidents
+-  30% improvement in developer productivity
+-  Full regulatory compliance automation
 
 This comprehensive testing strategy ensures robust, secure, and scalable cybersecurity API testing while maintaining high quality standards and regulatory compliance.

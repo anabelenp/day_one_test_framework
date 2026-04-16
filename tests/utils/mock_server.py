@@ -182,21 +182,21 @@ def start_mock_server(port=8080):
     """Start the mock server"""
     server_address = ('', port)
     httpd = HTTPServer(server_address, MockNetskopeHandler)
-    print(f"🚀 Mock Netskope API Server running on http://localhost:{port}")
-    print("📝 Available endpoints:")
+    print(f" Mock Netskope API Server running on http://localhost:{port}")
+    print(" Available endpoints:")
     print("   - GET  /api/v2/events")
     print("   - GET  /api/v2/policies") 
     print("   - GET  /api/v2/users")
     print("   - GET  /api/v2/reports")
     print("   - GET  /api/v2/alerts")
     print("   - POST /api/v2/users")
-    print("\n🔧 Mock mode is active - no real API calls will be made")
-    print("⏹️  Press Ctrl+C to stop the server\n")
+    print("\n Mock mode is active - no real API calls will be made")
+    print("⏹  Press Ctrl+C to stop the server\n")
     
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n🛑 Mock server stopped")
+        print("\n Mock server stopped")
         httpd.server_close()
 
 if __name__ == '__main__':

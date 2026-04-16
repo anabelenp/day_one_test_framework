@@ -4,7 +4,7 @@
 
 The Netskope SDET Framework includes **complete Enterprise CI/CD integration** with both GitHub Actions and Jenkins, providing automated testing, security scanning, and deployment pipelines.
 
-## 🏗️ **CI/CD Architecture**
+##  **CI/CD Architecture**
 
 ```mermaid
 graph TB
@@ -65,7 +65,7 @@ graph TB
 
 ---
 
-## 🚀 **GitHub Actions Workflows**
+##  **GitHub Actions Workflows**
 
 ### **1. Unit Tests** (`.github/workflows/unit-tests.yml`)
 
@@ -170,7 +170,7 @@ gh workflow run deployment.yml -f environment=staging -f force_deploy=true
 
 ---
 
-## 🏭 **Jenkins Pipeline** (`Jenkinsfile`)
+##  **Jenkins Pipeline** (`Jenkinsfile`)
 
 ### **Pipeline Stages**
 
@@ -298,17 +298,17 @@ stage('Deploy to Staging') {
 ```groovy
 post {
     success {
-        echo '✅ Pipeline completed successfully!'
+        echo ' Pipeline completed successfully!'
     }
     failure {
-        echo '❌ Pipeline failed!'
+        echo ' Pipeline failed!'
     }
 }
 ```
 
 ---
 
-## 🔒 **Security Integration**
+##  **Security Integration**
 
 ### **SAST (Static Application Security Testing)**
 
@@ -370,7 +370,7 @@ trufflehog3 --format json --output reports/trufflehog-report.json .
 
 ---
 
-## 🚀 **Deployment Automation**
+##  **Deployment Automation**
 
 ### **Integration Environment**
 
@@ -454,7 +454,7 @@ spec:
 
 ---
 
-## 📊 **Monitoring Integration**
+##  **Monitoring Integration**
 
 ### **CI/CD Metrics**
 
@@ -489,7 +489,7 @@ build_duration = Histogram('cicd_build_duration_seconds', 'Build duration')
 
 ---
 
-## 🔧 **Configuration**
+##  **Configuration**
 
 ### **Environment Variables**
 
@@ -547,7 +547,7 @@ https://jenkins.company.com/github-webhook/
 
 ---
 
-## 📚 **Usage Examples**
+##  **Usage Examples**
 
 ### **Running CI/CD Locally**
 
@@ -625,7 +625,7 @@ repos:
 
 ---
 
-## 🚨 **Troubleshooting**
+##  **Troubleshooting**
 
 ### **Common Issues**
 
@@ -681,7 +681,7 @@ pip-audit --ignore-vuln PYSEC-2021-123
 
 ---
 
-## 📈 **Best Practices**
+##  **Best Practices**
 
 ### **Pipeline Optimization**
 
@@ -753,32 +753,32 @@ if: startsWith(github.ref, 'refs/tags/v')
 
 ---
 
-## 🎯 **Summary**
+##  **Summary**
 
 The Netskope SDET Framework provides **enterprise-grade CI/CD integration** with:
 
-### **✅ Complete GitHub Actions Integration**
+### ** Complete GitHub Actions Integration**
 - **4 workflows**: Unit tests, integration tests, security scans, deployment
 - **Multi-version testing**: Python 3.9, 3.10, 3.11
 - **Comprehensive security**: SAST, dependency scanning, secret detection
 - **Automated deployment**: Integration and staging environments
 
-### **✅ Full Jenkins Pipeline**
+### ** Full Jenkins Pipeline**
 - **Multi-stage pipeline**: Parallel execution, approval gates
 - **Artifact management**: Test reports, coverage, Docker images
 - **Security integration**: Bandit, Safety, TruffleHog
 - **Deployment automation**: Kubernetes integration and staging
 
-### **✅ Enterprise Security**
+### ** Enterprise Security**
 - **SAST tools**: Bandit, Semgrep, CodeQL
 - **Dependency scanning**: Safety, pip-audit
 - **Secret detection**: TruffleHog, Gitleaks
 - **SARIF integration**: GitHub Security tab integration
 
-### **✅ Production-Ready Deployment**
+### ** Production-Ready Deployment**
 - **Kubernetes orchestration**: Integration and staging environments
 - **High availability**: HA configuration for staging
 - **Health monitoring**: Automated service health checks
 - **Rollback capabilities**: Safe deployment practices
 
-**The CI/CD integration is 100% complete and production-ready!** 🚀
+**The CI/CD integration is 100% complete and production-ready!** 

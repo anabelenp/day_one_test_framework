@@ -532,7 +532,7 @@ class TestStagingEnvironmentSecurity:
             insecure_response = api_client.get("/api/v2/events", verify_ssl=False)
             # If it succeeds, verify it's properly secured
             if insecure_response:
-                print("⚠️ TLS enforcement may not be fully configured")
+                print(" TLS enforcement may not be fully configured")
         except Exception:
             # Exception is expected for properly secured staging environment
             pass
@@ -594,13 +594,13 @@ class TestStagingEnvironmentSecurity:
             })
             
             if audit_logs:
-                print("✅ Audit logging is functional")
+                print(" Audit logging is functional")
                 assert audit_logs is not None, "Audit logs should be created for API access"
             else:
-                print("⚠️ Audit logs not found - may be configured differently")
+                print(" Audit logs not found - may be configured differently")
                 
         except Exception as e:
-            print(f"⚠️ Could not verify audit logging: {e}")
+            print(f" Could not verify audit logging: {e}")
 
 
 if __name__ == "__main__":

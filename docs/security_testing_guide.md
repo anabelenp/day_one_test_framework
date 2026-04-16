@@ -1,10 +1,10 @@
 # Netskope SDET Framework - Security Testing Guide
 
-## 🛡️ Overview
+##  Overview
 
 This guide provides comprehensive security testing methodologies specifically designed for cybersecurity API testing within the Netskope SDET Framework. It covers threat modeling, security test patterns, compliance validation, and incident response testing.
 
-## 🎯 Security Testing Objectives
+##  Security Testing Objectives
 
 ### **Primary Security Goals**
 1. **Zero Trust Validation**: Verify all security controls and access policies
@@ -20,7 +20,7 @@ This guide provides comprehensive security testing methodologies specifically de
 - **Compliance by Design**: Built-in compliance validation
 - **Threat-Informed Testing**: Based on real-world attack patterns
 
-## 🔍 Threat Modeling for API Security
+##  Threat Modeling for API Security
 
 ### **STRIDE Threat Model for Netskope APIs**
 
@@ -242,7 +242,7 @@ class TestPrivilegeEscalation:
         assert response.status_code == 403
 ```
 
-## 🔒 Authentication & Authorization Testing
+##  Authentication & Authorization Testing
 
 ### **Multi-Factor Authentication (MFA) Testing**
 ```python
@@ -356,7 +356,7 @@ class TestRBACImplementation:
         assert response.status_code == 403
 ```
 
-## 🔐 Data Protection Testing
+##  Data Protection Testing
 
 ### **Encryption Testing**
 ```python
@@ -453,7 +453,7 @@ class TestDataMasking:
         assert "@" in export_data["email"]  # Email format preserved
 ```
 
-## 🚨 Security Monitoring and Incident Response Testing
+##  Security Monitoring and Incident Response Testing
 
 ### **Threat Detection Testing**
 ```python
@@ -572,7 +572,7 @@ class TestIncidentResponse:
         assert any("critical security incident" in n["message"] for n in notifications)
 ```
 
-## 📋 Compliance Testing
+##  Compliance Testing
 
 ### **SOC 2 Type II Controls Testing**
 ```python
@@ -732,7 +732,7 @@ class TestGDPRCompliance:
         assert privacy_settings["data_retention_period"] == "minimum_required"
 ```
 
-## 🔧 Security Testing Tools Integration
+##  Security Testing Tools Integration
 
 ### **Static Application Security Testing (SAST)**
 ```python
@@ -815,7 +815,7 @@ class DynamicSecurityTesting:
                 assert "javascript:" not in user_data.get("username", "")
 ```
 
-## 📊 Security Metrics and Reporting
+##  Security Metrics and Reporting
 
 ### **Security Test Metrics**
 ```python
@@ -864,7 +864,7 @@ class SecurityMetricsCollector:
         return report
 ```
 
-## 🎯 Security Testing Best Practices
+##  Security Testing Best Practices
 
 ### **Test Data Security**
 - Use synthetic data for security testing

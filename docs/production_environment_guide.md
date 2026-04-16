@@ -4,7 +4,7 @@
 
 The Production Environment (E5) provides **read-only monitoring and health checking** capabilities for production Netskope SDET Framework deployments. This environment is designed with strict safety measures to ensure no modifications can be made to production systems while providing comprehensive observability and incident response capabilities.
 
-## ⚠️ **CRITICAL SAFETY NOTICE**
+##  **CRITICAL SAFETY NOTICE**
 
 **This environment is READ-ONLY by design. No write operations, deployments, or modifications are permitted in production.**
 
@@ -20,30 +20,30 @@ The Production Environment (E5) provides **read-only monitoring and health check
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                Production Environment (E5)                       │
-│                   READ-ONLY MONITORING ONLY                      │
-├──────────────────────────────────────────────────────────────────┤
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
-│  │  Redis Prod    │  │  Kafka Prod    │  │ MongoDB Prod   │     │
-│  │  (Read-Only)   │  │  (Read-Only)   │  │ (Read-Only)    │     │
-│  │  Health Checks │  │  Health Checks │  │ Health Checks  │     │
-│  │  Metrics Only  │  │  Metrics Only  │  │ Metrics Only   │     │
-│  └────────────────┘  └────────────────┘  └────────────────┘     │
-│                                                                  │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
-│  │ Netskope API   │  │ Prometheus     │  │   Grafana      │     │
-│  │ (Read-Only)    │  │ (Read-Only)    │  │ (Read-Only)    │     │
-│  │ Health & Stats │  │ Metrics Query  │  │ Dashboards     │     │
-│  │ No Mutations   │  │ No Config      │  │ View Only      │     │
-│  └────────────────┘  └────────────────┘  └────────────────┘     │
-│                                                                  │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
-│  │ Health Reports │  │ Incident Mgmt  │  │ Alert Manager  │     │
-│  │ Automated      │  │ Integration    │  │ (Read-Only)    │     │
-│  │ Continuous     │  │ JIRA/PagerDuty │  │ View Alerts    │     │
-│  └────────────────┘  └────────────────┘  └────────────────┘     │
-└──────────────────────────────────────────────────────────────────┘
+
+                Production Environment (E5)                       
+                   READ-ONLY MONITORING ONLY                      
+
+           
+    Redis Prod        Kafka Prod       MongoDB Prod        
+    (Read-Only)       (Read-Only)      (Read-Only)         
+    Health Checks     Health Checks    Health Checks       
+    Metrics Only      Metrics Only     Metrics Only        
+           
+                                                                  
+           
+   Netskope API      Prometheus          Grafana           
+   (Read-Only)       (Read-Only)       (Read-Only)         
+   Health & Stats    Metrics Query     Dashboards          
+   No Mutations      No Config         View Only           
+           
+                                                                  
+           
+   Health Reports    Incident Mgmt     Alert Manager       
+   Automated         Integration       (Read-Only)         
+   Continuous        JIRA/PagerDuty    View Alerts         
+           
+
 ```
 
 ## Prerequisites
@@ -109,7 +109,7 @@ with open('config/production.yaml') as f:
     config = yaml.safe_load(f)
 assert config['READ_ONLY_MODE'] is True
 assert config['PRODUCTION_WRITE_OPERATIONS'] is False
-print('✅ Production config is safe')
+print(' Production config is safe')
 "
 ```
 
@@ -140,24 +140,24 @@ python scripts/deploy_production.py --action monitor --interval 300 --duration 3
 python scripts/deploy_production.py --action health-check
 
 # Expected output:
-# 🔍 Checking production monitoring prerequisites...
-# ✅ Production monitoring prerequisites met
-# 🏥 Running comprehensive production health check...
-# ⚠️  This is read-only monitoring - no changes will be made
+#  Checking production monitoring prerequisites...
+#  Production monitoring prerequisites met
+#  Running comprehensive production health check...
+#   This is read-only monitoring - no changes will be made
 #   Checking redis...
-#   ✅ redis: healthy
+#    redis: healthy
 #   Checking kafka...
-#   ✅ kafka: healthy
+#    kafka: healthy
 #   Checking mongodb...
-#   ✅ mongodb: healthy
+#    mongodb: healthy
 #   Checking api...
-#   ✅ api: healthy
-#   ✅ prometheus: healthy
-#   ✅ grafana: healthy
+#    api: healthy
+#    prometheus: healthy
+#    grafana: healthy
 # 
-# 📊 Overall Health: healthy
-# 📈 Health Score: 100.0%
-# 🔢 Services: 6/6 healthy
+#  Overall Health: healthy
+#  Health Score: 100.0%
+#  Services: 6/6 healthy
 ```
 
 #### Continuous Monitoring
@@ -288,7 +288,7 @@ cat reports/production_health_20241218_103000.json | jq .
     }
   },
   "recommendations": [
-    "✅ HEALTHY: All systems operating normally"
+    " HEALTHY: All systems operating normally"
   ]
 }
 ```
@@ -507,7 +507,7 @@ python -c "
 from scripts.deploy_production import ProductionMonitoring
 monitor = ProductionMonitoring()
 assert monitor.config['READ_ONLY_MODE'] is True
-print('✅ Read-only mode confirmed')
+print(' Read-only mode confirmed')
 "
 ```
 
@@ -659,7 +659,7 @@ pipeline {
                         slackSend(
                             channel: '#production-alerts',
                             color: 'danger',
-                            message: "🚨 Production health check failed! Check Jenkins logs for details."
+                            message: " Production health check failed! Check Jenkins logs for details."
                         )
                     }
                 }
@@ -715,6 +715,6 @@ python scripts/deploy_production.py --action monitor --interval 60 --duration 36
 
 ---
 
-**⚠️ REMEMBER: This is a READ-ONLY monitoring environment. No modifications to production systems are permitted through this framework.**
+** REMEMBER: This is a READ-ONLY monitoring environment. No modifications to production systems are permitted through this framework.**
 
 For production changes, follow your organization's change management procedures and use appropriate production deployment tools.

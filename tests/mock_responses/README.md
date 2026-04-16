@@ -21,11 +21,11 @@ When `MOCK_MODE: true` is set in `config/env.yaml`, the framework will:
 
 ```
 mock_responses/
-├── swg/          # Secure Web Gateway mock responses
-├── dlp/          # Data Loss Prevention mock responses
-├── ztna/         # Zero Trust Network Access mock responses
-├── firewall/     # Firewall mock responses
-└── common/       # Common API responses (auth, users, etc.)
+ swg/          # Secure Web Gateway mock responses
+ dlp/          # Data Loss Prevention mock responses
+ ztna/         # Zero Trust Network Access mock responses
+ firewall/     # Firewall mock responses
+ common/       # Common API responses (auth, users, etc.)
 ```
 
 ## Usage

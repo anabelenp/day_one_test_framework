@@ -1,38 +1,38 @@
 # Netskope SDET Framework - Environment Setup Guide
 
-## 🌍 Overview
+##  Overview
 
 This guide provides comprehensive instructions for setting up and configuring all testing environments in the Netskope SDET Framework, from local development to production validation.
 
-## 🏗️ Environment Architecture
+##  Environment Architecture
 
 ```mermaid
 graph TB
     subgraph "Development"
-        A[Mock Environment ✅] --> B[Local Environment ✅]
+        A[Mock Environment ] --> B[Local Environment ]
     end
     
     subgraph "Testing"
-        B --> C[Integration Environment 🚧]
-        C --> D[Staging Environment 🚧]
+        B --> C[Integration Environment ]
+        C --> D[Staging Environment ]
     end
     
     subgraph "Production"
-        D --> E[Production Environment 🚧]
+        D --> E[Production Environment ]
     end
     
     subgraph "Infrastructure"
-        F[Docker Compose ✅] --> G[Kubernetes 🚧]
-        G --> H[Cloud Services ✅]
+        F[Docker Compose ] --> G[Kubernetes ]
+        G --> H[Cloud Services ]
     end
 ```
 
 ### **Implementation Status**
-- ✅ **Completed**: Mock Environment, Local Environment, Docker Compose, LocalStack (AWS)
-- 🚧 **In Progress**: Integration Environment (Kubernetes), Staging Environment, Production Environment
-- 📋 **Planned**: Advanced monitoring, security hardening, compliance automation
+-  **Completed**: Mock Environment, Local Environment, Docker Compose, LocalStack (AWS)
+-  **In Progress**: Integration Environment (Kubernetes), Staging Environment, Production Environment
+-  **Planned**: Advanced monitoring, security hardening, compliance automation
 
-## 🎭 Environment 1: Mock Environment
+##  Environment 1: Mock Environment
 
 ### **Purpose**
 - Fastest feedback loop for developers
@@ -104,9 +104,9 @@ TEST_DATA_PATH: "./tests/data"
 pytest tests/unit/ -v -m mock
 
 # Expected output:
-# ✅ 15 tests passed in 2.3 seconds
-# ✅ Mock services responding correctly
-# ✅ All synthetic data generated successfully
+#  15 tests passed in 2.3 seconds
+#  Mock services responding correctly
+#  All synthetic data generated successfully
 ```
 
 ### **Mock Services Available**
@@ -121,7 +121,7 @@ pytest tests/unit/ -v -m mock
 
 ---
 
-## 🐳 Environment 2: Local Environment
+##  Environment 2: Local Environment
 
 ### **Purpose**
 - Integration testing with real services
@@ -311,7 +311,7 @@ open http://localhost:9090  # Prometheus
 
 ---
 
-## ☁️ Environment 3: Integration Environment
+##  Environment 3: Integration Environment
 
 ### **Purpose**
 - End-to-end testing with production-like services
@@ -476,7 +476,7 @@ kubectl describe hpa netskope-test-runner -n netskope-integration
 
 ---
 
-## 🚀 Environment 4: Staging Environment
+##  Environment 4: Staging Environment
 
 ### **Purpose**
 - Production readiness validation
@@ -643,7 +643,7 @@ open https://grafana.staging.netskope.com
 
 ---
 
-## 🏭 Environment 5: Production Environment
+##  Environment 5: Production Environment
 
 ### **Purpose**
 - Live system monitoring and validation
@@ -806,7 +806,7 @@ open https://grafana.netskope.com/d/production-overview
 
 ---
 
-## 🔧 Environment Management Scripts
+##  Environment Management Scripts
 
 ### **Environment Switcher**
 ```python
@@ -833,7 +833,7 @@ class EnvironmentManager:
         
         print(f"Switching to {env_name} environment...")
         self.environments[env_name]()
-        print(f"✅ Successfully switched to {env_name} environment")
+        print(f" Successfully switched to {env_name} environment")
     
     def _setup_mock(self):
         """Setup mock environment"""
@@ -904,9 +904,9 @@ class EnvironmentManager:
                     pass
                 time.sleep(2)
             else:
-                print(f"⚠️  Warning: {service_name} may not be ready")
+                print(f"  Warning: {service_name} may not be ready")
             
-            print(f"✅ {service_name} is ready")
+            print(f" {service_name} is ready")
 
 # Usage
 if __name__ == "__main__":
@@ -931,7 +931,7 @@ set -e
 ENVIRONMENT=${1:-mock}
 TEST_SUITE=${2:-all}
 
-echo "🚀 Running tests in $ENVIRONMENT environment"
+echo " Running tests in $ENVIRONMENT environment"
 
 case $ENVIRONMENT in
     "mock")
@@ -982,12 +982,12 @@ case $ENVIRONMENT in
         ;;
 esac
 
-echo "✅ Tests completed successfully!"
+echo " Tests completed successfully!"
 ```
 
 ---
 
-## 📊 Environment Comparison
+##  Environment Comparison
 
 | Feature | Mock | Local | Integration | Staging | Production |
 |---------|------|-------|-------------|---------|------------|
@@ -999,7 +999,7 @@ echo "✅ Tests completed successfully!"
 | **Isolation** | Complete | High | Medium | Low | None |
 | **Debugging** | Easy | Easy | Medium | Hard | Limited |
 
-## 🎯 Environment Selection Guide
+##  Environment Selection Guide
 
 ### **When to Use Each Environment**
 

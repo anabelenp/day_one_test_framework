@@ -43,53 +43,53 @@ class StagingDeployment:
             cmd.extend(["--kubeconfig", self.kubeconfig])
         cmd.extend(args)
         
-        print(f"🔧 Running: {' '.join(cmd)}")
+        print(f" Running: {' '.join(cmd)}")
         return subprocess.run(cmd, check=check, capture_output=True, text=True)
     
     def check_prerequisites(self) -> bool:
         """Check if all prerequisites are met for staging deployment"""
-        print("🔍 Checking staging deployment prerequisites...")
+        print(" Checking staging deployment prerequisites...")
         
         # Check kubectl
         try:
             result = self.run_kubectl(["version", "--client"])
-            print("✅ kubectl is available")
+            print(" kubectl is available")
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print("❌ kubectl is not available or not in PATH")
+            print(" kubectl is not available or not in PATH")
             return False
         
         # Check cluster connectivity
         try:
             result = self.run_kubectl(["cluster-info"])
-            print("✅ Kubernetes cluster is accessible")
+            print(" Kubernetes cluster is accessible")
         except subprocess.CalledProcessError:
-            print("❌ Cannot connect to Kubernetes cluster")
+            print(" Cannot connect to Kubernetes cluster")
             return False
         
         # Check cluster resources (staging requires more resources)
         try:
             result = self.run_kubectl(["top", "nodes"])
-            print("✅ Cluster resources available")
+            print(" Cluster resources available")
         except subprocess.CalledProcessError:
-            print("⚠️ Cannot check cluster resources (metrics-server may not be installed)")
+            print(" Cannot check cluster resources (metrics-server may not be installed)")
         
         # Check for required storage classes
         try:
             result = self.run_kubectl(["get", "storageclass"])
             if "fast-ssd" not in result.stdout:
-                print("⚠️ 'fast-ssd' storage class not found - using default")
+                print(" 'fast-ssd' storage class not found - using default")
             else:
-                print("✅ Fast SSD storage class available")
+                print(" Fast SSD storage class available")
         except subprocess.CalledProcessError:
-            print("⚠️ Cannot check storage classes")
+            print(" Cannot check storage classes")
         
         # Check cluster capacity
         try:
             result = self.run_kubectl(["describe", "nodes"])
             # Basic check for sufficient resources
-            print("✅ Cluster capacity check completed")
+            print(" Cluster capacity check completed")
         except subprocess.CalledProcessError:
-            print("⚠️ Cannot check cluster capacity")
+            print(" Cannot check cluster capacity")
         
         # Verify RBAC permissions
         try:
@@ -97,16 +97,16 @@ class StagingDeployment:
                 "auth", "can-i", "create", "deployments", 
                 f"--namespace={self.namespace}"
             ])
-            print("✅ RBAC permissions verified")
+            print(" RBAC permissions verified")
         except subprocess.CalledProcessError:
-            print("❌ Insufficient RBAC permissions")
+            print(" Insufficient RBAC permissions")
             return False
         
         return True
     
     def generate_secrets(self) -> bool:
         """Generate secure secrets for staging environment"""
-        print("🔐 Generating secure secrets for staging environment...")
+        print(" Generating secure secrets for staging environment...")
         
         import secrets
         import string
@@ -154,13 +154,13 @@ class StagingDeployment:
             for secret_name, secret_values in secrets_data.items():
                 for key, value in secret_values.items():
                     # This is a simplified replacement - in production, use proper YAML parsing
-                    print(f"✅ Generated secure {key} for {secret_name}")
+                    print(f" Generated secure {key} for {secret_name}")
             
-            print("✅ Secure secrets generated successfully")
+            print(" Secure secrets generated successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to generate secrets: {e}")
+            print(f" Failed to generate secrets: {e}")
             return False
     
     def deploy_manifest(self, manifest_file: str) -> bool:
@@ -168,17 +168,17 @@ class StagingDeployment:
         manifest_path = self.k8s_dir / manifest_file
         
         if not manifest_path.exists():
-            print(f"❌ Manifest file not found: {manifest_path}")
+            print(f" Manifest file not found: {manifest_path}")
             return False
         
-        print(f"📦 Deploying {manifest_file}...")
+        print(f" Deploying {manifest_file}...")
         
         try:
             result = self.run_kubectl(["apply", "-f", str(manifest_path)])
-            print(f"✅ Successfully deployed {manifest_file}")
+            print(f" Successfully deployed {manifest_file}")
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to deploy {manifest_file}: {e.stderr}")
+            print(f" Failed to deploy {manifest_file}: {e.stderr}")
             return False
     
     def wait_for_pods(self, label_selector: str, timeout: int = 600) -> bool:
@@ -208,7 +208,7 @@ class StagingDeployment:
                                 break
                     
                     if all_ready:
-                        print(f"✅ All pods with selector '{label_selector}' are ready")
+                        print(f" All pods with selector '{label_selector}' are ready")
                         return True
                 
                 time.sleep(15)  # Longer interval for staging
@@ -216,7 +216,7 @@ class StagingDeployment:
             except subprocess.CalledProcessError:
                 time.sleep(15)
         
-        print(f"❌ Timeout waiting for pods with selector '{label_selector}'")
+        print(f" Timeout waiting for pods with selector '{label_selector}'")
         return False
     
     def wait_for_services(self) -> bool:
@@ -232,14 +232,14 @@ class StagingDeployment:
         
         for selector, name in services:
             if not self.wait_for_pods(selector, timeout=900):  # 15 minutes for HA services
-                print(f"❌ {name} pods are not ready")
+                print(f" {name} pods are not ready")
                 return False
         
         return True
     
     def run_health_checks(self) -> bool:
         """Run comprehensive health checks on staging services"""
-        print("🏥 Running comprehensive health checks...")
+        print(" Running comprehensive health checks...")
         
         health_checks = [
             {
@@ -281,16 +281,16 @@ class StagingDeployment:
                     "--timeout=60s",
                     "--", "sh", "-c", " ".join(check['command'])
                 ])
-                print(f"✅ {check['name']} health check passed")
+                print(f" {check['name']} health check passed")
             except subprocess.CalledProcessError:
-                print(f"❌ {check['name']} health check failed")
+                print(f" {check['name']} health check failed")
                 all_healthy = False
         
         return all_healthy
     
     def setup_monitoring_dashboards(self) -> bool:
         """Setup enhanced monitoring dashboards for staging"""
-        print("📊 Setting up enhanced monitoring dashboards...")
+        print(" Setting up enhanced monitoring dashboards...")
         
         try:
             # Create Grafana dashboards ConfigMap
@@ -340,20 +340,20 @@ class StagingDeployment:
             stdout, stderr = process.communicate(input=dashboard_yaml)
             
             if process.returncode == 0:
-                print("✅ Monitoring dashboards configured")
+                print(" Monitoring dashboards configured")
                 return True
             else:
-                print(f"❌ Failed to configure dashboards: {stderr}")
+                print(f" Failed to configure dashboards: {stderr}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Failed to setup monitoring dashboards: {e}")
+            print(f" Failed to setup monitoring dashboards: {e}")
             return False
     
     def deploy_staging_environment(self) -> bool:
         """Deploy the complete staging environment"""
-        print("🚀 Starting Staging Environment (E4) deployment...")
-        print("⚠️  This is a production-like environment with enhanced security and monitoring")
+        print(" Starting Staging Environment (E4) deployment...")
+        print("  This is a production-like environment with enhanced security and monitoring")
         
         if not self.check_prerequisites():
             return False
@@ -364,7 +364,7 @@ class StagingDeployment:
         # Deploy manifests in order
         for manifest in self.deployment_order:
             if not self.deploy_manifest(manifest):
-                print(f"❌ Deployment failed at {manifest}")
+                print(f" Deployment failed at {manifest}")
                 return False
             
             # Wait longer between deployments for staging
@@ -372,43 +372,43 @@ class StagingDeployment:
         
         # Wait for all services to be ready
         if not self.wait_for_services():
-            print("❌ Some services failed to start")
+            print(" Some services failed to start")
             return False
         
         # Setup monitoring dashboards
         if not self.setup_monitoring_dashboards():
-            print("⚠️ Monitoring dashboards setup failed, but deployment completed")
+            print(" Monitoring dashboards setup failed, but deployment completed")
         
         # Run comprehensive health checks
         if not self.run_health_checks():
-            print("⚠️ Some health checks failed, but deployment completed")
+            print(" Some health checks failed, but deployment completed")
         
-        print("🎉 Staging Environment (E4) deployment completed successfully!")
-        print("🔒 This environment includes enhanced security, HA services, and comprehensive monitoring")
+        print(" Staging Environment (E4) deployment completed successfully!")
+        print(" This environment includes enhanced security, HA services, and comprehensive monitoring")
         return True
     
     def undeploy_staging_environment(self) -> bool:
         """Remove the staging environment"""
-        print("🗑️ Removing Staging Environment (E4)...")
-        print("⚠️  This will delete all staging data and configurations")
+        print(" Removing Staging Environment (E4)...")
+        print("  This will delete all staging data and configurations")
         
         # Confirm deletion for staging
         confirm = input("Are you sure you want to delete the staging environment? (yes/no): ")
         if confirm.lower() != 'yes':
-            print("❌ Deployment cancelled")
+            print(" Deployment cancelled")
             return False
         
         try:
             result = self.run_kubectl(["delete", "namespace", self.namespace])
-            print(f"✅ Namespace '{self.namespace}' deleted")
+            print(f" Namespace '{self.namespace}' deleted")
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to delete namespace: {e.stderr}")
+            print(f" Failed to delete namespace: {e.stderr}")
             return False
     
     def get_environment_status(self) -> Dict:
         """Get comprehensive status of the staging environment"""
-        print("📊 Getting Staging Environment status...")
+        print(" Getting Staging Environment status...")
         
         status = {
             "namespace": self.namespace,
@@ -483,17 +483,17 @@ class StagingDeployment:
             status["overall_health"] = "healthy" if all_healthy else "unhealthy"
             
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to get status: {e.stderr}")
+            print(f" Failed to get status: {e.stderr}")
             status["overall_health"] = "error"
         
         return status
     
     def print_access_info(self):
         """Print information about accessing the staging services"""
-        print("\n🌐 Staging Environment Access Information:")
+        print("\n Staging Environment Access Information:")
         print("=" * 70)
         
-        print("\n🔒 Security Notice:")
+        print("\n Security Notice:")
         print("  This is a production-like staging environment with enhanced security.")
         print("  All services use authentication and may require proper credentials.")
         
@@ -506,28 +506,28 @@ class StagingDeployment:
             ("MongoDB HA Primary", "mongodb-ha-service", "27017:27017")
         ]
         
-        print(f"\n📡 Port Forward Commands (run in separate terminals):")
+        print(f"\n Port Forward Commands (run in separate terminals):")
         for name, service, ports in port_forwards:
             cmd = f"kubectl port-forward -n {self.namespace} svc/{service} {ports}"
             print(f"  {name}: {cmd}")
         
-        print(f"\n🔑 Security Credentials:")
-        print(f"  ⚠️  Credentials are stored in Kubernetes secrets")
-        print(f"  ⚠️  Use 'kubectl get secret -n {self.namespace}' to list secrets")
-        print(f"  ⚠️  Decode with: kubectl get secret <secret-name> -n {self.namespace} -o yaml")
+        print(f"\n Security Credentials:")
+        print(f"    Credentials are stored in Kubernetes secrets")
+        print(f"    Use 'kubectl get secret -n {self.namespace}' to list secrets")
+        print(f"    Decode with: kubectl get secret <secret-name> -n {self.namespace} -o yaml")
         
-        print(f"\n🧪 Running Tests:")
+        print(f"\n Running Tests:")
         print(f"  netskope-sdet staging test --test-type integration")
         print(f"  netskope-sdet staging test --test-type e2e")
         print(f"  netskope-sdet staging test --test-type security")
         
-        print(f"\n📊 Monitoring:")
+        print(f"\n Monitoring:")
         print(f"  kubectl get pods -n {self.namespace}")
         print(f"  kubectl get services -n {self.namespace}")
         print(f"  kubectl top pods -n {self.namespace}")
         print(f"  kubectl logs -n {self.namespace} -l environment=staging")
         
-        print(f"\n🔍 Health Checks:")
+        print(f"\n Health Checks:")
         print(f"  netskope-sdet staging health-check")
         print(f"  netskope-sdet staging status")
 
@@ -581,7 +581,7 @@ def main():
     
     elif args.action == "status":
         status = deployment.get_environment_status()
-        print(f"\n📊 Staging Environment Status:")
+        print(f"\n Staging Environment Status:")
         print(f"Namespace: {status['namespace']}")
         print(f"Environment: {status['environment']}")
         print(f"Overall Health: {status['overall_health']}")
@@ -589,14 +589,14 @@ def main():
         print(f"Pods: {len(status['pods'])}")
         print(f"Storage Volumes: {len(status['storage'])}")
         
-        print(f"\n🔍 Pod Status:")
+        print(f"\n Pod Status:")
         for name, info in status['pods'].items():
-            status_icon = "✅" if info['ready'] else "❌"
+            status_icon = "" if info['ready'] else ""
             print(f"  {status_icon} {name}: {info['phase']} (Node: {info.get('node', 'N/A')})")
         
-        print(f"\n💾 Storage Status:")
+        print(f"\n Storage Status:")
         for name, info in status['storage'].items():
-            print(f"  📦 {name}: {info['status']} ({info.get('storage_class', 'default')})")
+            print(f"   {name}: {info['status']} ({info.get('storage_class', 'default')})")
     
     elif args.action == "health-check":
         success = deployment.run_health_checks()

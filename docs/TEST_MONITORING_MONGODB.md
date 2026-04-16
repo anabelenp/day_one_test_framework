@@ -1,10 +1,10 @@
 # Test Monitoring with MongoDB - Complete Guide
 
-## 📊 Overview
+##  Overview
 
 The Day-1 Framework includes automatic test result logging to MongoDB for comprehensive test monitoring, analytics, and reporting. This guide covers how to use, configure, and analyze test data stored in MongoDB.
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### **Automatic Test Logging**
 Test results are automatically logged to MongoDB when you run pytest - no additional configuration needed!
@@ -21,16 +21,16 @@ mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?auth
 ```
 
 ### **What Gets Logged Automatically**
-- ✅ **Test execution results** (pass/fail/skip)
-- ⏱️ **Test duration and timing**
-- 🔍 **Error messages and stack traces**
-- 📊 **Session summaries and statistics**
-- 🌍 **Environment and metadata**
-- 📈 **Performance metrics**
+-  **Test execution results** (pass/fail/skip)
+- ⏱ **Test duration and timing**
+-  **Error messages and stack traces**
+-  **Session summaries and statistics**
+-  **Environment and metadata**
+-  **Performance metrics**
 
 ---
 
-## 🔧 How It Works
+##  How It Works
 
 ### **Automatic Integration**
 The framework uses pytest hooks to automatically capture and log test data:
@@ -99,7 +99,7 @@ Stores test session summaries:
 
 ---
 
-## 📊 MongoDB Access Methods
+##  MongoDB Access Methods
 
 ### **1. Command Line Access (Recommended)**
 ```bash
@@ -137,7 +137,7 @@ for result in results:
 
 ---
 
-## 🔍 Test Data Analysis
+##  Test Data Analysis
 
 ### **Basic Queries**
 
@@ -286,7 +286,7 @@ db.test_results.aggregate([
 
 ---
 
-## 📈 Real-Time Monitoring
+##  Real-Time Monitoring
 
 ### **Live Test Monitoring**
 ```javascript
@@ -341,7 +341,7 @@ def monitor_test_failures():
             failure_rate = len(failed_tests) / len(recent_tests) * 100
             
             if failure_rate > 20:  # Alert if >20% failure rate
-                print(f"🚨 HIGH FAILURE RATE ALERT: {failure_rate:.1f}% ({len(failed_tests)}/{len(recent_tests)} tests failed)")
+                print(f" HIGH FAILURE RATE ALERT: {failure_rate:.1f}% ({len(failed_tests)}/{len(recent_tests)} tests failed)")
                 
                 # Send notification (email, Slack, etc.)
                 # send_alert_notification(failure_rate, failed_tests)
@@ -355,7 +355,7 @@ if __name__ == "__main__":
 
 ---
 
-## 📊 Custom Dashboards and Reports
+##  Custom Dashboards and Reports
 
 ### **MongoDB Charts Integration**
 ```javascript
@@ -441,7 +441,7 @@ export_test_data_to_csv(30)  # Export last 30 days
 
 ---
 
-## 🔧 Configuration and Customization
+##  Configuration and Customization
 
 ### **Custom Test Metadata**
 ```python
@@ -513,7 +513,7 @@ db.test_results.aggregate([
 
 ---
 
-## 🚀 Advanced Use Cases
+##  Advanced Use Cases
 
 ### **A/B Testing Analysis**
 ```javascript
@@ -568,7 +568,7 @@ db.test_results.aggregate([
 
 ---
 
-## 🛠️ Troubleshooting
+##  Troubleshooting
 
 ### **Common Issues**
 
@@ -630,7 +630,7 @@ if success:
 
 ---
 
-## 📚 Integration Examples
+##  Integration Examples
 
 ### **CI/CD Pipeline Integration**
 ```yaml
@@ -691,7 +691,7 @@ def send_test_summary_to_slack(webhook_url):
     
     if latest_session:
         message = {
-            "text": f"🧪 Test Results Summary",
+            "text": f" Test Results Summary",
             "attachments": [{
                 "color": "good" if latest_session["success_rate"] > 90 else "warning",
                 "fields": [
@@ -719,7 +719,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 ---
 
-## 🎯 Best Practices
+##  Best Practices
 
 ### **1. Query Optimization**
 - Always use indexes for frequently queried fields
@@ -747,19 +747,19 @@ def pytest_sessionfinish(session, exitstatus):
 
 ---
 
-## 📞 Support and Resources
+##  Support and Resources
 
 ### **Documentation Links**
-- 📖 **[Main Framework Guide](../README.md)** - Complete setup instructions
-- 🔧 **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues and solutions
-- 📊 **[Monitoring Guide](MONITORING_AND_REPORTS_GUIDE.md)** - All monitoring platforms
-- 🏗️ **[Architecture Guide](architecture.md)** - System design overview
+-  **[Main Framework Guide](../README.md)** - Complete setup instructions
+-  **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues and solutions
+-  **[Monitoring Guide](MONITORING_AND_REPORTS_GUIDE.md)** - All monitoring platforms
+-  **[Architecture Guide](architecture.md)** - System design overview
 
 ### **MongoDB Resources**
-- 📚 **[MongoDB Manual](https://docs.mongodb.com/manual/)** - Official documentation
-- 🔍 **[Query Reference](https://docs.mongodb.com/manual/reference/operator/query/)** - Query operators
-- 📊 **[Aggregation Pipeline](https://docs.mongodb.com/manual/aggregation/)** - Advanced analytics
-- 🛠️ **[MongoDB Compass](https://www.mongodb.com/products/compass)** - GUI tool
+-  **[MongoDB Manual](https://docs.mongodb.com/manual/)** - Official documentation
+-  **[Query Reference](https://docs.mongodb.com/manual/reference/operator/query/)** - Query operators
+-  **[Aggregation Pipeline](https://docs.mongodb.com/manual/aggregation/)** - Advanced analytics
+-  **[MongoDB Compass](https://www.mongodb.com/products/compass)** - GUI tool
 
 ### **Getting Help**
 ```bash
@@ -776,4 +776,4 @@ python src/cli.py env info
 
 ---
 
-**🎯 This guide provides complete coverage of test monitoring with MongoDB in the Day-1 Framework. Use it to gain deep insights into your test execution patterns, performance trends, and quality metrics!**
+** This guide provides complete coverage of test monitoring with MongoDB in the Day-1 Framework. Use it to gain deep insights into your test execution patterns, performance trends, and quality metrics!**

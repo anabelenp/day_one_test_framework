@@ -1,0 +1,164 @@
+{
+  "status": "success",
+  "data": {
+    "events": [
+      {
+        "id": "evt_001",
+        "type": "file_download",
+        "severity": "low",
+        "timestamp": "2024-01-15T10:30:00Z",
+        "user": {
+          "id": "usr_001",
+          "email": "john.doe@example.com",
+          "name": "John Doe"
+        },
+        "device": {
+          "id": "dev_001",
+          "hostname": "workstation-01",
+          "ip_address": "192.168.1.100"
+        },
+        "app": {
+          "name": "Google Drive",
+          "category": "Cloud Storage"
+        },
+        "destination": {
+          "type": "external",
+          "domain": "external.com"
+        },
+        "policy": {
+          "id": "pol_001",
+          "name": "Cloud Storage Policy"
+        },
+        "action": "allowed",
+        "bytes": 1024000
+      },
+      {
+        "id": "evt_002",
+        "type": "malware_detected",
+        "severity": "critical",
+        "timestamp": "2024-01-15T10:35:00Z",
+        "user": {
+          "id": "usr_002",
+          "email": "jane.smith@example.com",
+          "name": "Jane Smith"
+        },
+        "device": {
+          "id": "dev_002",
+          "hostname": "laptop-02",
+          "ip_address": "192.168.1.101"
+        },
+        "app": {
+          "name": "Email",
+          "category": "Email"
+        },
+        "threat": {
+          "name": "Trojan.GenericKD.4615164",
+          "type": "malware",
+          "family": "Trojan"
+        },
+        "policy": {
+          "id": "pol_002",
+          "name": "Malware Protection Policy"
+        },
+        "action": "blocked",
+        "quarantined": true
+      },
+      {
+        "id": "evt_003",
+        "type": "dlp_violation",
+        "severity": "high",
+        "timestamp": "2024-01-15T10:40:00Z",
+        "user": {
+          "id": "usr_003",
+          "email": "bob.wilson@example.com",
+          "name": "Bob Wilson"
+        },
+        "device": {
+          "id": "dev_003",
+          "hostname": "desktop-03",
+          "ip_address": "192.168.1.102"
+        },
+        "app": {
+          "name": "Slack",
+          "category": "Collaboration"
+        },
+        "dlp": {
+          "rule": "Credit Card Numbers",
+          "matches": ["****-****-****-4242"],
+          "count": 1
+        },
+        "policy": {
+          "id": "pol_003",
+          "name": "PCI-DSS Compliance Policy"
+        },
+        "action": "alert",
+        "data_loss_prevented": true
+      },
+      {
+        "id": "evt_004",
+        "type": "anomaly_detected",
+        "severity": "medium",
+        "timestamp": "2024-01-15T10:45:00Z",
+        "user": {
+          "id": "usr_004",
+          "email": "alice.johnson@example.com",
+          "name": "Alice Johnson"
+        },
+        "device": {
+          "id": "dev_004",
+          "hostname": "workstation-04",
+          "ip_address": "192.168.1.103"
+        },
+        "anomaly": {
+          "type": "unusual_login_location",
+          "baseline": "San Francisco, CA",
+          "current": "Moscow, Russia",
+          "confidence": 0.95
+        },
+        "policy": {
+          "id": "pol_004",
+          "name": "Anomaly Detection Policy"
+        },
+        "action": "alert",
+        "risk_score": 85
+      },
+      {
+        "id": "evt_005",
+        "type": "policy_violation",
+        "severity": "low",
+        "timestamp": "2024-01-15T10:50:00Z",
+        "user": {
+          "id": "usr_005",
+          "email": "charlie.brown@example.com",
+          "name": "Charlie Brown"
+        },
+        "device": {
+          "id": "dev_005",
+          "hostname": "BYOD-05",
+          "ip_address": "192.168.1.104"
+        },
+        "violation": {
+          "category": "unsanctioned_app",
+          "app": "BitTorrent",
+          "reason": "P2P file sharing not allowed"
+        },
+        "policy": {
+          "id": "pol_005",
+          "name": "Application Control Policy"
+        },
+        "action": "blocked"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 50,
+      "total": 5,
+      "total_pages": 1
+    }
+  },
+  "meta": {
+    "request_id": "req_abc123",
+    "timestamp": "2024-01-15T10:55:00Z",
+    "version": "v2"
+  }
+}

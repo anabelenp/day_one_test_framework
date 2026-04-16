@@ -1,6 +1,6 @@
 # Netskope SDET Framework - Troubleshooting Guide
 
-## 🔧 Common Issues and Solutions
+##  Common Issues and Solutions
 
 ### **Environment Detection Issues**
 
@@ -19,10 +19,10 @@ python src/cli.py env info
 
 **Root Cause**: Environment detection prioritizes configuration file existence. If multiple config files exist, it may default to production.
 
-#### **Problem**: Environment validation fails with "❌ Invalid"
+#### **Problem**: Environment validation fails with " Invalid"
 ```bash
 python src/cli.py env validate
-# Shows: ❌ local environment validation failed
+# Shows:  local environment validation failed
 ```
 
 **Solution**: Check service connectivity
@@ -48,17 +48,17 @@ def test_port(host, port):
 
 services = [('Redis', 'localhost', 6379), ('Kafka', 'localhost', 9092), ('MongoDB', 'localhost', 27017)]
 for name, host, port in services:
-    status = '✅' if test_port(host, port) else '❌'
+    status = '' if test_port(host, port) else ''
     print(f'{name}: {status}')
 "
 ```
 
 ### **Service Health Check Issues**
 
-#### **Problem**: All services show "❌ Unhealthy"
+#### **Problem**: All services show " Unhealthy"
 ```bash
 python src/cli.py services health
-# Shows: cache: ❌ Unhealthy, message: ❌ Unhealthy, etc.
+# Shows: cache:  Unhealthy, message:  Unhealthy, etc.
 ```
 
 **Solution 1**: Check Docker Compose services
@@ -103,7 +103,7 @@ curl http://localhost:8080/health
 # Kafka will show as healthy using mock client
 export TESTING_MODE=local
 python src/cli.py services health
-# Should show: message: ✅ Healthy (using mock client)
+# Should show: message:  Healthy (using mock client)
 ```
 
 ### **Docker Compose Issues**
@@ -212,7 +212,7 @@ pip install -e .
 export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
 
 # Verify installation
-python -c "from src.environment_manager import get_current_environment; print('✅ Import successful')"
+python -c "from src.environment_manager import get_current_environment; print(' Import successful')"
 ```
 
 #### **Problem**: Missing dependencies
@@ -249,7 +249,7 @@ docker-compose -f docker-compose.local.yml down
 docker-compose -f docker-compose.local.yml up -d
 ```
 
-## 🔍 Debugging Commands
+##  Debugging Commands
 
 ### **Environment Debugging**
 ```bash
@@ -307,7 +307,7 @@ lsof -i :27017
 lsof -i :8080
 ```
 
-## 🚨 Emergency Recovery
+##  Emergency Recovery
 
 ### **Complete Environment Reset**
 ```bash
@@ -356,7 +356,7 @@ docker volume rm netskope_day_one_test_framework_mongodb_config
 docker-compose -f docker-compose.local.yml up -d mongodb
 ```
 
-## 📞 Getting Help
+##  Getting Help
 
 ### **Check Framework Status**
 ```bash
@@ -400,4 +400,4 @@ cat debug_report.txt
 
 ---
 
-**💡 Pro Tip**: Always start with `export TESTING_MODE=local` and `docker-compose -f docker-compose.local.yml ps` to check the basic setup before diving into specific issues.
+** Pro Tip**: Always start with `export TESTING_MODE=local` and `docker-compose -f docker-compose.local.yml ps` to check the basic setup before diving into specific issues.

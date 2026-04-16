@@ -1,0 +1,143 @@
+{
+  "status": "success",
+  "data": {
+    "users": [
+      {
+        "id": "usr_001",
+        "username": "john.doe",
+        "email": "john.doe@example.com",
+        "name": "John Doe",
+        "first_name": "John",
+        "last_name": "Doe",
+        "department": "Engineering",
+        "division": "Product Development",
+        "title": "Senior Software Engineer",
+        "role": "user",
+        "status": "active",
+        "managed": true,
+        "source": "active_directory",
+        "created_at": "2023-06-15T00:00:00Z",
+        "last_login": "2024-01-15T09:30:00Z",
+        "risk_score": 15,
+        "devices": [
+          {"id": "dev_001", "hostname": "workstation-01", "managed": true, "compliant": true}
+        ],
+        "groups": ["engineering", "developers", "project-alpha"],
+        "permissions": ["read", "write", "execute"],
+        "mfa_enabled": true,
+        "mfa_methods": ["totp", "sms"]
+      },
+      {
+        "id": "usr_002",
+        "username": "jane.smith",
+        "email": "jane.smith@example.com",
+        "name": "Jane Smith",
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "department": "Security",
+        "division": "Information Security",
+        "title": "Security Analyst",
+        "role": "admin",
+        "status": "active",
+        "managed": true,
+        "source": "active_directory",
+        "created_at": "2023-03-01T00:00:00Z",
+        "last_login": "2024-01-15T08:45:00Z",
+        "risk_score": 5,
+        "devices": [
+          {"id": "dev_002", "hostname": "laptop-02", "managed": true, "compliant": true}
+        ],
+        "groups": ["security_team", " admins", "soc"],
+        "permissions": ["read", "write", "execute", "admin"],
+        "mfa_enabled": true,
+        "mfa_methods": ["totp", "hardware_key"]
+      },
+      {
+        "id": "usr_003",
+        "username": "bob.wilson",
+        "email": "bob.wilson@example.com",
+        "name": "Bob Wilson",
+        "first_name": "Bob",
+        "last_name": "Wilson",
+        "department": "Finance",
+        "division": "Accounting",
+        "title": "Financial Analyst",
+        "role": "user",
+        "status": "active",
+        "managed": true,
+        "source": "active_directory",
+        "created_at": "2023-09-10T00:00:00Z",
+        "last_login": "2024-01-15T10:15:00Z",
+        "risk_score": 25,
+        "devices": [
+          {"id": "dev_003", "hostname": "desktop-03", "managed": true, "compliant": true}
+        ],
+        "groups": ["finance_team", "accounting"],
+        "permissions": ["read", "write"],
+        "mfa_enabled": true,
+        "mfa_methods": ["totp"]
+      },
+      {
+        "id": "usr_004",
+        "username": "alice.johnson",
+        "email": "alice.johnson@example.com",
+        "name": "Alice Johnson",
+        "first_name": "Alice",
+        "last_name": "Johnson",
+        "department": "HR",
+        "division": "Human Resources",
+        "title": "HR Manager",
+        "role": "user",
+        "status": "active",
+        "managed": true,
+        "source": "active_directory",
+        "created_at": "2023-01-20T00:00:00Z",
+        "last_login": "2024-01-15T09:00:00Z",
+        "risk_score": 20,
+        "devices": [
+          {"id": "dev_004", "hostname": "workstation-04", "managed": true, "compliant": true}
+        ],
+        "groups": ["hr_team", "management"],
+        "permissions": ["read", "write"],
+        "mfa_enabled": true,
+        "mfa_methods": ["totp"]
+      },
+      {
+        "id": "usr_005",
+        "username": "charlie.brown",
+        "email": "charlie.brown@example.com",
+        "name": "Charlie Brown",
+        "first_name": "Charlie",
+        "last_name": "Brown",
+        "department": "Marketing",
+        "division": "Digital Marketing",
+        "title": "Marketing Specialist",
+        "role": "user",
+        "status": "active",
+        "managed": false,
+        "source": "local",
+        "created_at": "2024-01-05T00:00:00Z",
+        "last_login": "2024-01-15T11:00:00Z",
+        "risk_score": 45,
+        "devices": [
+          {"id": "dev_005", "hostname": "BYOD-05", "managed": false, "compliant": false}
+        ],
+        "groups": ["marketing"],
+        "permissions": ["read"],
+        "mfa_enabled": false,
+        "mfa_methods": []
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 50,
+      "total": 5,
+      "total_pages": 1
+    }
+  },
+  "meta": {
+    "request_id": "req_users_001",
+    "timestamp": "2024-01-15T11:05:00Z",
+    "version": "v2"
+  }
+}

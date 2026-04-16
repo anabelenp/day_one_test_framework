@@ -41,42 +41,42 @@ class IntegrationDeployment:
             cmd.extend(["--kubeconfig", self.kubeconfig])
         cmd.extend(args)
         
-        print(f"🔧 Running: {' '.join(cmd)}")
+        print(f" Running: {' '.join(cmd)}")
         return subprocess.run(cmd, check=check, capture_output=True, text=True)
     
     def check_prerequisites(self) -> bool:
         """Check if all prerequisites are met"""
-        print("🔍 Checking prerequisites...")
+        print(" Checking prerequisites...")
         
         # Check kubectl
         try:
             result = self.run_kubectl(["version", "--client"])
-            print("✅ kubectl is available")
+            print(" kubectl is available")
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print("❌ kubectl is not available or not in PATH")
+            print(" kubectl is not available or not in PATH")
             return False
         
         # Check cluster connectivity
         try:
             result = self.run_kubectl(["cluster-info"])
-            print("✅ Kubernetes cluster is accessible")
+            print(" Kubernetes cluster is accessible")
         except subprocess.CalledProcessError:
-            print("❌ Cannot connect to Kubernetes cluster")
+            print(" Cannot connect to Kubernetes cluster")
             return False
         
         # Check if namespace exists
         try:
             result = self.run_kubectl(["get", "namespace", self.namespace])
-            print(f"✅ Namespace '{self.namespace}' exists")
+            print(f" Namespace '{self.namespace}' exists")
         except subprocess.CalledProcessError:
-            print(f"ℹ️ Namespace '{self.namespace}' will be created")
+            print(f"ℹ Namespace '{self.namespace}' will be created")
         
         # Check available resources
         try:
             result = self.run_kubectl(["top", "nodes"])
-            print("✅ Cluster has available resources")
+            print(" Cluster has available resources")
         except subprocess.CalledProcessError:
-            print("⚠️ Cannot check cluster resources (metrics-server may not be installed)")
+            print(" Cannot check cluster resources (metrics-server may not be installed)")
         
         return True
     
@@ -85,17 +85,17 @@ class IntegrationDeployment:
         manifest_path = self.k8s_dir / manifest_file
         
         if not manifest_path.exists():
-            print(f"❌ Manifest file not found: {manifest_path}")
+            print(f" Manifest file not found: {manifest_path}")
             return False
         
-        print(f"📦 Deploying {manifest_file}...")
+        print(f" Deploying {manifest_file}...")
         
         try:
             result = self.run_kubectl(["apply", "-f", str(manifest_path)])
-            print(f"✅ Successfully deployed {manifest_file}")
+            print(f" Successfully deployed {manifest_file}")
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to deploy {manifest_file}: {e.stderr}")
+            print(f" Failed to deploy {manifest_file}: {e.stderr}")
             return False
     
     def wait_for_pods(self, label_selector: str, timeout: int = 300) -> bool:
@@ -126,7 +126,7 @@ class IntegrationDeployment:
                                 break
                     
                     if all_ready:
-                        print(f"✅ All pods with selector '{label_selector}' are ready")
+                        print(f" All pods with selector '{label_selector}' are ready")
                         return True
                 
                 time.sleep(10)
@@ -134,7 +134,7 @@ class IntegrationDeployment:
             except subprocess.CalledProcessError:
                 time.sleep(10)
         
-        print(f"❌ Timeout waiting for pods with selector '{label_selector}'")
+        print(f" Timeout waiting for pods with selector '{label_selector}'")
         return False
     
     def wait_for_services(self) -> bool:
@@ -151,14 +151,14 @@ class IntegrationDeployment:
         
         for selector, name in services:
             if not self.wait_for_pods(selector, timeout=300):
-                print(f"❌ {name} pods are not ready")
+                print(f" {name} pods are not ready")
                 return False
         
         return True
     
     def run_health_checks(self) -> bool:
         """Run health checks on deployed services"""
-        print("🏥 Running health checks...")
+        print(" Running health checks...")
         
         health_checks = [
             {
@@ -195,16 +195,16 @@ class IntegrationDeployment:
                     "--rm", "-i", "--restart=Never",
                     "--", "sh", "-c", " ".join(check['command'])
                 ])
-                print(f"✅ {check['name']} health check passed")
+                print(f" {check['name']} health check passed")
             except subprocess.CalledProcessError:
-                print(f"❌ {check['name']} health check failed")
+                print(f" {check['name']} health check failed")
                 all_healthy = False
         
         return all_healthy
     
     def deploy_integration_environment(self) -> bool:
         """Deploy the complete integration environment"""
-        print("🚀 Starting Integration Environment (E3) deployment...")
+        print(" Starting Integration Environment (E3) deployment...")
         
         if not self.check_prerequisites():
             return False
@@ -212,7 +212,7 @@ class IntegrationDeployment:
         # Deploy manifests in order
         for manifest in self.deployment_order:
             if not self.deploy_manifest(manifest):
-                print(f"❌ Deployment failed at {manifest}")
+                print(f" Deployment failed at {manifest}")
                 return False
             
             # Wait a bit between deployments
@@ -220,31 +220,31 @@ class IntegrationDeployment:
         
         # Wait for all services to be ready
         if not self.wait_for_services():
-            print("❌ Some services failed to start")
+            print(" Some services failed to start")
             return False
         
         # Run health checks
         if not self.run_health_checks():
-            print("⚠️ Some health checks failed, but deployment completed")
+            print(" Some health checks failed, but deployment completed")
         
-        print("🎉 Integration Environment (E3) deployment completed successfully!")
+        print(" Integration Environment (E3) deployment completed successfully!")
         return True
     
     def undeploy_integration_environment(self) -> bool:
         """Remove the integration environment"""
-        print("🗑️ Removing Integration Environment (E3)...")
+        print(" Removing Integration Environment (E3)...")
         
         try:
             result = self.run_kubectl(["delete", "namespace", self.namespace])
-            print(f"✅ Namespace '{self.namespace}' deleted")
+            print(f" Namespace '{self.namespace}' deleted")
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to delete namespace: {e.stderr}")
+            print(f" Failed to delete namespace: {e.stderr}")
             return False
     
     def get_environment_status(self) -> Dict:
         """Get status of the integration environment"""
-        print("📊 Getting Integration Environment status...")
+        print(" Getting Integration Environment status...")
         
         status = {
             "namespace": self.namespace,
@@ -287,14 +287,14 @@ class IntegrationDeployment:
             status["overall_health"] = "healthy" if all_healthy else "unhealthy"
             
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to get status: {e.stderr}")
+            print(f" Failed to get status: {e.stderr}")
             status["overall_health"] = "error"
         
         return status
     
     def print_access_info(self):
         """Print information about accessing the deployed services"""
-        print("\n🌐 Integration Environment Access Information:")
+        print("\n Integration Environment Access Information:")
         print("=" * 60)
         
         # Port forwarding commands
@@ -305,22 +305,22 @@ class IntegrationDeployment:
             ("Mock API", "mock-api-service", "8080:8080")
         ]
         
-        print("\n📡 Port Forward Commands (run in separate terminals):")
+        print("\n Port Forward Commands (run in separate terminals):")
         for name, service, ports in port_forwards:
             cmd = f"kubectl port-forward -n {self.namespace} svc/{service} {ports}"
             print(f"  {name}: {cmd}")
         
-        print(f"\n🔑 Default Credentials:")
+        print(f"\n Default Credentials:")
         print(f"  Grafana: admin / integration-grafana-2024")
         print(f"  Redis: integration-redis-2024")
         print(f"  MongoDB: netskope_app / netskope-app-2024")
         print(f"  API Key: integration-api-key-2024")
         
-        print(f"\n🧪 Running Tests:")
+        print(f"\n Running Tests:")
         print(f"  kubectl apply -f k8s/integration/test-runner-job.yaml")
         print(f"  kubectl logs -n {self.namespace} job/test-runner-integration -f")
         
-        print(f"\n📊 Monitoring:")
+        print(f"\n Monitoring:")
         print(f"  kubectl get pods -n {self.namespace}")
         print(f"  kubectl get services -n {self.namespace}")
         print(f"  kubectl describe namespace {self.namespace}")
@@ -370,14 +370,14 @@ def main():
     
     elif args.action == "status":
         status = deployment.get_environment_status()
-        print(f"\n📊 Environment Status:")
+        print(f"\n Environment Status:")
         print(f"Namespace: {status['namespace']}")
         print(f"Overall Health: {status['overall_health']}")
         print(f"Services: {len(status['services'])}")
         print(f"Pods: {len(status['pods'])}")
         
         for name, info in status['pods'].items():
-            status_icon = "✅" if info['ready'] else "❌"
+            status_icon = "" if info['ready'] else ""
             print(f"  {status_icon} {name}: {info['phase']}")
     
     elif args.action == "health-check":

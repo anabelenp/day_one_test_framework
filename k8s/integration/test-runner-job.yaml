@@ -121,7 +121,7 @@ spec:
         - -c
         - |
           set -e
-          echo "🚀 Starting Netskope SDET Integration Tests"
+          echo " Starting Netskope SDET Integration Tests"
           
           # Wait for services to be ready
           echo "⏳ Waiting for services to be ready..."
@@ -144,14 +144,14 @@ spec:
             sleep 5
           done
           
-          echo "✅ All services are ready!"
+          echo " All services are ready!"
           
           # Set environment
           export TESTING_MODE=integration
           export PYTHONPATH=/app/src:$PYTHONPATH
           
           # Run environment validation
-          echo "🔍 Validating integration environment..."
+          echo " Validating integration environment..."
           python -c "
           from src.environment_manager import EnvironmentManager
           from src.environment_manager import Environment
@@ -160,14 +160,14 @@ spec:
           is_valid = env_manager.validate_environment(Environment.INTEGRATION)
           
           if is_valid:
-              print('✅ Integration environment validation passed')
+              print(' Integration environment validation passed')
           else:
-              print('❌ Integration environment validation failed')
+              print(' Integration environment validation failed')
               exit(1)
           "
           
           # Run service health checks
-          echo "🏥 Running service health checks..."
+          echo " Running service health checks..."
           python -c "
           from src.service_manager import ServiceManager
           
@@ -176,23 +176,23 @@ spec:
           
           all_healthy = True
           for service, is_healthy in health_results.items():
-              status = '✅ Healthy' if is_healthy else '❌ Unhealthy'
+              status = ' Healthy' if is_healthy else ' Unhealthy'
               print(f'  {service}: {status}')
               if not is_healthy:
                   all_healthy = False
           
           if not all_healthy:
-              print('❌ Some services are unhealthy')
+              print(' Some services are unhealthy')
               exit(1)
           
-          print('✅ All services are healthy')
+          print(' All services are healthy')
           "
           
           # Create reports directory
           mkdir -p /app/reports
           
           # Run integration tests
-          echo "🧪 Running integration tests..."
+          echo " Running integration tests..."
           pytest tests/integration/ \
             -v \
             --tb=short \
@@ -206,7 +206,7 @@ spec:
             --maxfail=5
           
           # Run E2E tests
-          echo "🔄 Running E2E tests..."
+          echo " Running E2E tests..."
           pytest tests/e2e/ \
             -v \
             --tb=short \
@@ -216,7 +216,7 @@ spec:
             --maxfail=3
           
           # Run security tests
-          echo "🛡️ Running security tests..."
+          echo " Running security tests..."
           pytest tests/security/ \
             -v \
             --tb=short \
@@ -225,7 +225,7 @@ spec:
             -m "security" \
             --maxfail=3
           
-          echo "🎉 All tests completed successfully!"
+          echo " All tests completed successfully!"
           
           # Generate summary report
           python -c "
@@ -248,7 +248,7 @@ spec:
           with open('/app/reports/test_summary.json', 'w') as f:
               json.dump(summary, f, indent=2)
           
-          print('📊 Test summary generated')
+          print(' Test summary generated')
           "
         
         env:
@@ -364,7 +364,7 @@ spec:
             - /bin/bash
             - -c
             - |
-              echo "🕐 Running scheduled integration tests..."
+              echo " Running scheduled integration tests..."
               export TESTING_MODE=integration
               export PYTHONPATH=/app/src:$PYTHONPATH
               
@@ -375,7 +375,7 @@ spec:
               if [ $? -eq 0 ]; then
                 pytest tests/integration/ -v --html=/app/reports/scheduled_report.html
               else
-                echo "❌ Smoke tests failed, skipping full integration tests"
+                echo " Smoke tests failed, skipping full integration tests"
                 exit 1
               fi
             

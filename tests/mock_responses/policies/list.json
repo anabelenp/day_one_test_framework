@@ -1,0 +1,195 @@
+{
+  "status": "success",
+  "data": {
+    "policies": [
+      {
+        "id": "pol_001",
+        "name": "Cloud Storage Policy",
+        "description": "Controls access to cloud storage applications",
+        "type": "access_control",
+        "enabled": true,
+        "priority": 10,
+        "categories": ["Cloud Storage"],
+        "rules": [
+          {
+            "id": "rule_001",
+            "type": "allow",
+            "conditions": [
+              {"field": "app.category", "operator": "in", "value": ["Cloud Storage"]},
+              {"field": "user.department", "operator": "in", "value": ["Engineering", "Sales", "Marketing"]}
+            ],
+            "actions": ["allow"]
+          },
+          {
+            "id": "rule_002",
+            "type": "block",
+            "conditions": [
+              {"field": "app.category", "operator": "in", "value": ["Cloud Storage"]},
+              {"field": "file.type", "operator": "in", "value": ["executable", "script"]}
+            ],
+            "actions": ["block", "alert"]
+          }
+        ],
+        "compliance": ["SOC2", "ISO27001"],
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-15T10:00:00Z"
+      },
+      {
+        "id": "pol_002",
+        "name": "Malware Protection Policy",
+        "description": "Protects against malware and ransomware",
+        "type": "security",
+        "enabled": true,
+        "priority": 1,
+        "categories": ["Malware Protection"],
+        "rules": [
+          {
+            "id": "rule_010",
+            "type": "block",
+            "conditions": [
+              {"field": "threat.type", "operator": "in", "value": ["malware", "ransomware", "trojan"]}
+            ],
+            "actions": ["block", "quarantine", "alert"]
+          }
+        ],
+        "compliance": ["SOC2", "PCI-DSS"],
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-10T08:00:00Z"
+      },
+      {
+        "id": "pol_003",
+        "name": "PCI-DSS Compliance Policy",
+        "description": "Ensures PCI-DSS compliance for cardholder data",
+        "type": "dlp",
+        "enabled": true,
+        "priority": 5,
+        "categories": ["Data Loss Prevention"],
+        "rules": [
+          {
+            "id": "rule_020",
+            "type": "alert",
+            "conditions": [
+              {"field": "content.pattern", "operator": "matches", "value": "credit_card"}
+            ],
+            "actions": ["alert", "log"]
+          },
+          {
+            "id": "rule_021",
+            "type": "block",
+            "conditions": [
+              {"field": "content.pattern", "operator": "matches", "value": "credit_card"},
+              {"field": "destination.type", "operator": "equals", "value": "external"}
+            ],
+            "actions": ["block", "quarantine", "alert"]
+          }
+        ],
+        "compliance": ["PCI-DSS"],
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-12T14:00:00Z"
+      },
+      {
+        "id": "pol_004",
+        "name": "Anomaly Detection Policy",
+        "description": "Detects anomalous user behavior",
+        "type": "ueba",
+        "enabled": true,
+        "priority": 8,
+        "categories": ["User Behavior Analytics"],
+        "rules": [
+          {
+            "id": "rule_030",
+            "type": "alert",
+            "conditions": [
+              {"field": "behavior.risk_score", "operator": "greater_than", "value": 70}
+            ],
+            "actions": ["alert", "require_mfa"]
+          },
+          {
+            "id": "rule_031",
+            "type": "block",
+            "conditions": [
+              {"field": "behavior.risk_score", "operator": "greater_than", "value": 90}
+            ],
+            "actions": ["block", "alert", "notify_security"]
+          }
+        ],
+        "compliance": ["SOC2", "GDPR"],
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-14T09:00:00Z"
+      },
+      {
+        "id": "pol_005",
+        "name": "Application Control Policy",
+        "description": "Controls access to applications based on policy",
+        "type": "access_control",
+        "enabled": true,
+        "priority": 15,
+        "categories": ["Application Control"],
+        "rules": [
+          {
+            "id": "rule_040",
+            "type": "allow",
+            "conditions": [
+              {"field": "app.sanctioned", "operator": "equals", "value": true}
+            ],
+            "actions": ["allow"]
+          },
+          {
+            "id": "rule_041",
+            "type": "block",
+            "conditions": [
+              {"field": "app.sanctioned", "operator": "equals", "value": false},
+              {"field": "app.category", "operator": "in", "value": ["P2P", "Gaming"]}
+            ],
+            "actions": ["block", "alert"]
+          }
+        ],
+        "compliance": ["SOC2"],
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-13T11:00:00Z"
+      },
+      {
+        "id": "pol_006",
+        "name": "Insider Threat Policy",
+        "description": "Detects potential insider threat activities",
+        "type": "security",
+        "enabled": true,
+        "priority": 3,
+        "categories": ["Insider Threat"],
+        "rules": [
+          {
+            "id": "rule_050",
+            "type": "alert",
+            "conditions": [
+              {"field": "behavior.data_exfiltration_risk", "operator": "greater_than", "value": 60}
+            ],
+            "actions": ["alert", "monitor"]
+          },
+          {
+            "id": "rule_051",
+            "type": "block",
+            "conditions": [
+              {"field": "behavior.data_exfiltration_risk", "operator": "greater_than", "value": 85},
+              {"field": "file.classification", "operator": "in", "value": ["confidential", "restricted"]}
+            ],
+            "actions": ["block", "alert", "notify_manager"]
+          }
+        ],
+        "compliance": ["SOC2", "NIST"],
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-11T16:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 50,
+      "total": 6,
+      "total_pages": 1
+    }
+  },
+  "meta": {
+    "request_id": "req_policies_001",
+    "timestamp": "2024-01-15T11:00:00Z",
+    "version": "v2"
+  }
+}

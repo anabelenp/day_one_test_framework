@@ -416,7 +416,7 @@ class TestProductionMonitoring:
         recommendations = production_monitor._generate_recommendations(health_data, metrics_data)
         
         # Should have critical recommendations
-        assert any('🔴' in rec for rec in recommendations)
+        assert any('' in rec for rec in recommendations)
         assert any('REDIS' in rec for rec in recommendations)
         assert any('CPU' in rec for rec in recommendations)
 

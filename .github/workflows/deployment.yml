@@ -106,10 +106,10 @@ jobs:
         print(f'Integration environment health: {health}')
         
         if not all(health.values()):
-            print('❌ Some services are unhealthy')
+            print(' Some services are unhealthy')
             sys.exit(1)
         else:
-            print('✅ All services healthy')
+            print(' All services healthy')
         "
 
     - name: Run integration tests
@@ -211,12 +211,12 @@ jobs:
         (needs.deploy-integration.result == 'success' || needs.deploy-integration.result == 'skipped') &&
         (needs.deploy-staging.result == 'success' || needs.deploy-staging.result == 'skipped')
       run: |
-        echo "✅ Deployment completed successfully"
+        echo " Deployment completed successfully"
 
     - name: Notify failure
       if: |
         needs.deploy-integration.result == 'failure' ||
         needs.deploy-staging.result == 'failure'
       run: |
-        echo "❌ Deployment failed"
+        echo " Deployment failed"
         exit 1

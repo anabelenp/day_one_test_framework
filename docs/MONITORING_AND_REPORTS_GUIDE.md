@@ -1,10 +1,10 @@
 # Day-1 Framework - Monitoring and Reports Guide
 
-## 📊 Overview
+##  Overview
 
 The Day-1 Framework includes a comprehensive monitoring stack with multiple platforms for observability, metrics, and reporting. This guide covers how to access, configure, and use each monitoring platform.
 
-## 🚀 Quick Access
+##  Quick Access
 
 ### **Service URLs (Local Environment)**
 | Service | URL | Credentials | Purpose |
@@ -32,7 +32,7 @@ curl -s http://localhost:16686/         # Jaeger
 
 ---
 
-## 📈 Grafana - Dashboards & Visualization
+##  Grafana - Dashboards & Visualization
 
 ### **Access Grafana**
 ```bash
@@ -148,7 +148,7 @@ providers:
 
 ---
 
-## 🔍 Prometheus - Metrics Collection
+##  Prometheus - Metrics Collection
 
 ### **Access Prometheus**
 ```bash
@@ -255,7 +255,7 @@ def test_api_endpoint():
 
 ---
 
-## 🔗 Jaeger - Distributed Tracing
+##  Jaeger - Distributed Tracing
 
 ### **Access Jaeger**
 ```bash
@@ -327,7 +327,7 @@ def test_with_tracing():
 
 ---
 
-## 🗄️ MongoDB - Database Monitoring
+##  MongoDB - Database Monitoring
 
 ### **Access MongoDB**
 
@@ -427,7 +427,7 @@ open http://localhost:9090/graph
 
 ---
 
-## 📊 Redis - Cache Monitoring
+##  Redis - Cache Monitoring
 
 ### **Access Redis**
 
@@ -498,7 +498,7 @@ open http://localhost:9090/graph
 
 ---
 
-## 📋 Test Reports and Analytics
+##  Test Reports and Analytics
 
 ### **HTML Test Reports**
 ```bash
@@ -598,7 +598,7 @@ plt.show()
 
 ---
 
-## 🔧 Configuration and Customization
+##  Configuration and Customization
 
 ### **Monitoring Configuration Files**
 ```bash
@@ -657,7 +657,7 @@ groups:
 
 ---
 
-## 🚀 Quick Start Monitoring
+##  Quick Start Monitoring
 
 ### **1. Start Everything**
 ```bash
@@ -701,7 +701,7 @@ open htmlcov/index.html
 
 ---
 
-## 📞 Support and Troubleshooting
+##  Support and Troubleshooting
 
 ### **Common Issues**
 - **Grafana login fails**: Check credentials (admin/netskope_grafana_2024)
@@ -726,10 +726,10 @@ curl http://localhost:16686/           # Jaeger
 ```
 
 ### **Getting Help**
-- 📖 **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues and solutions
-- 🏗️ **[Architecture Guide](architecture.md)** - System design and components
-- 📚 **[Main Documentation](../README.md)** - Framework overview
+-  **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues and solutions
+-  **[Architecture Guide](architecture.md)** - System design and components
+-  **[Main Documentation](../README.md)** - Framework overview
 
 ---
 
-**🎯 This guide provides complete coverage of all monitoring and reporting capabilities in the Day-1 Framework. Use it to gain full observability into your testing infrastructure and results!**
+** This guide provides complete coverage of all monitoring and reporting capabilities in the Day-1 Framework. Use it to gain full observability into your testing infrastructure and results!**
