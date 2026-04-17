@@ -11,12 +11,34 @@ Manages multi-environment configuration and service discovery across:
 """
 
 import os
+import re
 import yaml
 import logging
 from typing import Dict, Any, Optional
 from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
+
+
+def expand_env_vars(value: Any) -> Any:
+    """Recursively expand environment variables in config values.
+
+    Supports ${VAR} and ${VAR:-default} syntax.
+    """
+    if isinstance(value, str):
+        pattern = r"\$\{([^}:]+)(?::-([^}]*))?\}"
+
+        def replacer(match):
+            var_name = match.group(1)
+            default = match.group(2) if match.group(2) is not None else ""
+            return os.environ.get(var_name, default)
+
+        return re.sub(pattern, replacer, value)
+    elif isinstance(value, dict):
+        return {k: expand_env_vars(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [expand_env_vars(item) for item in value]
+    return value
 
 
 class Environment(Enum):
@@ -38,6 +60,7 @@ class ServiceConfig:
     username: Optional[str] = None
     password: Optional[str] = None
     database: Optional[str] = None
+    auth_source: Optional[str] = "admin"
     ssl_enabled: bool = False
     connection_pool_size: int = 10
     timeout: int = 30
@@ -307,6 +330,8 @@ class EnvironmentManager:
             if config_file.exists():
                 with open(config_file, "r") as f:
                     file_config = yaml.safe_load(f) or {}
+                    # Expand environment variables in config
+                    file_config = expand_env_vars(file_config)
                     env_config.update(file_config)
                 break
 

@@ -1,118 +1,99 @@
 # Integration Environment Configuration
-# Kubernetes-based production-like environment for E2E testing
+# Kubernetes-based production-like environment for E3 testing
 
-ENVIRONMENT: integration
-MOCK_MODE: false
+name: "Integration Environment"
+environment: "integration"
 
-# Service Endpoints (Kubernetes services)
-REDIS_HOST: redis-service.netskope-integration.svc.cluster.local
-REDIS_PORT: 6379
-REDIS_PASSWORD: integration-redis-2024
-REDIS_DB: 0
-REDIS_SSL: false
+# Service Configurations (Kubernetes services)
+redis:
+  host: "redis-service.netskope-integration.svc.cluster.local"
+  port: 6379
+  password: "integration-redis-2024"
+  ssl_enabled: false
+  connection_pool_size: 10
+  timeout: 30
 
-KAFKA_BOOTSTRAP_SERVERS: kafka-service.netskope-integration.svc.cluster.local:9092
-KAFKA_SECURITY_PROTOCOL: PLAINTEXT
-KAFKA_SASL_MECHANISM: null
-KAFKA_CONSUMER_GROUP: netskope-integration-tests
-KAFKA_AUTO_OFFSET_RESET: earliest
+kafka:
+  host: "kafka-service.netskope-integration.svc.cluster.local"
+  port: 9092
+  ssl_enabled: false
+  connection_pool_size: 10
+  timeout: 30
 
-MONGODB_HOST: mongodb-service.netskope-integration.svc.cluster.local
-MONGODB_PORT: 27017
-MONGODB_USERNAME: netskope_app
-MONGODB_PASSWORD: netskope-app-2024
-MONGODB_DATABASE: netskope_integration
-MONGODB_AUTH_SOURCE: netskope_integration
-MONGODB_REPLICA_SET: rs0
-MONGODB_SSL: false
+mongodb:
+  host: "mongodb-service.netskope-integration.svc.cluster.local"
+  port: 27017
+  username: "netskope_app"
+  password: "netskope-app-2024"
+  database: "netskope_integration"
+  ssl_enabled: false
+  connection_pool_size: 10
+  timeout: 30
 
-# Mock Netskope API (for integration testing)
-NETSKOPE_BASE_URL: http://mock-api-service.netskope-integration.svc.cluster.local:8080
-API_KEY: integration-api-key-2024
-API_TIMEOUT: 30
-API_RETRIES: 3
+target_api:
+  host: "mock-api-service.netskope-integration.svc.cluster.local"
+  port: 8080
+  ssl_enabled: false
+  timeout: 30
 
-# AWS Services (LocalStack - optional)
-AWS_REGION: us-east-1
-AWS_ENDPOINT_URL: http://localstack-service.netskope-integration.svc.cluster.local:4566
-AWS_ACCESS_KEY_ID: test
-AWS_SECRET_ACCESS_KEY: test
-AWS_S3_BUCKET: netskope-integration-test
+# AWS Configuration
+aws_config:
+  region: "us-east-1"
+  endpoint_url: "http://localstack-service.netskope-integration.svc.cluster.local:4566"
+  access_key_id: "test"
+  secret_access_key: "test"
 
-# GCP Services (Mock)
-GCP_PROJECT_ID: netskope-integration-test
-GOOGLE_APPLICATION_CREDENTIALS: /etc/gcp/credentials.json
-GCP_STORAGE_BUCKET: netskope-integration-test
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  prometheus_url: "http://prometheus-service.netskope-integration.svc.cluster.local:9090"
+  grafana_url: "http://grafana-service.netskope-integration.svc.cluster.local:3000"
+  jaeger_url: "http://jaeger-service.netskope-integration.svc.cluster.local:16686"
+  metrics_port: 9090
 
-# Monitoring and Observability
-PROMETHEUS_URL: http://prometheus-service.netskope-integration.svc.cluster.local:9090
-GRAFANA_URL: http://grafana-service.netskope-integration.svc.cluster.local:3000
-JAEGER_URL: http://jaeger-service.netskope-integration.svc.cluster.local:16686
+# Security Configuration
+security:
+  tls_enabled: false
+  mutual_tls: false
+  encryption_at_rest: false
+  audit_logging: true
+  rate_limiting_enabled: true
+  max_requests_per_minute: 1000
 
-# Metrics Collection
-METRICS_ENABLED: true
-METRICS_PORT: 9090
-METRICS_PATH: /metrics
+# Performance Configuration
+performance:
+  max_concurrent_connections: 100
+  connection_pool_size: 10
+  cache_ttl: 300
+  batch_size: 100
+  request_timeout: 30
+  retry_attempts: 3
+  retry_delay: 1
 
-# Distributed Tracing
-TRACING_ENABLED: true
-JAEGER_AGENT_HOST: jaeger-service.netskope-integration.svc.cluster.local
-JAEGER_AGENT_PORT: 6831
-JAEGER_SAMPLER_TYPE: const
-JAEGER_SAMPLER_PARAM: 1
-
-# Test Configuration
-TEST_TIMEOUT: 300
-TEST_RETRIES: 3
-TEST_PARALLEL_WORKERS: 4
-TEST_FAIL_FAST: false
-TEST_VERBOSE: true
-
-# Logging Configuration
-LOG_LEVEL: INFO
-LOG_FORMAT: json
-LOG_OUTPUT: stdout
-LOG_FILE: /var/log/netskope-sdet/integration.log
-
-# Performance Testing
-PERFORMANCE_TEST_DURATION: 60
-PERFORMANCE_TEST_USERS: 10
-PERFORMANCE_TEST_RAMP_UP: 10
-
-# Security Testing
-SECURITY_SCAN_ENABLED: true
-SECURITY_SCAN_DEPTH: medium
-SECURITY_SCAN_TIMEOUT: 300
-
-# Feature Flags
-FEATURE_DISTRIBUTED_TRACING: true
-FEATURE_METRICS_COLLECTION: true
-FEATURE_ADVANCED_LOGGING: true
-FEATURE_CHAOS_TESTING: false
-
-# Resource Limits
-MAX_CONNECTIONS: 100
-CONNECTION_POOL_SIZE: 10
-REQUEST_TIMEOUT: 30
-MAX_RETRIES: 3
-
-# Health Check Configuration
-HEALTH_CHECK_INTERVAL: 30
-HEALTH_CHECK_TIMEOUT: 5
-HEALTH_CHECK_RETRIES: 3
+# Testing Configuration
+testing:
+  parallel_execution: true
+  max_workers: 4
+  test_timeout: 300
+  cleanup_after_tests: true
+  generate_reports: true
 
 # Kubernetes Configuration
-KUBERNETES_NAMESPACE: netskope-integration
-KUBERNETES_SERVICE_ACCOUNT: test-runner-sa
-KUBERNETES_IN_CLUSTER: true
+kubernetes:
+  namespace: "netskope-integration"
+  service_account: "test-runner-sa"
+  in_cluster: true
 
-# Test Data Configuration
-TEST_DATA_SEED: 12345
-TEST_DATA_CLEANUP: true
-TEST_DATA_ISOLATION: true
+# Data Configuration
+data:
+  retention_days: 30
+  backup_enabled: false
+  anonymization_enabled: true
 
-# Notification Configuration (optional)
-SLACK_WEBHOOK_URL: null
-EMAIL_NOTIFICATIONS: false
-NOTIFICATION_ON_FAILURE: true
-NOTIFICATION_ON_SUCCESS: false
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "json"
+  file_rotation: true
+  max_file_size: "10MB"
+  max_files: 5

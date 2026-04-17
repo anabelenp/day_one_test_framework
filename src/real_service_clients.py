@@ -343,7 +343,9 @@ class RealDatabaseClient(DatabaseClient):
             if self.config.username and self.config.password:
                 escaped_username = quote_plus(self.config.username)
                 escaped_password = quote_plus(self.config.password)
-                connection_string = f"mongodb://{escaped_username}:{escaped_password}@{self.config.host}:{self.config.port}/{self.config.database}?authSource=admin"
+                # Use database as auth source if specified, otherwise default to admin
+                auth_source = getattr(self.config, "auth_source", "admin")
+                connection_string = f"mongodb://{escaped_username}:{escaped_password}@{self.config.host}:{self.config.port}/{self.config.database}?authSource={auth_source}"
             else:
                 connection_string = f"mongodb://{self.config.host}:{self.config.port}/{self.config.database}"
 
