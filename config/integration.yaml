@@ -23,8 +23,8 @@ kafka:
 mongodb:
   host: "mongodb-service.netskope-integration.svc.cluster.local"
   port: 27017
-  username: "netskope_app"
-  password: "netskope-app-2024"
+  username: ""
+  password: ""
   database: "netskope_integration"
   ssl_enabled: false
   connection_pool_size: 10

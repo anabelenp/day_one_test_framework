@@ -129,7 +129,6 @@ spec:
         command:
         - mongod
         - --bind_ip_all
-        - --auth
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
