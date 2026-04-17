@@ -527,13 +527,13 @@ _environment_manager = None
 _environment_manager_lock = threading.Lock()
 
 
-def get_environment_manager() -> EnvironmentManager:
+def get_environment_manager(config_dir: str = "config") -> EnvironmentManager:
     """Get global environment manager instance (thread-safe)"""
     global _environment_manager
     if _environment_manager is None:
         with _environment_manager_lock:
             if _environment_manager is None:
-                _environment_manager = EnvironmentManager()
+                _environment_manager = EnvironmentManager(config_dir=config_dir)
     return _environment_manager
 
 

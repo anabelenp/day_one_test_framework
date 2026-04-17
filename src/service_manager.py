@@ -807,10 +807,11 @@ class RealCacheClient(CacheClient):
 class ServiceManager:
     """Manages service clients across different environments"""
 
-    def __init__(self):
-        self.env_manager = get_environment_manager()
+    def __init__(self, config_dir: str = "config"):
+        self.env_manager = get_environment_manager(config_dir=config_dir)
         self.logger = logging.getLogger(__name__)
         self._clients: Dict[str, ServiceClient] = {}
+        self._config_dir = config_dir
 
     def get_cache_client(self) -> CacheClient:
         """Get Redis cache client for current environment"""
