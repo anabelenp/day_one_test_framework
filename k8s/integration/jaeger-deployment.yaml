@@ -66,6 +66,25 @@ data:
     
     # UI configuration
     ui.defaultServiceName=netskope-integration
+  sampling_strategies.json: |
+    {
+      "service_strategies": [
+        {
+          "service": "jaeger-collector",
+          "type": "probabilistic",
+          "param": 0.1
+        },
+        {
+          "service": "jaeger-query",
+          "type": "probabilistic",
+          "param": 0.0
+        }
+      ],
+      "default_strategy": {
+        "type": "probabilistic",
+        "param": 0.1
+      }
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -121,7 +140,7 @@ spec:
           name: agent-binary
         - containerPort: 14250
           protocol: TCP
-          name: grpc-collections
+          name: grpc
         env:
         - name: COLLECTOR_OTLP_ENABLED
           value: "true"
@@ -144,7 +163,7 @@ spec:
         - name: JAEGER_REPORTER_MAX_QUEUE_SIZE
           value: "10000"
         - name: JAEGER_REPORTER_FLUSH_INTERVAL
-          value: "1000"
+          value: "1000ms"
         - name: JAEGER_DISABLED
           value: "false"
         - name: LOG_LEVEL
@@ -207,7 +226,7 @@ spec:
     port: 14268
     targetPort: 14268
     protocol: TCP
-  - name: grpc-collections
+  - name: grpc
     port: 14250
     targetPort: 14250
     protocol: TCP
@@ -237,7 +256,7 @@ spec:
     port: 14268
     targetPort: 14268
     protocol: TCP
-  - name: grpc-collections
+  - name: grpc
     port: 14250
     targetPort: 14250
     protocol: TCP
