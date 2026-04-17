@@ -186,3 +186,4 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 | `scripts/generate_quality_summary.py` | Generate GitHub summary |
 | `scripts/check_complexity.py` | Analyze code complexity |
 | `scripts/check_flaky_threshold.py` | Check flaky test threshold |
+| `scripts/clean_reports.py` | Clean old reports directory |

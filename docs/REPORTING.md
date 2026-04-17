@@ -473,6 +473,81 @@ Access in GitHub Actions → Artifacts after workflow run.
 | Coverage Gate | `python scripts/check_coverage.py --threshold 80` |
 | Code Quality | `python scripts/run_quality_checks.py` |
 
+
+---
+
+## 13. Report Management
+
+### Automatic Cleanup
+
+Reports are automatically cleaned before each test run via `tests/conftest.py`:
+
+```python
+@pytest.fixture(scope="session", autouse=True)
+def clean_reports_dir():
+    """Clean reports directory before test session."""
+    # Removes old reports, creates fresh directories
+```
+
+**Generated reports after each run:**
+```
+reports/
+├── test_report.html      # HTML report (generated fresh)
+└── allure-results/       # Allure raw data (generated fresh)
+```
+
+### Manual Cleanup
+
+To manually clean reports:
+
+```bash
+# Clean all reports
+python scripts/clean_reports.py
+
+# Clean including allure-report
+python scripts/clean_reports.py --all
+
+# Manual cleanup
+rm -rf reports/*
+```
+
+### Running Tests with Reports
+
+**pytest.ini** already configures default report locations:
+```ini
+addopts =
+    --html=reports/test_report.html
+    --self-contained-html
+    --alluredir=reports/allure-results
+```
+
+**Run with all reports:**
+```bash
+# Integration tests with full reporting
+TESTING_MODE=local pytest tests/integration/ \
+  --html=reports/test_report.html \
+  --self-contained-html \
+  --alluredir=reports/allure-results \
+  --cov=src \
+  --cov-report=html \
+  --cov-report=xml \
+  --junitxml=reports/results.xml \
+  -v
+```
+
+**View reports:**
+```bash
+# Open HTML report
+open reports/test_report.html
+
+# Serve Allure report
+allure serve reports/allure-results
+
+# Generate static Allure HTML
+allure generate reports/allure-results -o reports/allure-report --clean
+open reports/allure-report/index.html
+```
+
 ---
 
 ## Dependencies
