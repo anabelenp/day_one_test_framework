@@ -565,11 +565,9 @@ class TestIntegrationE2E:
         # 1. Retrieve from cache
         cached_data = self.cache_client.get(cache_key)
         assert cached_data is not None, "Should retrieve from cache"
-        cached_data_obj = json.loads(cached_data)
-        assert cached_data_obj["id"] == test_id, "Cached data should match"
-        assert cached_data_obj["value"] == test_data["value"], (
-            "Cached value should match"
-        )
+        # cache_client.get() already returns parsed JSON, no need to json.loads()
+        assert cached_data["id"] == test_id, "Cached data should match"
+        assert cached_data["value"] == test_data["value"], "Cached value should match"
 
         # 2. Retrieve from database
         stored_data = self.db_client.find_one(collection, {"id": test_id})
