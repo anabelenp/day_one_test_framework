@@ -592,12 +592,12 @@ class TestIntegrationE2E:
         )
 
         # Verify all data is identical
-        assert (
-            cached_data_obj["name"] == stored_data["name"] == consumed_data["name"]
-        ), "Name should be consistent across all services"
-        assert (
-            cached_data_obj["value"] == stored_data["value"] == consumed_data["value"]
-        ), "Value should be consistent across all services"
+        assert cached_data["name"] == stored_data["name"] == consumed_data["name"], (
+            "Name should be consistent across all services"
+        )
+        assert cached_data["value"] == stored_data["value"] == consumed_data["value"], (
+            "Value should be consistent across all services"
+        )
 
         # Clean up
         self.cache_client.delete(cache_key)
