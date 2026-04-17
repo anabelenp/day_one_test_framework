@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development guidelines
 
--Keep it simple. No over-engineering or unnecessary defensive programming
--Identify root cause before fixing issues. Prove with evidence, then fix.
--Work incrementally with small steps. Validate each increment.
--Use latest library APIs.
--Use 'uv' as Python package manager in Docker
--Planning docs are in '/docs'
+- Keep it simple. No over-engineering or unnecessary defensive programming
+- Identify root cause before fixing issues. Prove with evidence, then fix.
+- Work incrementally with small steps. Validate each increment.
+- Use latest library APIs.
+- Use 'uv' as Python package manager in Docker
+- Planning docs are in '/docs'
 
 
 ## Essential Commands
@@ -23,8 +23,9 @@ TESTING_MODE=mock pytest tests/unit/ -v
 TESTING_MODE=mock pytest tests/unit/test_circuit_breaker.py -v
 TESTING_MODE=mock pytest tests/unit/test_circuit_breaker.py::TestCircuitBreaker::test_trip_after_failure_threshold -v
 
-# Coverage
+# Coverage with threshold check
 TESTING_MODE=mock pytest tests/unit/ --cov=src --cov-report=term-missing
+python scripts/check_coverage.py --threshold 80
 
 # Local environment (Docker Compose)
 docker-compose -f docker-compose.local.yml up -d   # NOT docker-compose.yml (that file is legacy)
@@ -34,20 +35,44 @@ TESTING_MODE=local pytest tests/integration/test_local_environment.py -v
 TESTING_MODE=mock pytest tests/security/ -v
 TESTING_MODE=mock pytest tests/swg/ tests/dlp/ tests/ztna/ tests/firewall/ -v
 
+# Performance security tests
+TESTING_MODE=mock pytest tests/performance/test_security_performance.py -v
+TESTING_MODE=mock pytest tests/performance/ -m security -v
+
 # E2E (requires Kubernetes integration environment)
 TESTING_MODE=integration pytest tests/e2e/ -v
 
 # Filter by marker (-m accepts pytest boolean expressions)
 TESTING_MODE=mock pytest -m "not slow" -v
 TESTING_MODE=mock pytest -m "security or unit" -v
+TESTING_MODE=mock pytest -m "performance and security" -v
 
 # CLI (day1-sdet == python src/cli.py, both take identical arguments)
 day1-sdet env detect
 day1-sdet services health
 day1-sdet test unit --html-report --coverage
+
+# Test quality tools
+python scripts/detect_flaky_tests.py --min-runs 5 --fail-on-flaky
+python scripts/analyze_test_metrics.py
+python scripts/check_documentation.py
+python scripts/run_quality_checks.py
 ```
 
 Markers defined in `pytest.ini`: `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
+
+
+## CI/CD Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `unit-tests.yml` | Push/PR | Unit tests on Python 3.9-3.12, coverage gate (80%) |
+| `integration-tests.yml` | Push/PR, daily | Docker Compose integration tests |
+| `security-scan.yml` | Push/PR, daily | SAST (Bandit, Semgrep, CodeQL), dependency scan |
+| `test-quality.yml` | Daily, manual | Flaky test detection, metrics, code quality |
+| `sonar-analysis.yml` | Daily, manual | SonarCloud/sonar-scanner analysis |
+| `snyk-security.yml` | Push/PR, daily | Snyk vulnerability and IaC scanning |
+
 
 ## Architecture
 
@@ -89,6 +114,7 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 
 `src/test_result_logger.py` hooks into pytest via `conftest.py`. It registers `pytest_sessionstart`, `pytest_runtest_setup`, `pytest_runtest_logreport`, and `pytest_sessionfinish` to write every test result and session summary to MongoDB collections `test_results` and `test_sessions`. This runs automatically on every `pytest` invocation; if MongoDB is unavailable the logger silently no-ops.
 
+
 ## Critical Gotchas
 
 **Always set `TESTING_MODE=mock` for unit tests.** `config/local.yaml` is committed to the repo. Without the env var, `detect_environment()` reaches step 5 and returns `LOCAL`, causing `ServiceManager` to attempt real Redis/Kafka/MongoDB connections.
@@ -105,6 +131,7 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 
 **Allure pytest version compatibility.** Use `allure-pytest>=2.14.0` with pytest 9.x. Older versions (e.g., 2.13.2) have compatibility issues with `iter_parents`.
 
+
 ## Adding a New Service
 
 1. Add an abstract class (e.g. `ElasticsearchClient(ServiceClient)`) to `src/service_manager.py`
@@ -114,3 +141,17 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 5. Add the service config block to each relevant YAML in `config/`
 6. Add `get_elasticsearch_client()` factory to `ServiceManager`
 7. Add unit tests in `tests/unit/test_service_manager.py`
+
+
+## Helper Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/detect_flaky_tests.py` | Analyze MongoDB for flaky tests |
+| `scripts/check_coverage.py` | Enforce coverage threshold (80%) |
+| `scripts/analyze_test_metrics.py` | Generate test metrics report |
+| `scripts/check_documentation.py` | Check doc coverage |
+| `scripts/run_quality_checks.py` | Run flake8/black/mypy |
+| `scripts/generate_quality_summary.py` | Generate GitHub summary |
+| `scripts/check_complexity.py` | Analyze code complexity |
+| `scripts/check_flaky_threshold.py` | Check flaky test threshold |

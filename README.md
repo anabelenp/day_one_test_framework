@@ -242,5 +242,4 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for additional scenarios.
 | [MONITORING_AND_REPORTS_GUIDE.md](docs/MONITORING_AND_REPORTS_GUIDE.md) | Prometheus, Grafana, Jaeger |
 | [TEST_MONITORING_MONGODB.md](docs/TEST_MONITORING_MONGODB.md) | Test result analytics queries |
 | [REPORTING.md](docs/REPORTING.md) | HTML, coverage, JUnit, MongoDB test reports |
-| [TUTORIAL.md](docs/TUTORIAL.md) | Comprehensive framework tutorial |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and fixes |

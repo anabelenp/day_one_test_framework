@@ -38,11 +38,11 @@ The Production Environment (E5) has been successfully implemented as a **read-on
 - **CI/CD integration** - GitHub Actions and Jenkins examples
 
 #### 5. CLI Integration (`src/cli.py`)
-- **`netskope-sdet production health-check`** - Comprehensive health monitoring
-- **`netskope-sdet production metrics`** - Real-time metrics collection
-- **`netskope-sdet production report`** - Automated report generation
-- **`netskope-sdet production monitor`** - Continuous monitoring
-- **`netskope-sdet production status`** - Overall environment status
+- **`day1-sdet production health-check`** - Comprehensive health monitoring
+- **`day1-sdet production metrics`** - Real-time metrics collection
+- **`day1-sdet production report`** - Automated report generation
+- **`day1-sdet production monitor`** - Continuous monitoring
+- **`day1-sdet production status`** - Overall environment status
 
 ## Key Features
 
@@ -86,7 +86,7 @@ The Production Environment (E5) has been successfully implemented as a **read-on
 python scripts/deploy_production.py --action health-check
 
 # Or use CLI
-netskope-sdet production health-check
+day1-sdet production health-check
 ```
 
 ### Generate Health Report
@@ -95,7 +95,7 @@ netskope-sdet production health-check
 python scripts/deploy_production.py --action report --output reports/prod_health_$(date +%Y%m%d_%H%M%S).json
 
 # Or use CLI
-netskope-sdet production report --output prod_health.json
+day1-sdet production report --output prod_health.json
 ```
 
 ### Continuous Monitoring
@@ -104,7 +104,7 @@ netskope-sdet production report --output prod_health.json
 python scripts/deploy_production.py --action monitor --interval 300 --duration 3600
 
 # Or use CLI
-netskope-sdet production monitor --interval 300 --duration 3600
+day1-sdet production monitor --interval 300 --duration 3600
 ```
 
 ### Collect Metrics
@@ -113,13 +113,13 @@ netskope-sdet production monitor --interval 300 --duration 3600
 python scripts/deploy_production.py --action metrics
 
 # Or use CLI
-netskope-sdet production metrics
+day1-sdet production metrics
 ```
 
 ### Check Status
 ```bash
 # Get overall production status
-netskope-sdet production status
+day1-sdet production status
 ```
 
 ## Architecture
@@ -207,11 +207,11 @@ Production monitoring is accessible through the unified CLI:
 
 ```bash
 # All production commands
-netskope-sdet production health-check
-netskope-sdet production metrics
-netskope-sdet production report
-netskope-sdet production monitor
-netskope-sdet production status
+day1-sdet production health-check
+day1-sdet production metrics
+day1-sdet production report
+day1-sdet production monitor
+day1-sdet production status
 ```
 
 ### Service Manager

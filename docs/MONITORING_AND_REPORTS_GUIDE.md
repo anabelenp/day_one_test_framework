@@ -270,7 +270,7 @@ open http://localhost:16686
 #### **Search for Traces**
 ```bash
 1. Go to http://localhost:16686/search
-2. Select service: "netskope-sdet-framework"
+2. Select service: "day1-sdet-framework"
 3. Select operation: "test_execution" or "api_call"
 4. Set time range (last 1 hour)
 5. Click "Find Traces"
@@ -295,7 +295,7 @@ config = Config(
         'logging': True,
         'local_agent': {'reporting_host': 'localhost', 'reporting_port': 6831}
     },
-    service_name='netskope-sdet-tests'
+    service_name='day1-sdet-tests'
 )
 tracer = config.initialize_tracer()
 

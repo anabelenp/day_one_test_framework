@@ -1,0 +1,132 @@
+name: Test Quality
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: 'Hours to look back'
+        required: false
+        default: '168'
+      min_runs:
+        description: 'Minimum test runs'
+        required: false
+        default: '5'
+      fail_threshold:
+        description: 'Fail if flaky % exceeds'
+        required: false
+        default: '5'
+
+jobs:
+  flaky-test-detection:
+    name: Flaky Test Detection
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: admin_2024
+          MONGO_INITDB_DATABASE: day1_local
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install pymongo
+      - name: Wait for MongoDB
+        run: |
+          echo "Waiting for MongoDB..."
+          for i in {1..30}; do
+            mongosh --host localhost --port 27017 --eval "db.adminCommand('ping')" && break
+            sleep 1
+          done
+      - name: Detect flaky tests
+        run: |
+          python scripts/detect_flaky_tests.py \
+            --mongo-uri "mongodb://admin:admin_2024@localhost:27017/" \
+            --database "day1_local" \
+            --hours ${{ inputs.lookback_hours || '168' }} \
+            --min-runs ${{ inputs.min_runs || '5' }} \
+            --format json \
+            --output reports/flaky-test-report.json || true
+      - name: Upload flaky test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: flaky-test-report
+          path: reports/flaky-test-report.json
+      - name: Check flaky test threshold
+        run: |
+          python scripts/check_flaky_threshold.py --threshold ${{ inputs.fail_threshold || '5' }} || true
+
+  test-metrics:
+    name: Test Metrics Analysis
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install pymongo
+      - name: Analyze test metrics
+        run: python scripts/analyze_test_metrics.py
+      - name: Upload test metrics
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-metrics
+          path: reports/test-metrics.json
+
+  documentation-coverage:
+    name: Documentation Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check documentation coverage
+        run: python scripts/check_documentation.py
+
+  code-quality-check:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install linting tools
+        run: pip install flake8 black mypy radon
+      - name: Run code quality checks
+        run: python scripts/run_quality_checks.py
+
+  test-reliability-report:
+    name: Generate Reliability Report
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [flaky-test-detection, test-metrics, documentation-coverage, code-quality-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Generate summary report
+        run: python scripts/generate_quality_summary.py

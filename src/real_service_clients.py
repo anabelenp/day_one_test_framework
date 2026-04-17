@@ -337,10 +337,13 @@ class RealDatabaseClient(DatabaseClient):
         try:
             from pymongo import MongoClient
             from pymongo.errors import ConnectionFailure
+            from urllib.parse import quote_plus
 
-            # Build connection string
+            # Build connection string with proper URL encoding
             if self.config.username and self.config.password:
-                connection_string = f"mongodb://{self.config.username}:{self.config.password}@{self.config.host}:{self.config.port}/{self.config.database}?authSource=admin"
+                escaped_username = quote_plus(self.config.username)
+                escaped_password = quote_plus(self.config.password)
+                connection_string = f"mongodb://{escaped_username}:{escaped_password}@{self.config.host}:{self.config.port}/{self.config.database}?authSource=admin"
             else:
                 connection_string = f"mongodb://{self.config.host}:{self.config.port}/{self.config.database}"
 
@@ -505,10 +508,19 @@ class RealDatabaseClient(DatabaseClient):
             if self._database is None:
                 raise Exception("Database not connected")
 
-            # Add update metadata
-            update_with_metadata = {
-                "$set": {**update_dict, "_updated_at": datetime.now()}
-            }
+            # Check if update_dict already has MongoDB operators
+            has_operator = any(key.startswith("$") for key in update_dict.keys())
+
+            if has_operator:
+                # Update dict already contains operators, just add metadata
+                if "$set" in update_dict:
+                    update_dict["$set"]["_updated_at"] = datetime.now()
+                update_with_metadata = update_dict
+            else:
+                # Wrap in $set operator and add metadata
+                update_with_metadata = {
+                    "$set": {**update_dict, "_updated_at": datetime.now()}
+                }
 
             result = self._database[collection].update_one(
                 filter_dict, update_with_metadata

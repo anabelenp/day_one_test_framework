@@ -122,7 +122,7 @@ print(' Production config is safe')
 python scripts/deploy_production.py --action health-check
 
 # Or use CLI (when implemented)
-netskope-sdet production health-check
+day1-sdet production health-check
 
 # Generate health report
 python scripts/deploy_production.py --action report --output reports/prod_health.json

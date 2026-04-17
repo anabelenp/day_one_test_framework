@@ -1,0 +1,91 @@
+name: Code Quality - SonarQube
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      sonar_host:
+        description: 'SonarQube host URL'
+        required: false
+        default: ''
+      sonar_token:
+        description: 'SonarQube token (use secret)'
+        required: false
+        default: ''
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || inputs.sonar_host != ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -e .
+          pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/unit/ --cov=src --cov-report=xml --cov-report=coverage -v
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.python.version=3.11
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+            -Dsonar.coverage.reportPaths=coverage.xml
+            -Dsonar.coverage.exclusions=**/__init__.py,**/test*.py
+            -Dsonar.projectKey=netskope_sdet_framework
+            -Dsonar.organization=netskope
+
+  sonar-scanner:
+    name: SonarQube Scanner (Self-hosted)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    container:
+      image: sonarsource/sonar-scanner-cli:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Run tests
+        run: pytest tests/unit/ --cov=src --cov-report=xml -v
+
+      - name: Run SonarQube Scanner
+        env:
+          SONAR_HOST_URL: ${{ inputs.sonar_host }}
+          SONAR_TOKEN: ${{ inputs.sonar_token }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=day_one_test_framework \
+            -Dsonar.sources=src \
+            -Dsonar.tests=tests \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.token=$SONAR_TOKEN \
+            -Dsonar.python.version=3.11 \
+            -Dsonar.coverage.reportPaths=coverage.xml

@@ -212,7 +212,7 @@
 - Metrics endpoint for monitoring
 - Realistic API responses with configurable delays
 
-** Helm Charts** (`helm/netskope-sdet/`)
+** Helm Charts** (`helm/day1-sdet/`)
 - Complete Helm chart for easy deployment
 - Environment-specific values files
 - Parameterized configurations
@@ -358,7 +358,7 @@
 #### **Deployment and Management**
 -  Complete Kubernetes manifests for HA deployment
 -  Automated deployment script (`scripts/deploy_staging.py`)
--  CLI integration (`netskope-sdet staging` commands)
+-  CLI integration (`day1-sdet staging` commands)
 -  Comprehensive documentation and troubleshooting guide
 -  Staging-specific test suites with HA validation
 
@@ -409,11 +409,11 @@
 -  Disaster recovery monitoring (RTO/RPO tracking)
 
 #### **CLI Integration**
--  `netskope-sdet production health-check` - Comprehensive health monitoring
--  `netskope-sdet production metrics` - Real-time metrics collection
--  `netskope-sdet production report` - Automated report generation
--  `netskope-sdet production monitor` - Continuous monitoring
--  `netskope-sdet production status` - Overall environment status
+-  `day1-sdet production health-check` - Comprehensive health monitoring
+-  `day1-sdet production metrics` - Real-time metrics collection
+-  `day1-sdet production report` - Automated report generation
+-  `day1-sdet production monitor` - Continuous monitoring
+-  `day1-sdet production status` - Overall environment status
 
 #### **Documentation & Testing**
 -  Complete production monitoring guide with security procedures

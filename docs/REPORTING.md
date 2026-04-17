@@ -375,7 +375,89 @@ No configuration required — runs on every `pytest` invocation.
 
 ---
 
-## 11. Quick Reference
+## 11. Test Quality Reports
+
+### Flaky Test Detection
+
+Detect tests that pass and fail inconsistently using the flaky test detector:
+
+```bash
+# Basic detection
+python scripts/detect_flaky_tests.py
+
+# With custom parameters
+python scripts/detect_flaky_tests.py \
+  --min-runs 5 \
+  --stability-threshold 0.8 \
+  --hours 168
+
+# JSON output for CI
+python scripts/detect_flaky_tests.py \
+  --format json \
+  --output reports/flaky-test-report.json
+
+# Fail CI if flaky tests found
+python scripts/detect_flaky_tests.py \
+  --fail-on-flaky \
+  --threshold 5
+```
+
+**Flaky test criteria:**
+- Has been run at least `--min-runs` times
+- Has both passed and failed results
+- Pass rate between stability thresholds
+
+### Test Metrics Analysis
+
+Generate test metrics from MongoDB:
+
+```bash
+# Analyze test metrics
+python scripts/analyze_test_metrics.py
+
+# Output: reports/test-metrics.json
+{
+  "total_runs": 150,
+  "passed": 145,
+  "failed": 3,
+  "skipped": 2,
+  "success_rate": 96.7,
+  "avg_duration_seconds": 0.45,
+  "sessions": 12
+}
+```
+
+### Code Quality Reports
+
+```bash
+# Run all quality checks
+python scripts/run_quality_checks.py
+
+# Check documentation coverage
+python scripts/check_documentation.py
+
+# Check code complexity
+python scripts/check_complexity.py
+
+# Coverage threshold check
+python scripts/check_coverage.py --threshold 80
+```
+
+### CI/CD Quality Pipeline
+
+The `test-quality.yml` workflow runs daily and generates:
+
+| Artifact | Contents |
+|---------|---------|
+| `flaky-test-report.json` | Tests with inconsistent pass/fail history |
+| `test-metrics.json` | Success rate, duration analysis |
+| Code quality checks | flake8, black, mypy results |
+
+Access in GitHub Actions → Artifacts after workflow run.
+
+---
+
+## 12. Quick Reference
 
 | Report Type | Command |
 |-------------|---------|
@@ -386,6 +468,10 @@ No configuration required — runs on every `pytest` invocation.
 | MongoDB | Automatic (requires MongoDB connection) |
 | JMeter | `jmeter -n -t test.jmx -l results.jtl -e -o report/` |
 | Locust | `locust -f test.py --csv=results --headless` |
+| Flaky Tests | `python scripts/detect_flaky_tests.py` |
+| Test Metrics | `python scripts/analyze_test_metrics.py` |
+| Coverage Gate | `python scripts/check_coverage.py --threshold 80` |
+| Code Quality | `python scripts/run_quality_checks.py` |
 
 ---
 

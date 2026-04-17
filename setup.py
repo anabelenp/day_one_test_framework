@@ -74,6 +74,7 @@ setup(
     entry_points={
         "console_scripts": [
             "netskope-sdet=src.cli:main",
+            "day1-sdet=src.cli:main",  # Alias for netskope-sdet
             "netskope-env=src.environment_manager:main",
             "netskope-services=src.service_manager:main",
             "netskope-local=scripts.start_local_environment:main",

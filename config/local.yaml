@@ -22,9 +22,9 @@ kafka:
 mongodb:
   host: "localhost"
   port: 27017
-  username: ${MONGO_USERNAME:-admin}
-  password: ${MONGO_PASSWORD:-}
-  database: "day1_local"
+  username: "admin"
+  password: "netskope_admin_2024"
+  database: "netskope_local"
   ssl_enabled: false
   connection_pool_size: 10
   timeout: 30
@@ -39,8 +39,8 @@ target_api:
 aws_config:
   region: "us-east-1"
   endpoint_url: "http://localhost:4566"
-  access_key_id: ${AWS_ACCESS_KEY_ID:-test}
-  secret_access_key: ${AWS_SECRET_ACCESS_KEY:-test}
+  access_key_id: "test"
+  secret_access_key: "test"
 
 # Monitoring Configuration
 monitoring:

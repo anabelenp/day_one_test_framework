@@ -236,7 +236,7 @@ stage('Build Artifacts') {
     steps {
         sh '''
             python setup.py sdist bdist_wheel
-            docker build -f Dockerfile.test-runner -t netskope-sdet:${BUILD_NUMBER} .
+            docker build -f Dockerfile.test-runner -t day1-sdet:${BUILD_NUMBER} .
         '''
     }
 }
@@ -396,18 +396,18 @@ def deploy_integration():
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: netskope-sdet
+  name: day1-sdet
   namespace: netskope-integration
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: netskope-sdet
+      app: day1-sdet
   template:
     spec:
       containers:
-      - name: netskope-sdet
-        image: netskope-sdet:latest
+      - name: day1-sdet
+        image: day1-sdet:latest
         env:
         - name: TESTING_MODE
           value: "integration"
@@ -566,10 +566,10 @@ act -j sast-bandit
 #### **Run Jenkins Pipeline Locally**
 ```bash
 # Using Jenkins CLI
-java -jar jenkins-cli.jar build netskope-sdet-pipeline
+java -jar jenkins-cli.jar build day1-sdet-pipeline
 
 # Using curl
-curl -X POST http://jenkins.company.com/job/netskope-sdet/build \
+curl -X POST http://jenkins.company.com/job/day1-sdet/build \
   --user username:token
 ```
 
@@ -656,7 +656,7 @@ timeout(time: 10, unit: 'MINUTES') {
 ```bash
 # Check deployment status
 kubectl get pods -n netskope-integration
-kubectl describe deployment netskope-sdet -n netskope-integration
+kubectl describe deployment day1-sdet -n netskope-integration
 ```
 
 ### **Security Scan Issues**
