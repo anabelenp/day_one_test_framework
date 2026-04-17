@@ -35,12 +35,37 @@ The Integration Environment (E3) provides a production-like Kubernetes-based env
 
 ### 1. Kubernetes Cluster
 
+**IMPORTANT**: The framework requires an existing Kubernetes cluster. It does NOT create a cluster—it only deploys manifests to an existing one.
+
 You need access to a Kubernetes cluster with:
 - **Kubernetes version**: 1.20+
-- **Nodes**: At least 3 nodes (for high availability)
-- **Resources**: Minimum 16 CPU cores, 32GB RAM total
+- **Nodes**: At least 1 node (3+ for high availability)
+- **Resources**: Minimum 4 CPU cores, 8GB RAM (8 CPU cores, 16GB RAM recommended)
 - **Storage**: Dynamic volume provisioning enabled
 - **Networking**: CNI plugin installed (Calico, Flannel, etc.)
+
+**Setup a local Kubernetes cluster:**
+
+```bash
+# Option 1: Minikube (recommended for local development)
+minikube start --driver=virtualbox  # or --driver=hyperkit on macOS
+minikube addons enable ingress
+
+# Option 2: Kind (Kubernetes in Docker)
+kind create cluster --name day1-integration
+
+# Option 3: K3s (lightweight)
+curl -sfL https://get.k3s.io | sh -
+
+# Option 4: Docker Desktop Kubernetes
+# Enable Kubernetes in Docker Desktop Settings → Kubernetes
+```
+
+**For local development without Kubernetes**, use E2 (Local with Docker Compose):
+```bash
+docker-compose -f docker-compose.local.yml up -d
+TESTING_MODE=local pytest tests/integration/test_local_environment.py -v
+```
 
 ### 2. Required Tools
 

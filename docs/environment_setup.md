@@ -319,45 +319,58 @@ open http://localhost:9090  # Prometheus
 - Realistic data volumes and patterns
 - Performance and security validation
 
+### **IMPORTANT: Requires Kubernetes Cluster**
+
+The Integration Environment (E3) **requires an existing Kubernetes cluster**. The framework does NOT create a cluster—it only deploys manifests to an existing one.
+
+**Setup a local Kubernetes cluster first:**
+
+```bash
+# Option 1: Minikube (recommended)
+minikube start --driver=virtualbox  # or --driver=hyperkit on macOS
+minikube addons enable ingress
+
+# Option 2: Kind (Kubernetes in Docker)
+kind create cluster --name day1-integration
+
+# Option 3: K3s (lightweight)
+curl -sfL https://get.k3s.io | sh -
+
+# Option 4: Docker Desktop Kubernetes
+# Enable in Docker Desktop → Settings → Kubernetes
+```
+
+**For local development without Kubernetes**, use E2 (Local with Docker Compose):
+```bash
+docker-compose -f docker-compose.local.yml up -d
+TESTING_MODE=local pytest tests/integration/test_local_environment.py -v
+```
+
 ### **Setup Instructions**
 
 #### **Prerequisites**
 ```bash
 # Required tools
 - kubectl configured with cluster access
-- Helm 3.0+
-- Docker registry access
-- Cloud provider CLI (AWS CLI, gcloud, etc.)
+- Helm 3.0+ (optional, can use kubectl directly)
+- Docker (for building custom images)
 
 # Permissions required
-- Kubernetes cluster admin access
-- Container registry push/pull access
-- Cloud service provisioning rights
+- Kubernetes cluster access
+- Container registry push/pull access (for custom images)
 ```
 
 #### **Kubernetes Deployment**
 ```bash
-# 1. Create namespace
-kubectl create namespace day1-integration
+# 1. Deploy using the framework CLI
+day1-sdet integration deploy
 
-# 2. Deploy infrastructure services
-helm install redis bitnami/redis -n day1-integration \
-  --set auth.password=redis-password \
-  --set master.persistence.size=10Gi
+# 2. Verify deployment
+day1-sdet integration status
+kubectl get pods -n netskope-integration
 
-helm install kafka bitnami/kafka -n day1-integration \
-  --set persistence.size=20Gi \
-  --set zookeeper.persistence.size=10Gi
-
-helm install mongodb bitnami/mongodb -n day1-integration \
-  --set auth.rootPassword=mongo-password \
-  --set persistence.size=50Gi
-
-# 3. Deploy application services
-kubectl apply -f k8s/integration/
-
-# 4. Verify deployment
-kubectl get pods -n day1-integration
+# 3. Run tests
+TESTING_MODE=integration pytest tests/integration/test_integration_environment.py -v
 ```
 
 #### **Kubernetes Manifests**

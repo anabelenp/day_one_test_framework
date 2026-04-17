@@ -39,7 +39,7 @@ TESTING_MODE=mock pytest tests/swg/ tests/dlp/ tests/ztna/ tests/firewall/ -v
 TESTING_MODE=mock pytest tests/performance/test_security_performance.py -v
 TESTING_MODE=mock pytest tests/performance/ -m security -v
 
-# E2E (requires Kubernetes integration environment)
+# E2E (requires Kubernetes integration environment - see Prerequisites)
 TESTING_MODE=integration pytest tests/e2e/ -v
 
 # Filter by marker (-m accepts pytest boolean expressions)
@@ -60,6 +60,37 @@ python scripts/run_quality_checks.py
 ```
 
 Markers defined in `pytest.ini`: `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
+
+## Environment Prerequisites
+
+**E2 (Local) - Docker Compose:**
+```bash
+docker-compose -f docker-compose.local.yml up -d
+```
+No additional setup required.
+
+**E3 (Integration) - Kubernetes:**
+Requires an existing Kubernetes cluster. Setup options:
+```bash
+# Minikube
+minikube start
+
+# Kind
+kind create cluster --name day1-integration
+
+# K3s
+curl -sfL https://get.k3s.io | sh -
+
+# Docker Desktop Kubernetes
+# Enable in Settings → Kubernetes
+```
+
+**Tests without Kubernetes:**
+- `TESTING_MODE=mock` → Unit tests (no external deps)
+- `TESTING_MODE=local` → Integration tests (Docker Compose)
+- `TESTING_MODE=integration` → E2E tests (requires K8s cluster)
+
+Integration tests in `tests/integration/test_integration_environment.py` will **skip** if no Kubernetes cluster is available (expected behavior).
 
 
 ## CI/CD Workflows
