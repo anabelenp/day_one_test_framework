@@ -52,7 +52,7 @@ TESTING_MODE=mock pytest -m "not slow" -v
 TESTING_MODE=mock pytest -m "security or unit" -v
 ```
 
-Markers (`pytest.ini`): `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
+Markers (`pyproject.toml`): `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
 
 ## Environments
 

@@ -59,7 +59,7 @@ python scripts/check_documentation.py
 python scripts/run_quality_checks.py
 ```
 
-Markers defined in `pytest.ini`: `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
+Markers defined in `pyproject.toml`: `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
 
 ## Environment Prerequisites
 

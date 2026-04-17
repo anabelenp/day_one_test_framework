@@ -513,7 +513,7 @@ rm -rf reports/*
 
 ### Running Tests with Reports
 
-**pytest.ini** already configures default report locations:
+**pyproject.toml** already configures default report locations:
 ```ini
 addopts =
     --html=reports/test_report.html

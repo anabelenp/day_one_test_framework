@@ -36,7 +36,7 @@ mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?auth
 The framework uses pytest hooks to automatically capture and log test data:
 
 ```python
-# Configured in pytest.ini
+# Configured in pyproject.toml
 plugins = 
     src.test_result_logger
 
@@ -575,7 +575,7 @@ db.test_results.aggregate([
 #### **No Test Data in MongoDB**
 ```bash
 # Check if test logger is enabled
-grep -r "test_result_logger" pytest.ini
+grep -r "test_result_logger" pyproject.toml
 
 # Verify MongoDB connection
 python -c "from src.service_manager import get_database_client; print(get_database_client().ping())"
