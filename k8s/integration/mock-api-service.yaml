@@ -162,6 +162,7 @@ spec:
         - /bin/bash
         - -c
         - |
+          mkdir -p /app
           pip install flask prometheus-client pyyaml
           
           cat > /app/mock_api.py << 'EOF'

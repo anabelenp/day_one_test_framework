@@ -13,7 +13,6 @@ addopts = [
     "--color=yes",
     "--html=reports/test_report.html",
     "--self-contained-html",
-    "--alluredir=reports/allure-results",
 ]
 
 markers = [

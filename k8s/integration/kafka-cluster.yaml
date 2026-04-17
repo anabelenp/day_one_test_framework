@@ -47,7 +47,7 @@ metadata:
     environment: integration
 spec:
   serviceName: zookeeper-headless
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: zookeeper
@@ -76,12 +76,12 @@ spec:
           value: "5"
         - name: ZOOKEEPER_SYNC_LIMIT
           value: "2"
-        - name: ZOOKEEPER_SERVERS
-          value: "zookeeper-0.zookeeper-headless:2888:3888;zookeeper-1.zookeeper-headless:2888:3888;zookeeper-2.zookeeper-headless:2888:3888"
+        - name: ZOOKEEPER_ADMIN_ENABLE_SERVER
+          value: "false"
+        - name: ZOOKEEPER_4LW_COMMANDS_WHITELIST
+          value: "ruok,conf,stat,mntr"
         - name: ZOOKEEPER_SERVER_ID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
+          value: "0"
         volumeMounts:
         - name: zookeeper-data
           mountPath: /var/lib/zookeeper/data
@@ -95,19 +95,13 @@ spec:
             cpu: 500m
             memory: 1Gi
         livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "echo ruok | nc localhost 2181 | grep imok"
+          tcpSocket:
+            port: 2181
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "echo ruok | nc localhost 2181 | grep imok"
+          tcpSocket:
+            port: 2181
           initialDelaySeconds: 5
           periodSeconds: 5
   volumeClaimTemplates:
@@ -171,7 +165,7 @@ metadata:
     environment: integration
 spec:
   serviceName: kafka-headless
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: kafka
@@ -191,25 +185,25 @@ spec:
         - name: KAFKA_BROKER_ID
           valueFrom:
             fieldRef:
-              fieldPath: metadata.name
+              fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
         - name: KAFKA_ZOOKEEPER_CONNECT
           value: "zookeeper-service:2181"
         - name: KAFKA_LISTENERS
           value: "PLAINTEXT://0.0.0.0:9092"
         - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://$(POD_NAME).kafka-headless:9092"
+          value: "PLAINTEXT://kafka-cluster-0.kafka-headless.netskope-integration.svc.cluster.local:9092"
         - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-          value: "2"
+          value: "1"
         - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
-          value: "2"
+          value: "1"
         - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
           value: "1"
         - name: KAFKA_DEFAULT_REPLICATION_FACTOR
-          value: "2"
+          value: "1"
         - name: KAFKA_MIN_INSYNC_REPLICAS
           value: "1"
         - name: KAFKA_NUM_PARTITIONS
-          value: "3"
+          value: "1"
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -225,19 +219,13 @@ spec:
             cpu: 1
             memory: 2Gi
         livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "kafka-broker-api-versions --bootstrap-server localhost:9092"
+          tcpSocket:
+            port: 9092
           initialDelaySeconds: 60
           periodSeconds: 30
         readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "kafka-broker-api-versions --bootstrap-server localhost:9092"
+          tcpSocket:
+            port: 9092
           initialDelaySeconds: 30
           periodSeconds: 10
       initContainers:

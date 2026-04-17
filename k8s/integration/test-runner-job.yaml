@@ -114,7 +114,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: test-runner
-        image: netskope-sdet:integration
+        image: python:3.11-slim
         imagePullPolicy: IfNotPresent
         command:
         - /bin/bash
@@ -122,6 +122,16 @@ spec:
         - |
           set -e
           echo " Starting Netskope SDET Integration Tests"
+          
+          # Install system dependencies and Python packages
+          echo "Installing dependencies..."
+          apt-get update && apt-get install -y --no-install-recommends netcat-openbsd git && rm -rf /var/lib/apt/lists/*
+          pip install --no-cache-dir pytest pytest-html pytest-cov pytest-xdist requests kafka-python pymongo redis boto3 pyyaml pytest-timeout pytest-mock
+          
+          # Clone the project
+          echo "Cloning project..."
+          cd /app
+          git clone https://github.com/anomalyco/day_one_test_framework.git . 2>/dev/null || echo "Using existing code"
           
           # Wait for services to be ready
           echo "⏳ Waiting for services to be ready..."
@@ -359,12 +369,18 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: scheduled-test-runner
-            image: netskope-sdet:integration
+            image: python:3.11-slim
             command:
             - /bin/bash
             - -c
             - |
+              set -e
               echo " Running scheduled integration tests..."
+              
+              # Install dependencies
+              pip install --no-cache-dir -e .
+              pip install --no-cache-dir pytest pytest-html pytest-cov requests
+              
               export TESTING_MODE=integration
               export PYTHONPATH=/app/src:$PYTHONPATH
               

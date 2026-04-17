@@ -103,7 +103,7 @@ metadata:
     environment: integration
 spec:
   serviceName: mongodb-headless
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: mongodb
@@ -128,8 +128,6 @@ spec:
           value: "netskope_integration"
         command:
         - mongod
-        - --replSet
-        - rs0
         - --bind_ip_all
         - --auth
         volumeMounts:
@@ -164,26 +162,6 @@ spec:
       - name: mongodb-init
         configMap:
           name: mongodb-init
-      initContainers:
-      - name: init-replica
-        image: mongo:6
-        command:
-        - sh
-        - -c
-        - |
-          sleep 10
-          if [ "$(hostname)" = "mongodb-replica-0" ]; then
-            mongosh --eval "
-              rs.initiate({
-                _id: 'rs0',
-                members: [
-                  { _id: 0, host: 'mongodb-replica-0.mongodb-headless:27017' },
-                  { _id: 1, host: 'mongodb-replica-1.mongodb-headless:27017' },
-                  { _id: 2, host: 'mongodb-replica-2.mongodb-headless:27017' }
-                ]
-              })
-            "
-          fi
   volumeClaimTemplates:
   - metadata:
       name: mongodb-data

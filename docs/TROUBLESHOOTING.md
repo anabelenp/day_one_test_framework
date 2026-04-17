@@ -371,6 +371,226 @@ docker stats --no-stream >> debug_report.txt
 cat debug_report.txt
 ```
 
+### **Kubernetes Integration Deployment Issues**
+
+#### **Problem**: Zookeeper fails with "serverid zookeeper-0 is not a number"
+```bash
+kubectl logs zookeeper-0 -n netskope-integration --previous
+# Output shows: Invalid config, exiting abnormally
+# Caused by: java.lang.IllegalArgumentException: serverid zookeeper-0 is not a number
+```
+
+**Solution**: Update `k8s/integration/kafka-cluster.yaml` - change `ZOOKEEPER_SERVER_ID` to use pod index:
+```yaml
+# Change from:
+- name: ZOOKEEPER_SERVER_ID
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
+
+# To:
+- name: ZOOKEEPER_SERVER_ID
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+```
+
+**Then redeploy**:
+```bash
+day1-sdet integration undeploy
+day1-sdet integration deploy
+```
+
+#### **Problem**: Kafka pods stuck waiting for Zookeeper
+```bash
+kubectl get pods -n netskope-integration -l app=kafka
+# Shows: Init:0/1 (waiting for init container)
+```
+
+**Solution**:
+```bash
+# Verify Zookeeper is running
+kubectl get pods -n netskope-integration -l app=zookeeper
+
+# Check Zookeeper is ready
+kubectl exec -it zookeeper-0 -n netskope-integration -- sh -c 'echo ruok | nc localhost 2181'
+# Should return: imok
+```
+
+#### **Problem**: "Cannot connect to Kubernetes cluster"
+```bash
+day1-sdet integration deploy
+# Output: Cannot connect to Kubernetes cluster
+```
+
+**Solution**: Ensure a Kubernetes cluster is running:
+```bash
+# Check if kubectl is configured
+kubectl cluster-info
+
+# If using Docker Desktop, enable Kubernetes in Settings → Kubernetes
+
+# If using Kind
+kind create cluster --name day1-integration
+
+# If using Minikube
+minikube start
+```
+
+#### **Problem**: Zookeeper shows "My id 0 not in the peer list"
+```bash
+kubectl logs zookeeper-0 -n netskope-integration
+# Output shows: java.lang.RuntimeException: My id 0 not in the peer list
+```
+
+**Solution**: For single-node Zookeeper, configure properly:
+```yaml
+# In k8s/integration/kafka-cluster.yaml, update Zookeeper env:
+- name: ZOOKEEPER_CLIENT_PORT
+  value: "2181"
+- name: ZOOKEEPER_TICK_TIME
+  value: "2000"
+- name: ZOOKEEPER_INIT_LIMIT
+  value: "5"
+- name: ZOOKEEPER_SYNC_LIMIT
+  value: "2"
+- name: ZOOKEEPER_ADMIN_ENABLE_SERVER
+  value: "false"
+- name: ZOOKEEPER_4LW_COMMANDS_WHITELIST
+  value: "ruok,conf,stat,mntr"
+- name: ZOOKEEPER_SERVER_ID
+  value: "0"
+
+# Also update StatefulSet to use 1 replica (not 3):
+spec:
+  replicas: 1
+```
+
+**Then apply and recreate**:
+```bash
+kubectl apply -f k8s/integration/kafka-cluster.yaml
+kubectl delete pvc -n netskope-integration zookeeper-data-zookeeper-0 zookeeper-logs-zookeeper-0
+kubectl delete pod -n netskope-integration zookeeper-0 --force --grace-period=0
+```
+
+#### **Problem**: Zookeeper readiness probe fails with "Connection refused"
+```bash
+kubectl describe pod zookeeper-0 -n netskope-integration
+# Shows: Readiness probe failed: Ncat: Connection refused.
+```
+
+**Solution**: The exec-based readiness probe is unreliable. Update to TCP socket probe:
+```yaml
+# In k8s/integration/kafka-cluster.yaml, change probes to TCP:
+livenessProbe:
+  tcpSocket:
+    port: 2181
+  initialDelaySeconds: 30
+  periodSeconds: 10
+readinessProbe:
+  tcpSocket:
+    port: 2181
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+#### **Problem**: Kafka fails with "Invalid value for configuration broker.id: Not a number"
+```bash
+kubectl logs kafka-cluster-0 -n netskope-integration
+# Output: Invalid value kafka-cluster-0 for configuration broker.id: Not a number of type INT
+```
+
+**Solution**: The broker ID is using the pod name instead of a number. Update in kafka-cluster.yaml:
+```yaml
+# Change from:
+- name: KAFKA_BROKER_ID
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
+
+# To:
+- name: KAFKA_BROKER_ID
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+```
+
+#### **Problem**: Kafka fails with "Unable to parse PLAINTEXT://$(POD_NAME).kafka-headless:9092"
+```bash
+kubectl logs kafka-cluster-0 -n netskope-integration
+# Output: Unable to parse PLAINTEXT://$(POD_NAME).kafka-headless:9092 to a broker endpoint
+```
+
+**Solution**: The environment variable substitution doesn't work in Kubernetes env vars. Use a static FQDN:
+```yaml
+# Change from:
+- name: KAFKA_ADVERTISED_LISTENERS
+  value: "PLAINTEXT://$(POD_NAME).kafka-headless:9092"
+
+# To (for single broker):
+- name: KAFKA_ADVERTISED_LISTENERS
+  value: "PLAINTEXT://kafka-cluster-0.kafka-headless.netskope-integration.svc.cluster.local:9092"
+
+# Also ensure POD_NAME env var is defined:
+- name: POD_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
+```
+
+#### **Problem**: Kafka readiness probe times out
+```bash
+kubectl describe pod kafka-cluster-0 -n netskope-integration
+# Shows: Readiness probe failed: command timed out: "sh -c kafka-broker-api-versions..."
+```
+
+**Solution**: The exec-based probe is slow. Change to TCP socket probe:
+```yaml
+# In k8s/integration/kafka-cluster.yaml:
+livenessProbe:
+  tcpSocket:
+    port: 9092
+  initialDelaySeconds: 60
+  periodSeconds: 30
+readinessProbe:
+  tcpSocket:
+    port: 9092
+  initialDelaySeconds: 30
+  periodSeconds: 10
+```
+
+**Also reduce Kafka replication for single-node**:
+```yaml
+- name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+  value: "1"
+- name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+  value: "1"
+- name: KAFKA_DEFAULT_REPLICATION_FACTOR
+  value: "1"
+- name: KAFKA_MIN_INSYNC_REPLICAS
+  value: "1"
+- name: KAFKA_NUM_PARTITIONS
+  value: "1"
+```
+
+#### **Problem**: Service endpoints show no endpoints
+```bash
+kubectl get endpoints -n netskope-integration
+# Shows: zookeeper-service   <empty>
+```
+
+**Solution**: This usually means the pod isn't ready. Check pod status:
+```bash
+# Check if pod is actually running and ready
+kubectl get pods -n netskope-integration -l app=zookeeper
+
+# If running but not ready, check the readiness probe issue above
+
+# Check service selector matches pod labels
+kubectl describe svc zookeeper-service -n netskope-integration | grep Selector
+# Should show: app=zookeeper
+```
+
 ### **Common Solutions Summary**
 
 | Issue | Quick Fix |
