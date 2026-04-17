@@ -591,6 +591,99 @@ kubectl describe svc zookeeper-service -n netskope-integration | grep Selector
 # Should show: app=zookeeper
 ```
 
+---
+
+### **Integration Test Runner Issues**
+
+#### **Problem**: Test-runner job fails with "ModuleNotFoundError: No module named 'src'"
+```bash
+# The job clones the repo but doesn't copy source files correctly
+Cloning project...
+Using existing code
+...
+ModuleNotFoundError: No module named 'src'
+```
+
+**Solution**: Update the job to properly copy source files:
+```yaml
+# In test-runner-job.yaml, ensure proper file copying:
+mkdir -p /app/config /app/tests
+cp -rf /tmp/project/src /app/
+cp -rf /tmp/project/tests/* /app/tests/
+```
+
+#### **Problem**: Test-runner validation passes but health check fails
+```bash
+Integration environment validation passed
+Running service health checks...
+Error: ServiceManager.__init__() got an unexpected keyword argument 'config_dir'
+```
+
+**Solution**: The code changes need to be pushed to GitHub so the job clones the latest version:
+```bash
+git add src/service_manager.py src/environment_manager.py
+git commit -m "Add config_dir parameter"
+git push origin main
+```
+
+#### **Problem**: MongoDB authentication fails
+```bash
+Failed to connect to MongoDB: Authentication failed.
+```
+
+**Solution**: 
+1. MongoDB in integration mode runs without auth (removed --auth flag)
+2. Remove credentials from integration.yaml:
+```bash
+sed -i 's/username: "netskope_app"//g' /app/config/integration.yaml
+sed -i 's/password: "netskope-app-2024"//g' /app/config/integration.yaml
+```
+
+#### **Problem**: json.loads() error on cache_client.get() return
+```bash
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+```
+
+**Solution**: cache_client.get() already returns parsed JSON, remove json.loads():
+```python
+# Wrong:
+cached_data = self.cache_client.get(cache_key)
+cached_data_obj = json.loads(cached_data)
+
+# Correct:
+cached_data = self.cache_client.get(cache_key)
+# cache_client.get() already returns dict
+```
+
+#### **Problem**: Kafka create_topic fails with "object has no attribute 'items'"
+```bash
+'CreateTopicsResponse_v3' object has no attribute 'items'
+```
+
+**Solution**: Handle different kafka-python response types:
+```python
+if hasattr(result, 'items'):
+    topics_dict = dict(result.items())
+elif hasattr(result, 'topic_result_dict'):
+    topics_dict = result.topic_result_dict()
+else:
+    topics_dict = {topic: result}
+```
+
+#### **Problem**: Kubernetes service not accessible from test-runner
+```bash
+nc: bad address 'mongodb-service'
+```
+
+**Solution**: Use full FQDN for Kubernetes services:
+```bash
+# Wrong:
+until nc -z mongodb-service 27017; do
+
+# Correct:
+until nc -z mongodb-service.netskope-integration.svc.cluster.local 27017; do
+```
+
 ### **Common Solutions Summary**
 
 | Issue | Quick Fix |

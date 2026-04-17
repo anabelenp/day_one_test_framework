@@ -223,10 +223,11 @@ kubectl apply -f k8s/integration/kafka-cluster.yaml
 kubectl apply -f k8s/integration/mongodb-replica.yaml
 kubectl apply -f k8s/integration/mock-api-service.yaml
 kubectl apply -f k8s/integration/monitoring-stack.yaml
+kubectl apply -f k8s/integration/jaeger-deployment.yaml
 kubectl apply -f k8s/integration/test-runner-job.yaml
 
 # Check deployment
-kubectl get all -n day1-integration
+kubectl get all -n netskope-integration
 ```
 
 ## Configuration
