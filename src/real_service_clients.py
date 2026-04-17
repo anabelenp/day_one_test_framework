@@ -273,7 +273,7 @@ class RealMessageClient(MessageClient):
             self.logger.error(f"Failed to consume from {topic}: {e}")
             return []
 
-def create_topic(self, topic: str, partitions: int = 1) -> bool:
+    def create_topic(self, topic: str, partitions: int = 1) -> bool:
         """Create a new Kafka topic"""
         try:
             from kafka.admin import NewTopic
@@ -291,16 +291,16 @@ def create_topic(self, topic: str, partitions: int = 1) -> bool:
             result = self._admin_client.create_topics([topic_config])
 
             # Handle different response types from kafka-python versions
-            if hasattr(result, 'items'):
+            if hasattr(result, "items"):
                 topics_dict = dict(result.items())
-            elif hasattr(result, 'topic_result_dict'):
+            elif hasattr(result, "topic_result_dict"):
                 topics_dict = result.topic_result_dict()
             else:
                 topics_dict = {topic: result}
 
             for topic_name, future in topics_dict.items():
                 try:
-                    if hasattr(future, 'result'):
+                    if hasattr(future, "result"):
                         future.result()
                     self.logger.info(f"Created topic {topic_name}")
                     return True
@@ -316,34 +316,6 @@ def create_topic(self, topic: str, partitions: int = 1) -> bool:
 
         except Exception as e:
             self.logger.error(f"Failed to create topic: {e}")
-            return False
-
-            topic_config = NewTopic(
-                name=topic,
-                num_partitions=partitions,
-                replication_factor=1,  # Adjust based on cluster size
-            )
-
-            result = self._admin_client.create_topics([topic_config])
-
-            # Wait for topic creation
-            for topic_name, future in result.items():
-                try:
-                    future.result()  # Will raise exception if creation failed
-                    self.logger.info(f"Created topic {topic_name}")
-                    return True
-                except Exception as e:
-                    if "already exists" in str(e).lower():
-                        self.logger.info(f"Topic {topic_name} already exists")
-                        return True
-                    else:
-                        self.logger.error(f"Failed to create topic {topic_name}: {e}")
-                        return False
-
-            return False
-
-        except Exception as e:
-            self.logger.error(f"Failed to create topic {topic}: {e}")
             return False
 
     def list_topics(self) -> List[str]:
