@@ -505,6 +505,12 @@ open http://localhost:9090/graph
 # Generate comprehensive HTML report
 pytest tests/ --html=reports/test_report.html --self-contained-html -v
 
+# Generate with Allure results
+pytest tests/ --html=reports/test_report.html --alluredir=reports/allure-results -v
+
+# Generate Allure report
+allure serve reports/allure-results
+
 # Open report
 open reports/test_report.html
 
@@ -681,8 +687,10 @@ open http://localhost:16686   # Jaeger
 ### **3. Run Tests and Generate Data**
 ```bash
 # Run tests to generate monitoring data
-export TESTING_MODE=local
-pytest tests/ -v
+TESTING_MODE=local pytest tests/ -v
+
+# Generate with Allure results
+TESTING_MODE=local pytest tests/ --alluredir=reports/allure-results -v
 
 # Check service health
 python src/cli.py services health
@@ -693,6 +701,9 @@ python src/cli.py services health
 # Generate and view test reports
 pytest tests/ --html=reports/test_report.html --self-contained-html
 open reports/test_report.html
+
+# View Allure report
+allure serve reports/allure-results
 
 # View coverage
 pytest tests/ --cov=src --cov-report=html

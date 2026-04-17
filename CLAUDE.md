@@ -103,6 +103,8 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 
 **Mock `aggregate()` is incomplete.** `MockDatabaseClient.aggregate()` supports only `$match` and `$group` stages. Tests relying on `$project`, `$sort`, `$limit`, or `$avg` will silently return wrong results in mock mode.
 
+**Allure pytest version compatibility.** Use `allure-pytest>=2.14.0` with pytest 9.x. Older versions (e.g., 2.13.2) have compatibility issues with `iter_parents`.
+
 ## Adding a New Service
 
 1. Add an abstract class (e.g. `ElasticsearchClient(ServiceClient)`) to `src/service_manager.py`

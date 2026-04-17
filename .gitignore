@@ -53,6 +53,12 @@ logs/
 reports/
 htmlcov/
 
+# Allure test reports
+reports/allure-results/
+reports/allure-report/
+allure-results/
+allure-report/
+
 # OS
 .DS_Store
 Thumbs.db

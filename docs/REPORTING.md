@@ -7,6 +7,7 @@ This document describes all methods for generating and viewing test reports in t
 | Type | Format | Use Case |
 |------|--------|----------|
 | HTML Report | Standalone `.html` | Human-readable, shareable results |
+| Allure Report | Rich `.html` with trends | Visual trends, categories, history |
 | Coverage Report | HTML + XML | Code coverage analysis |
 | JUnit XML | `.xml` | CI/CD integration, GitHub Actions |
 | MongoDB | Collections | Historical trends, analytics |
@@ -40,7 +41,76 @@ python -m http.server 8000 --directory reports
 
 ---
 
-## 2. Code Coverage Reports
+## 2. Allure Reports
+
+Allure provides rich, interactive test reports with trends, categories, and history.
+
+### Installation
+
+```bash
+# Install Allure (requires Java)
+brew install allure  # macOS
+# or: scoop install allure  # Windows
+# or: apt install allure  # Ubuntu/Debian
+
+# Install Python adapter
+pip install allure-pytest
+```
+
+### Generate Reports
+
+```bash
+# Run tests (results saved to reports/allure-results/)
+pytest tests/unit/ -v
+
+# Generate HTML report from results
+allure serve reports/allure-results
+
+# Or generate static report
+allure generate reports/allure-results -o reports/allure-report --clean
+```
+
+### View Reports
+
+```bash
+# Serve report locally (opens in browser)
+allure serve reports/allure-results
+
+# Serve specific report
+allure serve reports/allure-results --port 9000
+
+# Open static report
+open reports/allure-report/index.html
+```
+
+### Features
+
+- **Trends**: Track pass/fail rates over time
+- **Categories**: Group failures by type (Product Defects, Test Defects, etc.)
+- **History**: Compare with previous runs
+- **Attachments**: Screenshots, logs, stdout
+- **Timeline**: See test execution timeline
+- **Behaviors**: Group tests by feature/epic
+
+### GitHub Actions Integration
+
+```yaml
+- name: Generate Allure Report
+  if: always()
+  run: |
+    allure generate reports/allure-results -o reports/allure-report --clean
+
+- name: Upload Allure Report
+  uses: actions/upload-artifact@v3
+  if: always()
+  with:
+    name: allure-report
+    path: reports/allure-report
+```
+
+---
+
+## 3. Code Coverage Reports
 
 Uses `pytest-cov` to measure code coverage.
 
@@ -66,7 +136,7 @@ open htmlcov/index.html
 
 ---
 
-## 3. JUnit XML Reports
+## 4. JUnit XML Reports
 
 Machine-readable format for CI/CD tools like GitHub Actions, Jenkins, CircleCI.
 
@@ -106,7 +176,7 @@ post {
 
 ---
 
-## 4. MongoDB Test Analytics
+## 5. MongoDB Test Analytics
 
 Every pytest run automatically logs results to MongoDB via `src/test_result_logger.py`.
 
@@ -166,7 +236,7 @@ db.test_results.aggregate([
 
 ---
 
-## 5. Complete Report Command
+## 6. Complete Report Command
 
 Generate all reports at once:
 
@@ -183,7 +253,7 @@ pytest tests/unit/ \
 
 ---
 
-## 6. CI/CD Integration
+## 7. CI/CD Integration
 
 ### GitHub Actions Workflow
 
@@ -247,7 +317,7 @@ stage('Unit Tests') {
 
 ---
 
-## 7. JMeter Load Test Reports
+## 8. JMeter Load Test Reports
 
 For performance testing with JMeter:
 
@@ -267,7 +337,7 @@ Outputs:
 
 ---
 
-## 8. Locust Reports
+## 9. Locust Reports
 
 For Locust load tests:
 
@@ -289,7 +359,7 @@ locust -f tests/performance/locust/netskope_load_test.py \
 
 ---
 
-## 9. Test Result Logger Configuration
+## 10. Test Result Logger Configuration
 
 The `src/test_result_logger.py` hooks into pytest automatically via `conftest.py`. It silently skips if MongoDB is unavailable.
 
@@ -305,11 +375,12 @@ No configuration required — runs on every `pytest` invocation.
 
 ---
 
-## 10. Quick Reference
+## 11. Quick Reference
 
 | Report Type | Command |
 |-------------|---------|
 | HTML | `pytest --html=reports/report.html --self-contained-html` |
+| Allure | `pytest` + `allure serve reports/allure-results` |
 | Coverage | `pytest --cov=src --cov-report=html --cov-report=xml` |
 | JUnit XML | `pytest --junitxml=reports/results.xml` |
 | MongoDB | Automatic (requires MongoDB connection) |
@@ -321,10 +392,19 @@ No configuration required — runs on every `pytest` invocation.
 ## Dependencies
 
 ```bash
-pip install pytest-html pytest-cov pytest-xdist
+pip install pytest pytest-html pytest-cov pytest-xdist allure-pytest
 ```
 
-Listed in `requirements.txt` and `setup.py` extras:
+Listed in `requirements.txt`:
+```
+pytest>=9.0.0
+pytest-html>=4.2.0
+allure-pytest>=2.14.0
+pytest-cov>=4.0.0
+pytest-xdist>=3.0.0
+```
+
+Listed in `setup.py` extras:
 ```python
 extras_require={
     'dev': ['pytest-cov>=4.0.0', 'pytest-xdist>=3.0.0'],
