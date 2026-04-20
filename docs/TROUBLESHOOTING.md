@@ -593,96 +593,112 @@ kubectl describe svc zookeeper-service -n netskope-integration | grep Selector
 
 ---
 
-### **Integration Test Runner Issues**
+### **Grafana Login Issues**
 
-#### **Problem**: Test-runner job fails with "ModuleNotFoundError: No module named 'src'"
+#### **Problem**: Grafana login fails with "Invalid username or password"
+
 ```bash
-# The job clones the repo but doesn't copy source files correctly
-Cloning project...
-Using existing code
-...
-ModuleNotFoundError: No module named 'src'
+# Access Grafana
+kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000
+
+# Open http://localhost:3000 in browser
+# Username: admin
+# Password: integration-grafana-2024
 ```
 
-**Solution**: Update the job to properly copy source files:
-```yaml
-# In test-runner-job.yaml, ensure proper file copying:
-mkdir -p /app/config /app/tests
-cp -rf /tmp/project/src /app/
-cp -rf /tmp/project/tests/* /app/tests/
-```
+**If login still fails**, reset the password:
 
-#### **Problem**: Test-runner validation passes but health check fails
 ```bash
-Integration environment validation passed
-Running service health checks...
-Error: ServiceManager.__init__() got an unexpected keyword argument 'config_dir'
+# Reset password via CLI
+kubectl exec -n netskope-integration deploy/grafana -- grafana cli admin reset-admin-password --new-password integration-grafana-2024
+
+# Alternative method
+kubectl exec -n netskope-integration deploy/grafana -- grafana-cli admin reset-admin-password integration-grafana-2024
+
+# Then restart the deployment
+kubectl rollout restart deployment/grafana -n netskope-integration
 ```
 
-**Solution**: The code changes need to be pushed to GitHub so the job clones the latest version:
+**Check environment variables** in the pod:
+
 ```bash
-git add src/service_manager.py src/environment_manager.py
-git commit -m "Add config_dir parameter"
-git push origin main
+kubectl exec -n netskope-integration deploy/grafana -- env | grep GF_SECURITY_ADMIN
 ```
 
-#### **Problem**: MongoDB authentication fails
+**Credentials by environment**:
+| Environment | Username | Password |
+|------------|----------|----------|
+| Kubernetes Integration | admin | integration-grafana-2024 |
+| Docker Local | admin | netskope_grafana_2024 |
+
+---
+
+### **Querying Test Results**
+
+#### **Problem**: How to view test results from MongoDB
+
+**Option 1: CLI Command**
+
 ```bash
-Failed to connect to MongoDB: Authentication failed.
+# Statistics
+day1-sdet results --stats
+
+# Recent results
+day1-sdet results --recent 10
+
+# Failed tests only
+day1-sdet results --failed
+
+# Session summaries
+day1-sdet results --sessions
+
+# Query specific environment
+day1-sdet results --env integration --stats
 ```
 
-**Solution**: 
-1. MongoDB in integration mode runs without auth (removed --auth flag)
-2. Remove credentials from integration.yaml:
+**Option 2: Direct Script**
+
 ```bash
-sed -i 's/username: "netskope_app"//g' /app/config/integration.yaml
-sed -i 's/password: "netskope-app-2024"//g' /app/config/integration.yaml
+python scripts/query_test_results.py --stats
+python scripts/query_test_results.py --recent 10
+python scripts/query_test_results.py --failed
+python scripts/query_test_results.py --sessions
+python scripts/query_test_results.py --env integration
 ```
 
-#### **Problem**: json.loads() error on cache_client.get() return
+**Option 3: MongoDB Shell**
+
 ```bash
-TypeError: the JSON object must be str, bytes or bytearray, not dict
+# Connect to MongoDB
+# Local (Docker):
+docker exec -it mongodb mongosh "mongodb://admin:admin_2024@localhost:27017/netskope_local?authSource=admin"
+
+# Kubernetes Integration:
+kubectl exec -n netskope-integration mongodb-0 -- mongosh
+
+# Query test results
+db.test_results.find().sort({start_time: -1}).limit(10)
+db.test_results.find({status: "failed"}).sort({start_time: -1})
+db.test_sessions.find().sort({timestamp: -1}).limit(5)
+
+# Aggregate statistics
+db.test_results.aggregate([
+  {$group: {_id: "$test_name", avg_ms: {$avg: "$duration"}, runs: {$sum: 1}}}
+])
 ```
 
-**Solution**: cache_client.get() already returns parsed JSON, remove json.loads():
-```python
-# Wrong:
-cached_data = self.cache_client.get(cache_key)
-cached_data_obj = json.loads(cached_data)
+**Make sure MongoDB is running first**:
 
-# Correct:
-cached_data = self.cache_client.get(cache_key)
-# cache_client.get() already returns dict
-```
-
-#### **Problem**: Kafka create_topic fails with "object has no attribute 'items'"
 ```bash
-'CreateTopicsResponse_v3' object has no attribute 'items'
+# Local
+docker-compose -f docker-compose.local.yml up -d mongodb
+docker-compose -f docker-compose.local.yml ps | grep mongodb
+
+# Kubernetes
+kubectl get pods -n netskope-integration | grep mongodb
 ```
 
-**Solution**: Handle different kafka-python response types:
-```python
-if hasattr(result, 'items'):
-    topics_dict = dict(result.items())
-elif hasattr(result, 'topic_result_dict'):
-    topics_dict = result.topic_result_dict()
-else:
-    topics_dict = {topic: result}
-```
-
-#### **Problem**: Kubernetes service not accessible from test-runner
-```bash
-nc: bad address 'mongodb-service'
-```
-
-**Solution**: Use full FQDN for Kubernetes services:
-```bash
-# Wrong:
-until nc -z mongodb-service 27017; do
-
-# Correct:
-until nc -z mongodb-service.netskope-integration.svc.cluster.local 27017; do
-```
+---
 
 ### **Common Solutions Summary**
 
@@ -696,6 +712,8 @@ until nc -z mongodb-service.netskope-integration.svc.cluster.local 27017; do
 | Port not accessible | Check Docker port mappings and restart Docker |
 | Import errors | `pip install -e .` |
 | Slow startup | Increase Docker resources and timeouts |
+| Grafana login fails | Reset password with `grafana cli admin reset-admin-password` |
+| Query test results | `day1-sdet results --stats` |
 
 ---
 
