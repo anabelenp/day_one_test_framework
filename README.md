@@ -18,6 +18,9 @@ python -m venv .venv && source .venv/bin/activate
 
 pip install -e .                 # registers the day1-sdet CLI command
 pip install -r requirements.txt
+
+# For Prometheus metrics export (optional, for Grafana dashboards)
+pip install prometheus-client
 ```
 
 Verify:
@@ -53,6 +56,21 @@ TESTING_MODE=mock pytest -m "security or unit" -v
 ```
 
 Markers (`pyproject.toml`): `unit`, `integration`, `e2e`, `performance`, `security`, `smoke`, `slow`, `load`, `staging`, `mock`.
+
+**CRITICAL for Kubernetes job**: All test classes MUST have the correct `@pytest.mark.*` decorator. The K8s job runs tests with `-m "integration"` / `-m "e2e"` / `-m "security"` filters. Without markers, tests won't run and job fails with Exit Code 5 (no tests collected).
+
+```python
+# CORRECT - Add marker at class level for Kubernetes
+@pytest.mark.integration
+class TestIntegrationEnvironment:
+    def test_something(self):
+        ...
+
+# WRONG - No marker, test will NOT run in K8s job
+class TestIntegrationEnvironment:
+    def test_something(self):
+        ...
+```
 
 ## Environments
 
@@ -104,8 +122,14 @@ Services started:
 | Mock Target API (nginx) | 8080 | — |
 | LocalStack (AWS) | 4566 | — |
 | Prometheus | 9090 | — |
+| Prometheus Metrics | 9091 | — | (app metrics endpoint) |
 | Grafana | 3000 | admin / grafana_2024 |
 | Jaeger | 16686 | — |
+
+Grafana dashboards (auto-provisioned):
+- Framework Overview: http://localhost:3000/d/framework-overview
+- Service Performance: http://localhost:3000/d/service-performance
+- Test Execution: http://localhost:3000/d/test-execution
 
 ## Kubernetes Environments
 
@@ -129,8 +153,8 @@ day1-sdet production report --output health.json
 
 Port-forward services from K8s to localhost:
 ```bash
-kubectl port-forward -n day1-integration svc/grafana-service 3000:3000
-kubectl port-forward -n day1-integration svc/prometheus-service 9090:9090
+kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000
+kubectl port-forward -n netskope-integration svc/prometheus-service 9090:9090
 ```
 
 ## Performance Tests
