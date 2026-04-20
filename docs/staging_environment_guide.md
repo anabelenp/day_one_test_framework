@@ -316,6 +316,8 @@ Access Grafana at http://localhost:3000 (after port forwarding):
   - Test Execution: http://localhost:3000/d/test-execution
 - **Alerts**: Production-like alerting rules
 
+> **Troubleshooting**: If Grafana login has issues, use Prometheus at http://localhost:9090 for metrics, or query test results via CLI: `day1-sdet results --stats`
+
 #### Prometheus Metrics
 
 Access Prometheus at http://localhost:9090:

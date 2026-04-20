@@ -285,6 +285,8 @@ Access Grafana at `http://localhost:3000` (after port forwarding):
 - **Username**: admin
 - **Password**: integration-grafana-2024
 
+> **Note**: If Grafana login fails, use Prometheus at http://localhost:9090 for metrics, or query test results via CLI: `day1-sdet results --stats`
+
 Available dashboards (auto-provisioned):
 - **Framework Overview** (http://localhost:3000/d/framework-overview): System health and test metrics
 - **Service Performance** (http://localhost:3000/d/service-performance): Redis, Kafka, MongoDB metrics

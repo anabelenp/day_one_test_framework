@@ -432,10 +432,11 @@ graph TB
 
 #### **Core Monitoring Services**
 - **Prometheus** (http://localhost:9090): Metrics collection and alerting
-- **Prometheus Metrics Endpoint** (http://localhost:9091/metrics): Application metrics
 - **Grafana** (http://localhost:3000): Dashboards and visualization
 - **Jaeger** (http://localhost:16686): Distributed tracing
 - **MongoDB** (localhost:27017): Test result analytics and storage
+
+> **Note**: If Grafana login has issues, use Prometheus directly for metrics or query test results via CLI: `day1-sdet results --stats`
 
 #### **Grafana Dashboards (Auto-Provisioned)**
 

@@ -90,11 +90,12 @@ exit()
 |---------|-----|-------------|---------|
 | **Grafana** | http://localhost:3000 | admin/integration-grafana-2024 | Dashboards |
 | **Prometheus** | http://localhost:9090 | - | Metrics |
-| **Prometheus Metrics** | http://localhost:9091 | - | App metrics |
 | **MongoDB** | localhost:27017 | admin/admin_2024 | Test data |
 | **Redis** | localhost:6379 | - | Cache |
 | **Kafka** | localhost:9092 | - | Messages |
 | **Jaeger** | http://localhost:16686 | - | Tracing |
+
+> **Troubleshooting**: If Grafana login fails, use Prometheus at http://localhost:9090 for metrics, or query test results via CLI: `day1-sdet results --stats`
 
 ---
 

@@ -1552,7 +1552,9 @@ After tests run, results are accessible in multiple places:
 | JUnit XML | Machine-readable for CI tools | `reports/*.xml` |
 | MongoDB | Historical test data, trends | `db.test_results.find(...)` |
 | Grafana | Service metrics (Redis ops, Kafka lag, API latency) | `http://localhost:3000` |
-| Prometheus | Real-time test metrics for dashboards | `http://localhost:9091/metrics` |
+| Prometheus | Real-time test metrics for dashboards | `http://localhost:9090` |
+
+> **Note**: If Grafana login fails, use Prometheus directly at http://localhost:9090 for metrics, or use the CLI to query test results: `day1-sdet results --stats`
 
 ### Prometheus Metrics (Automatic)
 

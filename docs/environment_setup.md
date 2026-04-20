@@ -332,9 +332,14 @@ TESTING_MODE=local pytest tests/ -v
 open http://localhost:3000/d/framework-overview
 ```
 
-#### Step 5: Query Prometheus directly
+> **Troubleshooting**: If Grafana login has issues, use alternative methods:
+> - Prometheus: http://localhost:9090
+> - Test results via CLI: `day1-sdet results --stats`
+
+#### Step 5: Query test results via CLI (recommended)
 ```bash
-curl http://localhost:9091/metrics
+day1-sdet results --stats
+day1-sdet results --failed
 ```
 
 #### Step 6: Review test results in MongoDB

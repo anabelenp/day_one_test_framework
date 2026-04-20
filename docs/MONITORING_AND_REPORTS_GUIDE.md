@@ -16,6 +16,8 @@ The Day-1 Framework includes a comprehensive monitoring stack with multiple plat
 | **Redis** | localhost:6379 | None | Cache Monitoring |
 | **Kafka** | localhost:9092 | None | Message Streaming |
 
+> **Troubleshooting**: If Grafana login has issues, use Prometheus at http://localhost:9090 for metrics, or query test results via CLI: `day1-sdet results --stats`
+
 ### **Start Monitoring Stack**
 ```bash
 # Start all services

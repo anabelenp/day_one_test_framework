@@ -122,9 +122,10 @@ Services started:
 | Mock Target API (nginx) | 8080 | — |
 | LocalStack (AWS) | 4566 | — |
 | Prometheus | 9090 | — |
-| Prometheus Metrics | 9091 | — | (app metrics endpoint) |
 | Grafana | 3000 | admin / integration-grafana-2024 |
 | Jaeger | 16686 | — |
+
+> **Troubleshooting**: If Grafana login has issues, use Prometheus at http://localhost:9090 for metrics, or query test results via CLI: `day1-sdet results --stats`
 
 Grafana dashboards (auto-provisioned):
 - Framework Overview: http://localhost:3000/d/framework-overview
