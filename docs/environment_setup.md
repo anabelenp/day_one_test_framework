@@ -309,6 +309,43 @@ open http://localhost:3000  # Grafana (admin/admin)
 open http://localhost:9090  # Prometheus
 ```
 
+### Complete Monitoring Flow (Local Environment)
+
+#### Step 1: Start the monitoring stack
+```bash
+docker-compose -f docker-compose.local.yml up -d
+docker-compose -f docker-compose.local.yml ps
+```
+
+#### Step 2: Install dependencies
+```bash
+pip install prometheus-client
+```
+
+#### Step 3: Run tests (metrics auto-collected)
+```bash
+TESTING_MODE=local pytest tests/ -v
+```
+
+#### Step 4: View results in Grafana
+```bash
+open http://localhost:3000/d/framework-overview
+```
+
+#### Step 5: Query Prometheus directly
+```bash
+curl http://localhost:9091/metrics
+```
+
+#### Step 6: Review test results in MongoDB
+```bash
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local"
+db.test_results.find().sort({start_time: -1}).limit(10)
+```
+
+**For complete monitoring flow, see:** [TUTORIAL.md](./TUTORIAL.md)
+```
+
 ---
 
 ##  Environment 3: Integration Environment

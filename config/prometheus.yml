@@ -68,3 +68,13 @@ scrape_configs:
           service: 'test-runner'
           instance: 'netskope-test-runner'
     scrape_interval: 30s
+
+  # Custom application metrics (for pytest, app-level)
+  - job_name: 'application-metrics'
+    static_configs:
+      - targets: ['host.docker.internal:9091']
+        labels:
+          service: 'application'
+          instance: 'netskope-app'
+    metrics_path: '/metrics'
+    scrape_interval: 15s

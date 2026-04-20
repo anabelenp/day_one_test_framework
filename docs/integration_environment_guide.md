@@ -285,12 +285,13 @@ Access Grafana at `http://localhost:3000` (after port forwarding):
 - **Username**: admin
 - **Password**: integration-grafana-2024
 
-Available dashboards:
-- **Day-1 SDET Overview**: System health and test metrics
+Available dashboards (auto-provisioned):
+- **Framework Overview** (http://localhost:3000/d/framework-overview): System health and test metrics
+- **Service Performance** (http://localhost:3000/d/service-performance): Redis, Kafka, MongoDB metrics
+- **Test Execution** (http://localhost:3000/d/test-execution): Test results and trends
 - **Redis Metrics**: Cache performance and usage
 - **Kafka Metrics**: Message throughput and lag
 - **MongoDB Metrics**: Database performance
-- **Test Execution**: Test results and trends
 
 ### Prometheus Metrics
 
@@ -300,12 +301,70 @@ Access Prometheus at `http://localhost:9090`:
 - Test execution metrics
 - Resource utilization metrics
 
+### Prometheus Application Metrics
+
+For test metrics in integration environment (requires prometheus_client package):
+
+1. Install dependency:
+```bash
+pip install prometheus-client
+```
+
+2. Metrics available at:
+```bash
+curl http://localhost:9091/metrics
+```
+
+3. Metrics exported:
+- `pytest_tests_total` - Total tests by status
+- `pytest_test_duration_seconds` - Test duration histogram
+- `pytest_session_tests` - Session test counts (Gauge)
+- `pytest_success_rate` - Success rate percentage (Gauge)
+
 ### Jaeger Tracing
 
 Access Jaeger at `http://localhost:16686`:
 - Distributed tracing across services
 - Request flow visualization
 - Performance bottleneck identification
+
+---
+
+### Complete Monitoring Flow (Integration Environment)
+
+#### Step 1: Access running services (via kubectl port-forward)
+```bash
+kubectl port-forward svc/grafana 3000:3000 -n day1-integration
+kubectl port-forward svc/prometheus 9090:9090 -n day1-integration
+```
+
+#### Step 2: Install dependencies
+```bash
+pip install prometheus-client
+```
+
+#### Step 3: Run tests
+```bash
+TESTING_MODE=integration pytest tests/ -v
+```
+
+#### Step 4: View results in Grafana
+```bash
+open http://localhost:3000/d/framework-overview
+```
+
+#### Step 5: Query Prometheus
+```bash
+curl http://localhost:9091/metrics
+```
+
+#### Step 6: Review test results in MongoDB
+```bash
+kubectl exec -n day1-integration -it mongodb-0 -- mongosh
+db.test_results.find().sort({start_time: -1}).limit(10)
+```
+
+**For complete monitoring flow, see:** [TUTORIAL.md](./TUTORIAL.md)
 
 ## Testing
 

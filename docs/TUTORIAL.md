@@ -1552,6 +1552,106 @@ After tests run, results are accessible in multiple places:
 | JUnit XML | Machine-readable for CI tools | `reports/*.xml` |
 | MongoDB | Historical test data, trends | `db.test_results.find(...)` |
 | Grafana | Service metrics (Redis ops, Kafka lag, API latency) | `http://localhost:3000` |
+| Prometheus | Real-time test metrics for dashboards | `http://localhost:9091/metrics` |
+
+### Prometheus Metrics (Automatic)
+
+The framework automatically exports test metrics to Prometheus for Grafana visualization.
+
+**Install dependency:**
+```bash
+pip install prometheus-client
+```
+
+**Metrics available:**
+| Metric | Type | Description |
+|--------|------|-------------|
+| `pytest_tests_total` | Counter | Total tests by status |
+| `pytest_test_duration_seconds` | Histogram | Test duration |
+| `pytest_session_tests` | Gauge | Session test counts |
+| `pytest_success_rate` | Gauge | Success rate % |
+
+**Access metrics:**
+```bash
+curl http://localhost:9091/metrics
+```
+
+**Grafana dashboards (auto-provisioned):**
+- Framework Overview: http://localhost:3000/d/framework-overview
+- Service Performance: http://localhost:3000/d/service-performance
+- Test Execution: http://localhost:3000/d/test-execution
+
+---
+
+### Complete Monitoring Flow
+
+#### Step 1: Start the monitoring stack
+```bash
+docker-compose -f docker-compose.local.yml up -d
+
+# Wait for services to be healthy
+docker-compose -f docker-compose.local.yml ps
+```
+
+#### Step 2: Install dependencies
+```bash
+pip install prometheus-client
+```
+
+#### Step 3: Run tests (metrics auto-collected)
+```bash
+TESTING_MODE=local pytest tests/unit/ -v
+```
+
+#### Step 4: View results in Grafana
+```bash
+# Framework Overview Dashboard
+open http://localhost:3000/d/framework-overview
+
+# Service Performance Dashboard
+open http://localhost:3000/d/service-performance
+
+# Test Execution Dashboard
+open http://localhost:3000/d/test-execution
+```
+
+#### Step 5: Query Prometheus directly
+```bash
+# Get all metrics
+curl http://localhost:9091/metrics
+
+# Open Prometheus UI
+open http://localhost:9090
+```
+
+#### Step 6: Review test results in MongoDB
+```bash
+# Connect to MongoDB
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local"
+
+# Query recent test results
+db.test_results.find().sort({start_time: -1}).limit(10)
+
+# Query test sessions
+db.test_sessions.find().sort({timestamp: -1}).limit(5)
+```
+
+---
+
+### Quick Monitoring Commands
+
+```bash
+# Health check all monitoring services
+curl -s http://localhost:3000/api/health  # Grafana
+curl -s http://localhost:9090/-/healthy   # Prometheus
+
+# Quick test run with all reports
+TESTING_MODE=local pytest tests/unit/ -v \
+  --html=reports/test_report.html \
+  --cov=src --cov-report=html:reports/coverage
+```
+
+---
 
 **Report generation (all at once):**
 ```bash

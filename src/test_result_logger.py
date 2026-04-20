@@ -9,14 +9,22 @@ for monitoring, analysis, and reporting.
 import json
 import logging
 import sys
+import threading
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 import pytest
 import os
 import traceback
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from .service_manager import get_database_client
 from .environment_manager import get_current_environment
+
+try:
+    from prometheus_client import Counter, Histogram, Gauge, generate_latest, REGISTRY
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
 
 
 class ResultLogger:
@@ -29,6 +37,39 @@ class ResultLogger:
         self.session_id = None
         self.environment = None
         self._skipped_count = 0
+        self._metrics_server = None
+        self._init_prometheus_metrics()
+
+    def _init_prometheus_metrics(self):
+        """Initialize Prometheus metrics if prometheus_client is available"""
+        if not PROMETHEUS_AVAILABLE:
+            self.logger.warning("prometheus_client not available, metrics disabled")
+            return
+
+        try:
+            self.pytest_tests_total = Counter(
+                'pytest_tests_total',
+                'Total number of pytest tests',
+                ['environment', 'status', 'test_file', 'test_name']
+            )
+            self.pytest_test_duration_seconds = Histogram(
+                'pytest_test_duration_seconds',
+                'Test duration in seconds',
+                ['environment', 'test_file', 'test_name']
+            )
+            self.pytest_session_tests = Gauge(
+                'pytest_session_tests',
+                'Number of tests in current session',
+                ['environment', 'status']
+            )
+            self.pytest_success_rate = Gauge(
+                'pytest_success_rate',
+                'Current test suite success rate',
+                ['environment']
+            )
+            self.logger.info("Prometheus metrics initialized")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize Prometheus metrics: {e}")
 
     def initialize(self):
         """Initialize database connection and session"""
@@ -131,8 +172,31 @@ class ResultLogger:
             else:
                 self.logger.debug(f"Updated test result: {test_name} -> {status}")
 
+            self._update_prometheus_metrics(test_name, status, duration, kwargs.get('test_file', 'unknown'))
+
         except Exception as e:
             self.logger.error(f"Failed to log test result: {e}")
+
+    def _update_prometheus_metrics(self, test_name: str, status: str, duration: float, test_file: str):
+        """Update Prometheus metrics"""
+        if not PROMETHEUS_AVAILABLE:
+            return
+
+        try:
+            self.pytest_tests_total.labels(
+                environment=self.environment,
+                status=status,
+                test_file=test_file,
+                test_name=test_name
+            ).inc()
+
+            self.pytest_test_duration_seconds.labels(
+                environment=self.environment,
+                test_file=test_file,
+                test_name=test_name
+            ).observe(duration)
+        except Exception as e:
+            self.logger.debug(f"Failed to update Prometheus metrics: {e}")
 
     def log_session_summary(
         self,
@@ -165,6 +229,26 @@ class ResultLogger:
 
             doc_id = self.db_client.insert_one("test_sessions", summary_doc)
             self.logger.info(f"Logged session summary: {self.session_id} -> {doc_id}")
+
+            if PROMETHEUS_AVAILABLE:
+                try:
+                    self.pytest_session_tests.labels(
+                        environment=self.environment,
+                        status='total'
+                    ).set(total_tests)
+                    self.pytest_session_tests.labels(
+                        environment=self.environment,
+                        status='passed'
+                    ).set(passed)
+                    self.pytest_session_tests.labels(
+                        environment=self.environment,
+                        status='failed'
+                    ).set(failed)
+                    self.pytest_success_rate.labels(
+                        environment=self.environment
+                    ).set(summary_doc['success_rate'])
+                except Exception as e:
+                    self.logger.debug(f"Failed to update session Prometheus metrics: {e}")
 
         except Exception as e:
             self.logger.error(f"Failed to log session summary: {e}")
@@ -250,3 +334,58 @@ def pytest_sessionfinish(session, exitstatus):
 def pytest_sessionstart(session):
     """Called at start of test session"""
     session._session_start_time = datetime.now()
+
+
+# Prometheus metrics HTTP server
+class PrometheusMetricsHandler(BaseHTTPRequestHandler):
+    """HTTP handler for Prometheus metrics endpoint"""
+
+    def do_GET(self):
+        if self.path == '/metrics' or self.path == '/metrics/':
+            if PROMETHEUS_AVAILABLE:
+                try:
+                    metrics_output = generate_latest(REGISTRY)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/plain; version=0.0.4')
+                    self.end_headers()
+                    self.wfile.write(metrics_output)
+                except Exception as e:
+                    self.send_response(500)
+                    self.send_header('Content-Type', 'text/plain')
+                    self.end_headers()
+                    self.wfile.write(f"Error generating metrics: {e}".encode())
+            else:
+                self.send_response(503)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b"Prometheus metrics not available (prometheus_client not installed)")
+        elif self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"OK")
+        else:
+            self.send_response(404)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"Not Found")
+
+    def log_message(self, format, *args):
+        pass  # Suppress HTTP logging
+
+
+def start_metrics_server(port: int = 9091):
+    """Start the Prometheus metrics HTTP server"""
+    if not PROMETHEUS_AVAILABLE:
+        logging.warning("Cannot start metrics server: prometheus_client not installed")
+        return None
+
+    try:
+        server = HTTPServer(('0.0.0.0', port), PrometheusMetricsHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        logging.info(f"Prometheus metrics server started on port {port}")
+        return server
+    except Exception as e:
+        logging.error(f"Failed to start metrics server: {e}")
+        return None

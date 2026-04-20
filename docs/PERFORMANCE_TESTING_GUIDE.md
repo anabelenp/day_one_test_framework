@@ -336,6 +336,41 @@ open http://localhost:9090    # Prometheus
 open http://localhost:16686   # Jaeger
 ```
 
+### Complete Monitoring Flow (Performance Testing)
+
+#### Step 1: Start the monitoring stack
+```bash
+docker-compose -f docker-compose.local.yml up -d
+```
+
+#### Step 2: Install dependencies
+```bash
+pip install prometheus-client
+```
+
+#### Step 3: Run performance tests (metrics auto-collected)
+```bash
+TESTING_MODE=local pytest tests/performance/ -v -m performance
+```
+
+#### Step 4: View results in Grafana
+```bash
+open http://localhost:3000/d/service-performance
+```
+
+#### Step 5: Query Prometheus directly
+```bash
+curl http://localhost:9091/metrics
+```
+
+#### Step 6: Review test results in MongoDB
+```bash
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local"
+db.test_results.find().sort({start_time: -1}).limit(10)
+```
+
+**For complete monitoring flow, see:** [TUTORIAL.md](./TUTORIAL.md)
+
 ### **Key Performance Metrics**
 
 #### **Response Time Metrics**
@@ -362,7 +397,12 @@ open http://localhost:16686   # Jaeger
 
 ### **Grafana Performance Dashboards**
 ```bash
-# Pre-configured dashboards available:
+# Pre-configured dashboards (auto-provisioned):
+# - Framework Overview: http://localhost:3000/d/framework-overview
+# - Service Performance: http://localhost:3000/d/service-performance
+# - Test Execution: http://localhost:3000/d/test-execution
+
+# Custom dashboards:
 # - API Performance Overview
 # - Service Response Times
 # - Error Rate Monitoring

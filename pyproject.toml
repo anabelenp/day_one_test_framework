@@ -28,3 +28,20 @@ markers = [
 ]
 
 timeout = 300
+
+[project]
+dependencies = [
+    "pytest",
+    "pytest-html",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-timeout",
+    "pytest-mock",
+    "requests",
+    "kafka-python",
+    "pymongo",
+    "redis",
+    "boto3",
+    "pyyaml",
+    "prometheus-client",
+]

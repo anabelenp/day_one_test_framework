@@ -73,6 +73,61 @@ Password: grafana_2024
   - Coverage Metrics
   - Environment Health During Tests
 
+> **Note**: The dashboards above are automatically provisioned when running with `docker-compose.local.yml`. They require Prometheus metrics to be collected. See [Prometheus Metrics](#prometheus-metrics) section for details.
+
+### **Prometheus Metrics**
+
+The framework automatically exports test metrics to Prometheus for visualization in Grafana dashboards.
+
+#### **Available Metrics**
+
+| Metric | Type | Description | Labels |
+|--------|------|-------------|--------|
+| `pytest_tests_total` | Counter | Total tests by status, test_file, test_name |
+| `pytest_test_duration_seconds` | Histogram | Test duration in seconds |
+| `pytest_session_tests` | Gauge | Current session test counts |
+| `pytest_success_rate` | Gauge | Current success rate percentage |
+
+#### **Enabling Metrics**
+
+Install the prometheus_client package:
+```bash
+pip install prometheus-client
+```
+
+Then start the metrics server (automatically loaded as pytest plugin):
+```bash
+# Metrics available at:
+curl http://localhost:9091/metrics
+```
+
+#### **Docker Compose Setup**
+
+The docker-compose.local.yml includes Prometheus scrape configuration:
+```yaml
+# Prometheus scrapes metrics from the application
+- job_name: 'application-metrics'
+  static_configs:
+    - targets: ['host.docker.internal:9091']
+  metrics_path: '/metrics'
+```
+
+#### **Query Examples**
+
+```promql
+# Test pass/fail counts
+sum(pytest_tests_total{environment="local"}) by (status)
+
+# Success rate
+sum(pytest_tests_total{status="passed"}) / sum(pytest_tests_total) * 100
+
+# Average test duration
+rate(pytest_test_duration_seconds_sum[5m]) / rate(pytest_test_duration_seconds_count[5m])
+
+# Session test counts
+pytest_session_tests{environment="local", status="passed"}
+```
+
 ### **Creating Custom Dashboards**
 
 #### **Add New Dashboard**

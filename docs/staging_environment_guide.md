@@ -310,7 +310,10 @@ day1-sdet staging test
 
 Access Grafana at http://localhost:3000 (after port forwarding):
 - **Credentials**: Check secrets in Kubernetes
-- **Dashboards**: Pre-configured staging dashboards
+- **Dashboards**: Pre-configured staging dashboards (auto-provisioned):
+  - Framework Overview: http://localhost:3000/d/framework-overview
+  - Service Performance: http://localhost:3000/d/service-performance
+  - Test Execution: http://localhost:3000/d/test-execution
 - **Alerts**: Production-like alerting rules
 
 #### Prometheus Metrics
@@ -319,6 +322,59 @@ Access Prometheus at http://localhost:9090:
 - **Metrics**: 30-day retention
 - **Recording Rules**: Pre-aggregated metrics
 - **Alert Rules**: Production-like alerts
+
+#### Prometheus Application Metrics
+
+For test metrics in staging environment (requires prometheus_client package):
+
+```bash
+pip install prometheus-client
+curl http://localhost:9091/metrics
+```
+
+Available metrics:
+- `pytest_tests_total` - Counter by status, test_file, test_name
+- `pytest_test_duration_seconds` - Histogram of test durations
+- `pytest_session_tests` - Gauge of session counts
+- `pytest_success_rate` - Gauge of success rate percentage
+
+---
+
+### Complete Monitoring Flow (Staging Environment)
+
+#### Step 1: Access running services (via kubectl port-forward)
+```bash
+kubectl port-forward svc/grafana 3000:3000 -n day1-staging
+kubectl port-forward svc/prometheus 9090:9090 -n day1-staging
+```
+
+#### Step 2: Install dependencies
+```bash
+pip install prometheus-client
+```
+
+#### Step 3: Run tests
+```bash
+TESTING_MODE=staging pytest tests/ -v
+```
+
+#### Step 4: View results in Grafana
+```bash
+open http://localhost:3000/d/framework-overview
+```
+
+#### Step 5: Query Prometheus
+```bash
+curl http://localhost:9091/metrics
+```
+
+#### Step 6: Review test results in MongoDB
+```bash
+kubectl exec -n day1-staging -it mongodb-0 -- mongosh
+db.test_results.find().sort({start_time: -1}).limit(10)
+```
+
+**For complete monitoring flow, see:** [TUTORIAL.md](./TUTORIAL.md)
 
 #### Logs
 

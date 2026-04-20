@@ -432,9 +432,29 @@ graph TB
 
 #### **Core Monitoring Services**
 - **Prometheus** (http://localhost:9090): Metrics collection and alerting
+- **Prometheus Metrics Endpoint** (http://localhost:9091/metrics): Application metrics
 - **Grafana** (http://localhost:3000): Dashboards and visualization
 - **Jaeger** (http://localhost:16686): Distributed tracing
 - **MongoDB** (localhost:27017): Test result analytics and storage
+
+#### **Grafana Dashboards (Auto-Provisioned)**
+
+| Dashboard | URL |
+|-----------|-----|
+| Framework Overview | http://localhost:3000/d/framework-overview |
+| Service Performance | http://localhost:3000/d/service-performance |
+| Test Execution | http://localhost:3000/d/test-execution |
+
+#### **Prometheus Application Metrics**  **IMPLEMENTED**
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `pytest_tests_total` | Counter | Total tests by status, test_file, test_name |
+| `pytest_test_duration_seconds` | Histogram | Test duration in seconds |
+| `pytest_session_tests` | Gauge | Session test counts |
+| `pytest_success_rate` | Gauge | Success rate percentage |
+
+Metrics require `prometheus-client` package and are exported via HTTP endpoint at port 9091.
 
 #### **Automatic Test Monitoring**  **IMPLEMENTED**
 ```python
@@ -457,12 +477,47 @@ class ResultLogger:
 # Access monitoring platforms
 open http://localhost:3000    # Grafana (admin/grafana_2024)
 open http://localhost:9090    # Prometheus
+open http://localhost:9091    # Application metrics
 open http://localhost:16686   # Jaeger
 
 # MongoDB test analytics
 mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local?authSource=admin"
 db.test_results.find().sort({start_time: -1}).limit(10)
 ```
+
+#### **Complete Monitoring Flow**
+
+**Step 1: Start the monitoring stack**
+```bash
+docker-compose -f docker-compose.local.yml up -d
+```
+
+**Step 2: Install dependencies**
+```bash
+pip install prometheus-client
+```
+
+**Step 3: Run tests**
+```bash
+TESTING_MODE=local pytest tests/ -v
+```
+
+**Step 4: View Grafana dashboards**
+```bash
+open http://localhost:3000/d/framework-overview
+```
+
+**Step 5: Query Prometheus directly**
+```bash
+curl http://localhost:9091/metrics
+```
+
+**Step 6: Review MongoDB test results**
+```bash
+mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local"
+```
+
+For complete step-by-step instructions, see: [TUTORIAL.md](./TUTORIAL.md) and [MONITORING_QUICK_START.md](./MONITORING_QUICK_START.md)
 
 ### **Metrics Collection**
 
