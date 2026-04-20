@@ -44,6 +44,12 @@ MONGODB_SERVER_SELECTION_TIMEOUT_MS: 30000
 MONGODB_READ_ONLY: true
 
 # Production Netskope API (Read-Only Monitoring)
+target_api:
+  host: prod-api.company.goskope.com
+  port: 443
+  ssl_enabled: true
+  timeout: 60
+
 NETSKOPE_BASE_URL: https://prod-api.company.goskope.com
 API_KEY: ${NETSKOPE_PROD_API_KEY}  # From external secret management
 API_TIMEOUT: 60

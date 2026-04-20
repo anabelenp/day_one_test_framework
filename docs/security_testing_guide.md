@@ -890,4 +890,50 @@ class SecurityMetricsCollector:
 - Validate automated response systems
 - Test communication and escalation procedures
 
+##  Mock Client Security Validation
+
+The Day-1 Test Framework's mock clients include built-in security validation that mimics production behavior:
+
+### Running Security Tests with Mocks
+
+```bash
+# Run all security tests with mock environment (no external dependencies required)
+TESTING_MODE=mock pytest tests/security/ -v
+
+# Run specific security test categories
+TESTING_MODE=mock pytest tests/security/test_api_security.py -v
+TESTING_MODE=mock pytest tests/security/test_data_security.py -v
+```
+
+### Mock Security Behavior
+
+The mock implementations validate security in `TESTING_MODE=mock`:
+
+| Security Test | Mock Behavior | Expected Response |
+|--------------|--------------|-----------------|
+| SQL Injection | Detects SQL patterns in params/body | `{"status": "error", "error": "Potential SQL injection..."}` |
+| Invalid Credentials | Validates against mock users | Returns `False` |
+| Weak Passwords | Rejects common weak passwords | Returns `False` |
+| Privilege Escalation | Admin endpoints require admin role | `{"status": "error", "error": "Unauthorized"}` |
+| Rate Limiting | Returns rate limit headers | `X-RateLimit-Limit`, `X-RateLimit-Remaining` |
+| Password Hashing | SHA-256 hashes on insert | Stored value differs from plaintext |
+
+### Password Hash Implementation
+
+When `MockDatabaseClient.insert_one()` is called with sensitive fields, they are automatically hashed:
+
+```python
+from src.service_manager import ServiceManager
+
+manager = ServiceManager()
+db = manager.get_database_client()
+
+# Password is automatically hashed before storage
+doc_id = db.insert_one("users", {"username": "test", "password": "plaintext"})
+doc = db.find_one("users", {"username": "test"})
+
+# Stored password is hashed, not plaintext
+assert doc["password"] != "plaintext"  # True: it's a SHA-256 hash
+```
+
 This comprehensive security testing guide ensures robust security validation across all aspects of the Netskope SDET Framework, from basic authentication to advanced threat detection and compliance requirements.

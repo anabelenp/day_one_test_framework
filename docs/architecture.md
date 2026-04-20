@@ -155,6 +155,23 @@ The SDET Framework is a comprehensive, multi-environment testing platform design
   - Test runner (container with code mounted)
 - Each service includes healthchecks and persistent volumes; exporters are included for Prometheus integration.
 
+## Mock Client Security Features
+
+The mock implementations (`MockAPIClient`, `MockDatabaseClient`) include built-in security validation for testing:
+
+### MockAPIClient Security
+- **SQL injection detection**: Validates query parameters and request body for SQL injection patterns (`; DROP`, `'; DELETE`, `' OR '1'='1`, etc.)
+- **Authentication validation**: Validates credentials, rejects invalid/missing credentials, rejects weak passwords (password, 123456, admin, qwerty)
+- **Authorization checks**: Admin endpoints (`/admin/`) require admin role; regular users receive "Unauthorized" error
+- **Rate limiting headers**: Returns `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` headers
+
+### MockDatabaseClient Security
+- **Password hashing**: Automatically hashes sensitive fields (`password`, `secret`, `api_key`) using SHA-256 before storing
+- **Sensitive field detection**: Checks for field names containing "password", "pass", "pwd", "secret", "api_key"
+
+### Production SSL Configuration
+- Production environment (`config/production.yaml`) configures `target_api.ssl_enabled: true` for secure HTTPS connections
+
 ## Operational notes and caveats (actionable)
 
 - Real service clients require optional Python packages: `kafka-python`, `pymongo`, `requests`, and `redis`. The code falls back to mocks when these are not installed; CI installs real deps inside the venv.

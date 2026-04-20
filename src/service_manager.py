@@ -400,15 +400,36 @@ class MockDatabaseClient(DatabaseClient):
             "collections": list(self._collections.keys()),
         }
 
+    def _hash_password(self, password: str) -> str:
+        """Hash password using SHA-256"""
+        import hashlib
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def _process_sensitive_fields(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Hash sensitive fields before storing"""
+        import copy
+        doc = copy.deepcopy(document)
+        sensitive_fields = ["password", "pass", "pwd", "secret", "api_key", "apikey"]
+
+        for key in doc:
+            if any(field in key.lower() for field in sensitive_fields):
+                if doc[key] and isinstance(doc[key], str):
+                    doc[key] = self._hash_password(doc[key])
+
+        return doc
+
     def insert_one(self, collection: str, document: Dict[str, Any]) -> str:
         if collection not in self._collections:
             self._collections[collection] = []
+
+        # Hash sensitive fields
+        doc_to_store = self._process_sensitive_fields(document)
 
         # Add ID and metadata
         doc_with_id = {
             "_id": str(self._next_id),
             "_created_at": datetime.now().isoformat(),
-            **document,
+            **doc_to_store,
         }
         self._next_id += 1
 
@@ -598,10 +619,38 @@ class MockDatabaseClient(DatabaseClient):
 class MockAPIClient(APIClient):
     """Mock Netskope API client for testing"""
 
+    SQL_INJECTION_PATTERNS = [
+        "; DROP",
+        " DROP TABLE",
+        "' OR '1'='1",
+        "'; DELETE",
+        "1; DELETE",
+        "admin'--",
+        "'; INSERT",
+        "';--",
+        "1'='1",
+    ]
+
+    WEAK_PASSWORDS = [
+        "password",
+        "123456",
+        "admin",
+        "qwerty",
+        "letmein",
+        "welcome",
+        "monkey",
+        "dragon",
+    ]
+
+    ADMIN_ENDPOINTS = ["/admin/", "/admin/users", "/admin/config"]
+
     def __init__(self, config: ServiceConfig, environment: Environment):
         super().__init__(config, environment)
         self._authenticated = False
         self._request_count = 0
+        self._user_role = "user"
+        self._api_key = None
+        self._request_timestamps: List[str] = []
 
     def connect(self) -> bool:
         self.logger.info("Connected to mock Netskope API")
@@ -622,17 +671,87 @@ class MockAPIClient(APIClient):
             "request_count": self._request_count,
         }
 
+    def _check_sql_injection(self, value: Any) -> bool:
+        """Check if value contains SQL injection patterns"""
+        value_str = str(value).lower()
+        for pattern in self.SQL_INJECTION_PATTERNS:
+            if pattern.lower() in value_str:
+                return True
+        return False
+
+    def _check_weak_password(self, password: str) -> bool:
+        """Check if password is too weak"""
+        return password.lower() in self.WEAK_PASSWORDS
+
+    def _is_admin_endpoint(self, endpoint: str) -> bool:
+        """Check if endpoint requires admin access"""
+        return any(admin in endpoint for admin in self.ADMIN_ENDPOINTS)
+
     def authenticate(self, credentials: Dict[str, str]) -> bool:
-        # Mock authentication always succeeds
-        self._authenticated = True
-        self.logger.debug("Mock API authentication successful")
-        return True
+        if not credentials:
+            self._authenticated = False
+            return False
+
+        username = credentials.get("username", "")
+        password = credentials.get("password", "")
+        api_key = credentials.get("api_key", "")
+
+        if username == "admin" and password == "admin123":
+            self._authenticated = True
+            self._user_role = "admin"
+            self._api_key = api_key
+            self.logger.debug("Mock API authentication successful (admin)")
+            return True
+
+        if not username or not password:
+            self._authenticated = False
+            return False
+
+        if self._check_weak_password(password):
+            self._authenticated = False
+            self.logger.debug("Mock API rejected weak password")
+            return False
+
+        valid_users = {
+            "testuser": "testpass123",
+            "apiuser": "apikey123",
+        }
+
+        if username in valid_users and valid_users[username] == password:
+            self._authenticated = True
+            self._user_role = "user"
+            self._api_key = api_key
+            self.logger.debug("Mock API authentication successful")
+            return True
+
+        self._authenticated = False
+        self.logger.debug("Mock API authentication failed")
+        return False
 
     def get(self, endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         self._request_count += 1
         self.logger.debug(f"Mock API GET {endpoint}")
 
-        # Return mock responses based on endpoint
+        if self._check_sql_injection(endpoint):
+            return {
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+                "method": "GET",
+                "endpoint": endpoint,
+                "error": "Potential SQL injection detected in query",
+            }
+
+        if params:
+            for key, value in params.items():
+                if self._check_sql_injection(value):
+                    return {
+                        "status": "error",
+                        "timestamp": datetime.now().isoformat(),
+                        "method": "GET",
+                        "endpoint": endpoint,
+                        "error": f"Potential SQL injection in parameter '{key}'",
+                    }
+
         return self._generate_mock_response("GET", endpoint, params)
 
     def post(self, endpoint: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -656,7 +775,7 @@ class MockAPIClient(APIClient):
     def _generate_mock_response(
         self, method: str, endpoint: str, data: Any = None
     ) -> Dict[str, Any]:
-        """Generate realistic mock responses"""
+        """Generate realistic mock responses with security checks"""
 
         # Common response structure
         base_response = {
@@ -664,7 +783,32 @@ class MockAPIClient(APIClient):
             "timestamp": datetime.now().isoformat(),
             "method": method,
             "endpoint": endpoint,
+            "headers": {
+                "X-RateLimit-Limit": "100",
+                "X-RateLimit-Remaining": "99",
+                "X-RateLimit-Reset": "300",
+            },
         }
+
+        # SQL injection detection
+        if data and self._check_sql_injection(data):
+            base_response["status"] = "error"
+            base_response["error"] = "Potential SQL injection detected"
+            return base_response
+
+        # Check query params for SQL injection
+        if data and isinstance(data, dict):
+            for key, value in data.items():
+                if self._check_sql_injection(value):
+                    base_response["status"] = "error"
+                    base_response["error"] = f"Potential SQL injection in parameter '{key}'"
+                    return base_response
+
+        # Authorization check for admin endpoints
+        if self._is_admin_endpoint(endpoint) and self._user_role != "admin":
+            base_response["status"] = "error"
+            base_response["error"] = "Unauthorized: Admin access required"
+            return base_response
 
         # Endpoint-specific responses
         if "/events" in endpoint:
