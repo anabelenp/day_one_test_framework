@@ -154,6 +154,30 @@ Abstract base classes (`CacheClient`, `MessageClient`, `DatabaseClient`, `APICli
 
 **E2E tests auto-skip outside the integration environment.** The `setup_integration_environment` autouse fixture in `tests/e2e/test_integration_e2e.py` calls `pytest.skip()` unless `TESTING_MODE=integration`.
 
+**CRITICAL: Always add pytest markers to test classes.** The Kubernetes job runs tests using marker filters (`-m integration`, `-m e2e`, `-m security`). Without the correct marker, tests will NOT run and the job will fail with Exit Code 5 (no tests collected).
+
+```python
+# CORRECT - Add marker at class level
+@pytest.mark.integration
+class TestIntegrationEnvironment:
+    def test_something(self):
+        ...
+
+# WRONG - No marker, test will NOT run in K8s job
+class TestIntegrationEnvironment:
+    def test_something(self):
+        ...
+```
+
+Available markers (defined in pyproject.toml):
+- `@pytest.mark.unit` - Fast unit tests
+- `@pytest.mark.integration` - Integration tests (Kubernetes)
+- `@pytest.mark.e2e` - End-to-end tests
+- `@pytest.mark.security` - Security tests
+- `@pytest.mark.performance` - Performance tests
+- `@pytest.mark.smoke` - Quick smoke tests
+- `@pytest.mark.slow` - Long-running tests
+
 **Integration tests have two variants:**
 - `tests/integration/test_local_environment.py` — requires `TESTING_MODE=local` (Docker Compose)
 - `tests/integration/test_integration_environment.py` — requires `TESTING_MODE=integration` (Kubernetes)
