@@ -15,6 +15,7 @@ from src.environment_manager import EnvironmentManager, Environment
 from src.service_manager import ServiceManager
 
 
+@pytest.mark.integration
 class TestIntegrationEnvironment:
     """Test suite for Integration Environment (E3) validation"""
 
