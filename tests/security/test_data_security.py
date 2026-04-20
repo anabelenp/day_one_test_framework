@@ -15,6 +15,7 @@ import base64
 from unittest.mock import patch, MagicMock
 
 
+@pytest.mark.security
 class TestDataEncryption:
     """Test data encryption at rest and in transit"""
 
@@ -67,6 +68,7 @@ class TestDataEncryption:
                 config = manager.get_service_config(service_name)
 
 
+@pytest.mark.security
 class TestDataMasking:
     """Test data masking for sensitive fields"""
 
@@ -93,6 +95,7 @@ class TestDataMasking:
         assert username not in masked or username[0] == masked[0]
 
 
+@pytest.mark.security
 class TestSecureStorage:
     """Test secure storage practices"""
 
@@ -131,6 +134,7 @@ class TestSecureStorage:
         assert "ssl_enabled" in info or "type" in info
 
 
+@pytest.mark.security
 class TestDataRetention:
     """Test data retention policies"""
 
@@ -168,6 +172,7 @@ class TestDataRetention:
         assert len(logs) >= 1
 
 
+@pytest.mark.security
 class TestAPIKeySecurity:
     """Test API key security"""
 
@@ -195,6 +200,7 @@ class TestAPIKeySecurity:
         api.authenticate({"api_key": new_key})
 
 
+@pytest.mark.security
 class TestComplianceDataHandling:
     """Test compliance-related data handling"""
 
@@ -251,6 +257,7 @@ class TestComplianceDataHandling:
         assert "email" in detected_pii or "ssn" in detected_pii
 
 
+@pytest.mark.security
 class TestSecureConfiguration:
     """Test secure configuration practices"""
 

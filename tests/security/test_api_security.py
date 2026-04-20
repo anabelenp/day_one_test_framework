@@ -15,6 +15,7 @@ import json
 from unittest.mock import patch, MagicMock
 
 
+@pytest.mark.security
 class TestSQLInjection:
     """Test for SQL/NoSQL injection vulnerabilities"""
 
@@ -62,6 +63,7 @@ class TestSQLInjection:
             assert response.get("status") == "error" or "data" in response
 
 
+@pytest.mark.security
 class TestXSSVulnerabilities:
     """Test for XSS vulnerabilities"""
 
@@ -96,6 +98,7 @@ class TestXSSVulnerabilities:
                     assert "<script>" not in str(event["name"])
 
 
+@pytest.mark.security
 class TestAuthenticationSecurity:
     """Test authentication security"""
 
@@ -135,6 +138,7 @@ class TestAuthenticationSecurity:
             assert result is False
 
 
+@pytest.mark.security
 class TestAuthorizationSecurity:
     """Test authorization security"""
 
@@ -162,6 +166,7 @@ class TestAuthorizationSecurity:
         assert "data" in response or response.get("status") == "error"
 
 
+@pytest.mark.security
 class TestInputValidation:
     """Test input validation security"""
 
@@ -206,6 +211,7 @@ class TestInputValidation:
             assert response.get("status") in ["success", "error"]
 
 
+@pytest.mark.security
 class TestRateLimiting:
     """Test rate limiting security"""
 
@@ -238,6 +244,7 @@ class TestRateLimiting:
         assert blocked or response.get("status") == "success"
 
 
+@pytest.mark.security
 class TestSSLSettings:
     """Test SSL/TLS security settings"""
 
@@ -263,6 +270,7 @@ class TestSSLSettings:
             assert Environment.PRODUCTION.value == "production"
 
 
+@pytest.mark.security
 class TestSecretExposure:
     """Test for secret exposure prevention"""
 
