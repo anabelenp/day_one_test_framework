@@ -597,39 +597,46 @@ kubectl describe svc zookeeper-service -n netskope-integration | grep Selector
 
 #### **Problem**: Grafana login fails with "Invalid username or password"
 
+This is a known issue with some K8s Grafana deployments. If login consistently fails, try these workarounds:
+
+**Workaround 1: Use API key instead of password**
+
+1. Get service token or create service account:
 ```bash
-# Access Grafana
+# Access Grafana needs alternative authentication
+# For read-only access via API, create service account in Grafana UI when it's working
+```
+
+**Workaround 2: Access via port-forward with alternative method**
+
+```bash
+# Port-forward directly to Grafana
 kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000
 
-# Open http://localhost:3000 in browser
-# Username: admin
-# Password: integration-grafana-2024
+# The service should still be accessible at the API level even if UI login fails
+# Access Prometheus instead for metrics
+open http://localhost:9090
 ```
 
-**If login still fails**, reset the password:
+**Workaround 3: Redeploy Grafana fresh**
+
+If login continues to fail, try removing and redeploying:
 
 ```bash
-# Reset password via CLI
-kubectl exec -n netskope-integration deploy/grafana -- grafana cli admin reset-admin-password --new-password integration-grafana-2024
-
-# Alternative method
-kubectl exec -n netskope-integration deploy/grafana -- grafana-cli admin reset-admin-password integration-grafana-2024
-
-# Then restart the deployment
-kubectl rollout restart deployment/grafana -n netskope-integration
+kubectl delete all -l app=grafana -n netskope-integration
+kubectl apply -f k8s/integration/monitoring-stack.yaml
 ```
 
-**Check environment variables** in the pod:
-
-```bash
-kubectl exec -n netskope-integration deploy/grafana -- env | grep GF_SECURITY_ADMIN
-```
-
-**Credentials by environment**:
+#### **Credentials (for reference)**:
 | Environment | Username | Password |
 |------------|----------|----------|
 | Kubernetes Integration | admin | integration-grafana-2024 |
 | Docker Local | admin | netskope_grafana_2024 |
+
+**Note**: If login continues to fail after trying all workarounds, use Prometheus (port 9090) directly for metrics visualization, or use the CLI to query test results:
+```bash
+day1-sdet results --stats
+```
 
 ---
 
