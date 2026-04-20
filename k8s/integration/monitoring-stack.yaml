@@ -182,10 +182,6 @@ data:
     http_port = 3000
     root_url = http://localhost:3000/
     
-    [security]
-    admin_user = admin
-    admin_password = integration-grafana-2024
-    
     [users]
     allow_sign_up = false
     
@@ -287,8 +283,14 @@ spec:
         - containerPort: 3000
           name: grafana
         env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: "admin"
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: "integration-grafana-2024"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
         volumeMounts:
         - name: grafana-config
           mountPath: /etc/grafana

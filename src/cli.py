@@ -657,6 +657,27 @@ def cmd_version(args: Namespace) -> int:
     return 0
 
 
+def cmd_results(args):
+    """Query test results from MongoDB"""
+    import subprocess
+    
+    # Run the query script
+    cmd = [sys.executable, "scripts/query_test_results.py"]
+    if args.stats:
+        cmd.append("--stats")
+    if args.failed:
+        cmd.append("--failed")
+    if args.sessions:
+        cmd.append("--sessions")
+    if args.recent != 10:
+        cmd.extend(["--recent", str(args.recent)])
+    if args.env:
+        cmd.extend(["--env", args.env])
+    
+    result = subprocess.run(cmd)
+    return result.returncode
+
+
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
@@ -679,6 +700,9 @@ Examples:
   netskope-sdet production monitor --interval 300 # Continuous production monitoring
   netskope-sdet test unit --html-report      # Run unit tests with HTML report
   netskope-sdet test integration -e local    # Run integration tests in local env
+  netskope-sdet results --stats               # Query test results from MongoDB
+  netskope-sdet results --failed             # Show failed tests
+  netskope-sdet results -s                    # Show session summaries
         """,
     )
 
@@ -825,6 +849,14 @@ Examples:
     )
     test_parser.add_argument("-m", "--markers", help="Pytest markers to filter tests")
 
+    # Results command
+    results_parser = subparsers.add_parser("results", help="Query test results from MongoDB")
+    results_parser.add_argument("--stats", action="store_true", help="Show overall statistics")
+    results_parser.add_argument("--recent", "-r", type=int, default=10, help="Number of recent results")
+    results_parser.add_argument("--failed", "-f", action="store_true", help="Show only failed tests")
+    results_parser.add_argument("--sessions", "-s", action="store_true", help="Show session summaries")
+    results_parser.add_argument("--env", default="local", help="Environment (local, integration)")
+
     # Version command
     version_parser = subparsers.add_parser("version", help="Show version information")
 
@@ -848,6 +880,8 @@ Examples:
         return cmd_production(args)
     elif args.command == "test":
         return cmd_test(args)
+    elif args.command == "results":
+        return cmd_results(args)
     elif args.command == "version":
         return cmd_version(args)
     else:
