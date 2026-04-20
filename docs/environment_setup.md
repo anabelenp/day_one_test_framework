@@ -213,8 +213,8 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: day1_local
+      MONGO_INITDB_ROOT_PASSWORD: netskope_admin_2024
+      MONGO_INITDB_DATABASE: netskope_local
     volumes:
       - mongodb_data:/data/db
       - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
@@ -281,7 +281,7 @@ MOCK_MODE: false
 # Service Endpoints
 REDIS_URL: "redis://localhost:6379"
 KAFKA_BROKERS: "localhost:9092"
-MONGODB_URL: "mongodb://admin:password@localhost:27017/day1_local?authSource=admin"
+MONGODB_URL: "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin"
 AWS_ENDPOINT_URL: "http://localhost:4566"
 
 # AWS LocalStack Configuration
@@ -344,7 +344,7 @@ day1-sdet results --failed
 
 #### Step 6: Review test results in MongoDB
 ```bash
-mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local"
+mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin"
 db.test_results.find().sort({start_time: -1}).limit(10)
 ```
 

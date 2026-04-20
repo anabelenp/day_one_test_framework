@@ -118,11 +118,11 @@ Services started:
 |---------|------|-------------|
 | Redis 7 | 6379 | — |
 | Kafka (KRaft) | 9092 | — |
-| MongoDB 6 | 27017 | admin / admin_2024 |
+| MongoDB 6 | 27017 | admin / netskope_admin_2024 |
 | Mock Target API (nginx) | 8080 | — |
 | LocalStack (AWS) | 4566 | — |
 | Prometheus | 9090 | — |
-| Grafana | 3000 | admin / integration-grafana-2024 |
+| Grafana | 3000 | admin / netskope_grafana_2024 |
 | Jaeger | 16686 | — |
 
 > **Troubleshooting**: If Grafana login has issues, use Prometheus at http://localhost:9090 for metrics, or query test results via CLI: `day1-sdet results --stats`
@@ -191,13 +191,13 @@ pytest tests/ --cov=src --cov-report=html
 All `pytest` runs automatically log results to MongoDB (`test_results` and `test_sessions` collections) when MongoDB is reachable; silently skipped otherwise.
 
 ```bash
-mongosh "mongodb://admin:admin_2024@localhost:27017/day1_local?authSource=admin"
+mongosh "mongodb://admin:netskope_admin_2024@localhost:27017/netskope_local?authSource=admin"
 
 # Recent failures
 db.test_results.find({status: "failed"}).sort({start_time: -1}).limit(10)
 
 # Per-test average duration
-db.test_results.aggregate([{$group: {_id: "$test_name", avg_ms: {$avg: "$duration"}}}])
+db.test_results.aggregate([{$group: {_id: "$test_name", avg_ms: {$avg: "$duration"}, runs: {$sum: 1}}}])
 
 # Session summaries
 db.test_sessions.find().sort({timestamp: -1}).limit(5)

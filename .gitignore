@@ -81,5 +81,4 @@ credentials.json
 secrets.yaml
 
 # Docs (generated/personal)
-docs/TUTORIAL.md
-docs/code_review*.md
+docs/internal
