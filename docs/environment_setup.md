@@ -368,7 +368,7 @@ minikube start --driver=virtualbox  # or --driver=hyperkit on macOS
 minikube addons enable ingress
 
 # Option 2: Kind (Kubernetes in Docker)
-kind create cluster --name day1-integration
+kind create cluster --name netskope-integration
 
 # Option 3: K3s (lightweight)
 curl -sfL https://get.k3s.io | sh -
@@ -417,7 +417,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: netskope-test-runner
-  namespace: day1-integration
+  namespace: netskope-integration
 spec:
   replicas: 3
   selector:
@@ -471,7 +471,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: netskope-config
-  namespace: day1-integration
+  namespace: netskope-integration
 data:
   env.yaml: |
     TESTING_MODE: "integration"
@@ -499,7 +499,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: netskope-secrets
-  namespace: day1-integration
+  namespace: netskope-integration
 type: Opaque
 data:
   api-key: <base64-encoded-api-key>
@@ -512,16 +512,16 @@ data:
 #### **Validation**
 ```bash
 # Run E2E tests
-kubectl exec -it deployment/netskope-test-runner -n day1-integration -- \
+kubectl exec -it deployment/netskope-test-runner -n netskope-integration -- \
   pytest tests/e2e/ -v --html=reports/e2e-report.html
 
 # Check service health
-kubectl get pods -n day1-integration
-kubectl logs -f deployment/netskope-test-runner -n day1-integration
+kubectl get pods -n netskope-integration
+kubectl logs -f deployment/netskope-test-runner -n netskope-integration
 
 # Monitor resources
-kubectl top pods -n day1-integration
-kubectl describe hpa netskope-test-runner -n day1-integration
+kubectl top pods -n netskope-integration
+kubectl describe hpa netskope-test-runner -n netskope-integration
 ```
 
 ---

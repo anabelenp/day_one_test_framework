@@ -234,8 +234,8 @@ TESTING_MODE=local pytest tests/ -v
 
 ```bash
 # Requires Kubernetes
-TESTING_MODE=integration kubectl port-forward svc/grafana 3000:3000 -n day1-integration
-TESTING_MODE=integration kubectl port-forward svc/prometheus 9090:9090 -n day1-integration
+TESTING_MODE=integration kubectl port-forward svc/grafana 3000:3000 -n netskope-integration
+TESTING_MODE=integration kubectl port-forward svc/prometheus 9090:9090 -n netskope-integration
 ```
 
 ### Staging Environment

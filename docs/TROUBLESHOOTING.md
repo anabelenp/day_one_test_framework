@@ -431,7 +431,7 @@ kubectl cluster-info
 # If using Docker Desktop, enable Kubernetes in Settings → Kubernetes
 
 # If using Kind
-kind create cluster --name day1-integration
+kind create cluster --name netskope-integration
 
 # If using Minikube
 minikube start
