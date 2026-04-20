@@ -331,7 +331,7 @@ def test_load_simulation():
 docker-compose -f docker-compose.local.yml up -d
 
 # Access monitoring dashboards during tests
-open http://localhost:3000    # Grafana (admin/grafana_2024)
+open http://localhost:3000    # Grafana (admin/integration-grafana-2024)
 open http://localhost:9090    # Prometheus
 open http://localhost:16686   # Jaeger
 ```

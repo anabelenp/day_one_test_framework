@@ -123,7 +123,7 @@ Services started:
 | LocalStack (AWS) | 4566 | — |
 | Prometheus | 9090 | — |
 | Prometheus Metrics | 9091 | — | (app metrics endpoint) |
-| Grafana | 3000 | admin / grafana_2024 |
+| Grafana | 3000 | admin / integration-grafana-2024 |
 | Jaeger | 16686 | — |
 
 Grafana dashboards (auto-provisioned):

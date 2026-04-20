@@ -88,7 +88,7 @@ exit()
 
 | Service | URL | Credentials | Purpose |
 |---------|-----|-------------|---------|
-| **Grafana** | http://localhost:3000 | admin/grafana_2024 | Dashboards |
+| **Grafana** | http://localhost:3000 | admin/integration-grafana-2024 | Dashboards |
 | **Prometheus** | http://localhost:9090 | - | Metrics |
 | **Prometheus Metrics** | http://localhost:9091 | - | App metrics |
 | **MongoDB** | localhost:27017 | admin/admin_2024 | Test data |

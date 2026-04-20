@@ -475,7 +475,7 @@ class ResultLogger:
 #### **Monitoring Integration**
 ```bash
 # Access monitoring platforms
-open http://localhost:3000    # Grafana (admin/grafana_2024)
+open http://localhost:3000    # Grafana (admin/integration-grafana-2024)
 open http://localhost:9090    # Prometheus
 open http://localhost:9091    # Application metrics
 open http://localhost:16686   # Jaeger

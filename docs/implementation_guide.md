@@ -322,7 +322,7 @@ python scripts/start_local_environment.py --restart
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **Grafana** | http://localhost:3000 | admin / netskope_grafana_2024 |
+| **Grafana** | http://localhost:3000 | admin / integration-grafana-2024 |
 | **Prometheus** | http://localhost:9090 | - |
 | **Jaeger** | http://localhost:16686 | - |
 | **LocalStack** | http://localhost:4566 | - |

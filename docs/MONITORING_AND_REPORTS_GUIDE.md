@@ -9,7 +9,7 @@ The Day-1 Framework includes a comprehensive monitoring stack with multiple plat
 ### **Service URLs (Local Environment)**
 | Service | URL | Credentials | Purpose |
 |---------|-----|-------------|---------|
-| **Grafana** | http://localhost:3000 | admin/grafana_2024 | Dashboards & Visualization |
+| **Grafana** | http://localhost:3000 | admin/integration-grafana-2024 | Dashboards & Visualization |
 | **Prometheus** | http://localhost:9090 | None | Metrics Collection |
 | **Jaeger** | http://localhost:16686 | None | Distributed Tracing |
 | **MongoDB** | mongodb://localhost:27017 | admin/admin_2024 | Database Queries |
@@ -736,7 +736,7 @@ open http://localhost:3000    # Grafana
 open http://localhost:9090    # Prometheus  
 open http://localhost:16686   # Jaeger
 
-# Login to Grafana: admin/netskope_grafana_2024
+# Login to Grafana: admin/integration-grafana-2024
 ```
 
 ### **3. Run Tests and Generate Data**
@@ -770,7 +770,7 @@ open htmlcov/index.html
 ##  Support and Troubleshooting
 
 ### **Common Issues**
-- **Grafana login fails**: Check credentials (admin/netskope_grafana_2024)
+- **Grafana login fails**: Check credentials (admin/integration-grafana-2024)
 - **No metrics in Prometheus**: Check if exporters are running
 - **Empty Jaeger traces**: Ensure tracing is enabled in tests
 - **MongoDB connection fails**: Verify credentials and authentication database
