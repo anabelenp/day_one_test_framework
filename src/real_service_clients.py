@@ -26,6 +26,46 @@ DEFAULT_TIMEOUT_MS = 5000
 DEFAULT_PARTITIONS = 1
 MAX_BATCH_SIZE = 16384
 
+# Tracing configuration
+try:
+    from jaeger_client import JaegerTracer
+    from opentracing import Tracer
+    TRACING_AVAILABLE = True
+except ImportError:
+    TRACING_AVAILABLE = False
+    JaegerTracer = None
+    Tracer = None
+
+
+class TracingManager:
+    """Manages Jaeger tracing for service clients"""
+
+    _instance = None
+    _tracer = None
+
+    @classmethod
+    def get_tracer(cls, service_name: str = "day1-sdet"):
+        if cls._tracer is None and TRACING_AVAILABLE:
+            from jaeger_client import Config
+            config = Config(
+                service_name=service_name,
+                sampler_config={"type": "const", "param": 1},
+                reporter_log_spans=True,
+            )
+            cls._tracer = config.new_tracer()
+        return cls._tracer
+
+    @classmethod
+    def create_span(cls, tracer, operation_name: str, tags: dict = None):
+        """Create a span for tracing"""
+        if tracer and operation_name:
+            with tracer.start_active_span(operation_name) as scope:
+                if tags:
+                    for key, value in tags.items():
+                        scope.span.set_tag(key, str(value))
+                return scope
+        return None
+
 
 class RealMessageClient(MessageClient):
     """Real Kafka client implementation using kafka-python"""
@@ -424,18 +464,37 @@ class RealDatabaseClient(DatabaseClient):
             if self._database is None:
                 raise Exception("Database not connected")
 
-            # Add metadata
-            doc_with_metadata = {
-                **document,
-                "_created_at": datetime.now(),
-                "_framework": "netskope-sdet",
-            }
+            tracer = TracingManager.get_tracer()
+            if tracer:
+                with tracer.start_active_span("mongodb.insert_one") as scope:
+                    scope.span.set_tag("mongodb.collection", collection)
+                    try:
+                        doc_with_metadata = {
+                            **document,
+                            "_created_at": datetime.now(),
+                            "_framework": "netskope-sdet",
+                        }
+                        result = self._database[collection].insert_one(doc_with_metadata)
+                        scope.span.set_tag("status", "success")
+                        self.logger.debug(
+                            f"Inserted document into {collection}: {result.inserted_id}"
+                        )
+                        return str(result.inserted_id)
+                    except Exception as e:
+                        scope.span.set_tag("status", "error")
+                        raise
+            else:
+                doc_with_metadata = {
+                    **document,
+                    "_created_at": datetime.now(),
+                    "_framework": "netskope-sdet",
+                }
 
-            result = self._database[collection].insert_one(doc_with_metadata)
-            self.logger.debug(
-                f"Inserted document into {collection}: {result.inserted_id}"
-            )
-            return str(result.inserted_id)
+                result = self._database[collection].insert_one(doc_with_metadata)
+                self.logger.debug(
+                    f"Inserted document into {collection}: {result.inserted_id}"
+                )
+                return str(result.inserted_id)
 
         except Exception as e:
             self.logger.error(f"Failed to insert document into {collection}: {e}")
@@ -477,12 +536,24 @@ class RealDatabaseClient(DatabaseClient):
             if self._database is None:
                 raise Exception("Database not connected")
 
-            result = self._database[collection].find_one(filter_dict)
-            if result:
-                # Convert ObjectId to string
-                result["_id"] = str(result["_id"])
-
-            return result
+            tracer = TracingManager.get_tracer()
+            if tracer:
+                with tracer.start_active_span("mongodb.find_one") as scope:
+                    scope.span.set_tag("mongodb.collection", collection)
+                    try:
+                        result = self._database[collection].find_one(filter_dict)
+                        if result:
+                            result["_id"] = str(result["_id"])
+                        scope.span.set_tag("status", "success")
+                        return result
+                    except Exception as e:
+                        scope.span.set_tag("status", "error")
+                        raise
+            else:
+                result = self._database[collection].find_one(filter_dict)
+                if result:
+                    result["_id"] = str(result["_id"])
+                return result
 
         except Exception as e:
             self.logger.error(f"Failed to find document in {collection}: {e}")
@@ -915,13 +986,32 @@ class RealAPIClient(APIClient):
             if not self._session:
                 raise Exception("Session not established")
 
+            tracer = TracingManager.get_tracer()
             url = f"{self._base_url}{endpoint}"
-            response = self._session.get(url, params=params)
 
-            response.raise_for_status()
-            result = response.json()
-            self._record_success()
-            return result
+            if tracer:
+                with tracer.start_active_span("api.get") as scope:
+                    scope.span.set_tag("http.method", "GET")
+                    scope.span.set_tag("http.url", url)
+                    scope.span.set_tag("http.endpoint", endpoint)
+                    try:
+                        response = self._session.get(url, params=params)
+                        response.raise_for_status()
+                        result = response.json()
+                        self._record_success()
+                        scope.span.set_tag("status", "success")
+                        scope.span.set_tag("http.status_code", str(response.status_code))
+                        return result
+                    except Exception as e:
+                        self._record_failure()
+                        scope.span.set_tag("status", "error")
+                        raise
+            else:
+                response = self._session.get(url, params=params)
+                response.raise_for_status()
+                result = response.json()
+                self._record_success()
+                return result
 
         except Exception as e:
             self._record_failure()
@@ -934,13 +1024,32 @@ class RealAPIClient(APIClient):
             if not self._session:
                 raise Exception("Session not established")
 
+            tracer = TracingManager.get_tracer()
             url = f"{self._base_url}{endpoint}"
-            response = self._session.post(url, json=data)
 
-            response.raise_for_status()
-            result = response.json()
-            self._record_success()
-            return result
+            if tracer:
+                with tracer.start_active_span("api.post") as scope:
+                    scope.span.set_tag("http.method", "POST")
+                    scope.span.set_tag("http.url", url)
+                    scope.span.set_tag("http.endpoint", endpoint)
+                    try:
+                        response = self._session.post(url, json=data)
+                        response.raise_for_status()
+                        result = response.json()
+                        self._record_success()
+                        scope.span.set_tag("status", "success")
+                        scope.span.set_tag("http.status_code", str(response.status_code))
+                        return result
+                    except Exception as e:
+                        self._record_failure()
+                        scope.span.set_tag("status", "error")
+                        raise
+            else:
+                response = self._session.post(url, json=data)
+                response.raise_for_status()
+                result = response.json()
+                self._record_success()
+                return result
 
         except Exception as e:
             self._record_failure()

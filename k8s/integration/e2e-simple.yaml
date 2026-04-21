@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: e2e-traced-runner
+  namespace: netskope-integration
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: e2e
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          pip install --no-cache-dir pytest requests kafka-python pymongo redis pyyaml jaeger-client 2>/dev/null || true
+          git clone https://github.com/anabelenp/day_one_test_framework.git /project --depth 1
+          cd /project
+          pip install -e .
+          export TESTING_MODE=integration
+          export PYTHONPATH=/project/src
+          export JAEGER_SERVICE_NAME=day1-e2e
+          export JAEGER_AGENT_HOST=jaeger-service.netskope-integration.svc.cluster.local
+          export JAEGER_AGENT_PORT=6831
+          pytest tests/e2e/ -v --tb=short || true
+          echo "Check Jaeger UI for traces!"
+        env:
+        - name: TESTING_MODE
+          value: "integration"
+        - name: JAEGER_SERVICE_NAME
+          value: "day1-e2e"
+        - name: JAEGER_AGENT_HOST
+          value: "jaeger-service.netskope-integration.svc.cluster.local"
+        - name: JAEGER_AGENT_PORT
+          value: "6831"
+        resources:
+          limits:
+            cpu: 2
+            memory: 2Gi

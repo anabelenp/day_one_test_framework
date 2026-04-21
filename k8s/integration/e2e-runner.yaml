@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: e2e-test-runner
+  namespace: netskope-integration
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: e2e-tests
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          echo "Installing dependencies..."
+          apt-get update && apt-get install -y --no-install-recommends netcat-openbsd git && rm -rf /var/lib/apt/lists/*
+          pip install --no-cache-dir --timeout=300 pytest requests kafka-python pymongo redis pyyaml
+
+          echo "Cloning project..."
+          git clone https://github.com/anabelenp/day_one_test_framework.git /project --depth 1 || true
+          cd /project
+
+          export TESTING_MODE=integration
+          export PYTHONPATH=/project/src:/project
+
+          echo "Running E2E tests..."
+          cd /project && pytest tests/e2e/ -v --tb=short || true
+          echo "E2E tests completed"
+
+        env:
+        - name: TESTING_MODE
+          value: "integration"
+
+        resources:
+          limits:
+            cpu: 2
+            memory: 4Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi

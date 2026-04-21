@@ -342,18 +342,24 @@ kubectl port-forward svc/prometheus 9090:9090 -n netskope-integration
 
 #### Step 2: Install dependencies
 ```bash
-pip install prometheus-client
+pip install prometheus-client jaeger-client
 ```
 
-#### Step 3: Run tests
+#### Step 3: Run tests with tracing
 ```bash
-TESTING_MODE=integration pytest tests/ -v
+# Set tracing environment
+export JAEGER_SERVICE_NAME=day1-e2e
+export JAEGER_AGENT_HOST=jaeger-service.netskope-integration.svc.cluster.local
+export JAEGER_AGENT_PORT=6831
+
+# Run E2E tests
+TESTING_MODE=integration pytest tests/e2e/ -v
 ```
 
-#### Step 4: View results in Grafana
-```bash
-open http://localhost:3000/d/framework-overview
-```
+#### Step 4: View results
+- **Grafana**: http://localhost:3000/d/framework-overview
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686 (for distributed traces)
 
 #### Step 5: Query Prometheus
 ```bash
@@ -365,6 +371,31 @@ curl http://localhost:9091/metrics
 kubectl exec -n netskope-integration -it mongodb-0 -- mongosh
 db.test_results.find().sort({start_time: -1}).limit(10)
 ```
+
+### Running E2E Tests with Full Observability
+
+**Option 1: Using K8s Job (Recommended)**
+```bash
+# Apply E2E test runner job
+kubectl apply -f k8s/integration/e2e-observability.yaml
+
+# View logs
+kubectl logs -n netskope-integration job/e2e-observability-runner -f
+
+# Delete when done
+kubectl delete job e2e-observability-runner -n netskope-integration
+```
+
+**Option 2: Using Simple E2E Job**
+```bash
+kubectl apply -f k8s/integration/e2e-simple.yaml
+kubectl logs -n netskope-integration job/e2e-traced-runner -f
+```
+
+### Key Files for E2E Testing
+- `k8s/integration/e2e-observability.yaml` - Job with Jaeger sidecar
+- `k8s/integration/e2e-simple.yaml` - Simple E2E runner
+- `k8s/integration/e2e-grafana-dashboard.json` - Import into Grafana
 
 **For complete monitoring flow, see:** [TUTORIAL.md](./TUTORIAL.md)
 

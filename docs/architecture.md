@@ -172,6 +172,20 @@ The mock implementations (`MockAPIClient`, `MockDatabaseClient`) include built-i
 ### Production SSL Configuration
 - Production environment (`config/production.yaml`) configures `target_api.ssl_enabled: true` for secure HTTPS connections
 
+### Jaeger Distributed Tracing
+- **Automatic span creation** for service operations:
+  - `redis.set`, `redis.get` - RealCacheClient operations
+  - `mongodb.insert_one`, `mongodb.find_one` - RealDatabaseClient operations
+  - `api.get`, `api.post` - RealAPIClient HTTP operations
+- **TracingManager** in service_manager.py handles tracer initialization
+- Graceful fallback when jaeger-client not installed
+- Traces include: operation name, service type, status, error details, HTTP status codes
+
+### K8s E2E Test Runner Jobs
+- `k8s/integration/e2e-observability.yaml` - Job with Jaeger sidecar
+- `k8s/integration/e2e-simple.yaml` - Simple E2E runner
+- `k8s/integration/e2e-grafana-dashboard.json` - Grafana dashboard JSON
+
 ## Operational notes and caveats (actionable)
 
 - Real service clients require optional Python packages: `kafka-python`, `pymongo`, `requests`, and `redis`. The code falls back to mocks when these are not installed; CI installs real deps inside the venv.

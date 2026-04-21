@@ -1,5 +1,53 @@
 # Netskope SDET Framework - Implementation Status
 
+**Last Updated**: April 20, 2026
+
+## **April 20, 2026 - Observability Updates**
+
+### **New Components Added:**
+
+#### **1. TracingManager and Automated Tracing**
+- Added `TracingManager` class in `src/service_manager.py`
+- Automatic Jaeger tracing integrated into:
+  - `RealCacheClient.set()`, `RealCacheClient.get()`
+  - `RealDatabaseClient.insert_one()`, `RealDatabaseClient.find_one()`
+  - `RealAPIClient.get()`, `RealAPIClient.post()`
+- Traces include service name, operation, status, error details
+- Graceful fallback when jaeger-client not installed
+
+#### **2. K8s E2E Test Jobs**
+- `k8s/integration/e2e-observability.yaml` - Job with Jaeger sidecar for full tracing
+- `k8s/integration/e2e-simple.yaml` - Simple E2E runner job
+- `k8s/integration/e2e-grafana-dashboard.json` - Grafana dashboard for E2E metrics
+
+#### **3. Mock Client Security Enhancements**
+- `MockAPIClient` now validates:
+  - SQL injection detection in query params and body
+  - Authentication validation (rejects invalid/weak credentials)
+  - Authorization checks (admin endpoints require admin role)
+  - Rate limiting headers
+- `MockDatabaseClient` automatically hashes passwords (SHA-256)
+
+#### **4. Production SSL Configuration**
+- `config/production.yaml` now includes `target_api.ssl_enabled: true`
+
+### **How to Run E2E with Observability**
+
+```bash
+# Start monitoring tools
+kubectl port-forward -n netskope-integration svc/prometheus-service 9090:9090 &
+kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000 &
+kubectl port-forward -n netskope-integration svc/jaeger-service 16686:16686 &
+
+# Run E2E tests from inside K8s
+kubectl apply -f k8s/integration/e2e-simple.yaml
+
+# View in browser:
+# - Jaeger: http://localhost:16686
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000
+```
+
 **Last Updated**: April 17, 2026
 
 ## **April 2026 Updates - Kubernetes Integration Fixes**

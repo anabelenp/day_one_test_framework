@@ -8,7 +8,6 @@ environment: "integration"
 redis:
   host: "redis-service.netskope-integration.svc.cluster.local"
   port: 6379
-  password: "integration-redis-2024"
   ssl_enabled: false
   connection_pool_size: 10
   timeout: 30
@@ -23,8 +22,6 @@ kafka:
 mongodb:
   host: "mongodb-service.netskope-integration.svc.cluster.local"
   port: 27017
-  username: ""
-  password: ""
   database: "netskope_integration"
   ssl_enabled: false
   connection_pool_size: 10

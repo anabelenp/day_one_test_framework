@@ -339,9 +339,38 @@ open http://localhost:16686
 - **Span Details**: Individual operation timing and metadata
 - **Error Analysis**: Identify failed operations and bottlenecks
 
-### **Trace Integration in Tests**
+### **Automated Trace Integration**
+
+The framework now provides **automatic tracing** in service clients. Traces are automatically created for all service operations:
+
 ```python
-# Add tracing to your test code
+# Install Jaeger client (required for tracing)
+pip install jaeger-client
+
+# Set environment variables
+export JAEGER_SERVICE_NAME=day1-e2e
+export JAEGER_AGENT_HOST=jaeger-service.netskope-integration.svc.cluster.local
+export JAEGER_AGENT_PORT=6831
+```
+
+**Automatic traces created for:**
+
+| Service Client | Operations Traced |
+|----------------|-------------------|
+| RealCacheClient | `redis.set`, `redis.get` |
+| RealDatabaseClient | `mongodb.insert_one`, `mongodb.find_one` |
+| RealAPIClient | `api.get`, `api.post` |
+
+Each span includes:
+- Operation name
+- Service type
+- Status (success/error)
+- HTTP status code (for API calls)
+- Error details (if applicable)
+
+### **Manual Trace Integration (Legacy)**
+```python
+# Manual tracing (not required - use automated instead)
 from jaeger_client import Config
 import opentracing
 

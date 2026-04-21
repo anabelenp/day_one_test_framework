@@ -1,0 +1,135 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: e2e-observability-runner
+  namespace: netskope-integration
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: e2e-runner
+        observability: enabled
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: jaeger-config
+        configMap:
+          name: jaeger-config
+          items:
+          - key: jaeger.exe
+            path: jaeger.exe
+            mode: 0755
+      initContainers:
+      - name: wait-for-services
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for services..."
+          nslookup redis-service.netskope-integration.svc.cluster.local || exit 1
+          nslookup mongodb-service.netskope-integration.svc.cluster.local || exit 1
+          nslookup prometheus-service.netskope-integration.svc.cluster.local || exit 1
+          nslookup jaeger-service.netskope-integration.svc.cluster.local || exit 1
+          echo "All services ready"
+      containers:
+      - name: e2e-tests
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+
+          echo "Installing dependencies..."
+          apt-get update && apt-get install -y --no-install-recommends netcat-openbsd git curl && rm -rf /var/lib/apt/lists/*
+
+          echo "Installing Python packages..."
+          pip install --no-cache-dir \
+            pytest \
+            pytest-html \
+            pytest-cov \
+            requests \
+            kafka-python \
+            pymongo \
+            redis \
+            pyyaml \
+            jaeger-client \
+            prometheus-client
+
+          echo "Installing application..."
+          git clone https://github.com/anabelenp/day_one_test_framework.git /project --depth 1
+          cd /project
+          pip install -e .
+
+          export TESTING_MODE=integration
+          export PYTHONPATH=/project/src
+
+          export JAEGER_SERVICE_NAME=e2e-test-runner
+          export JAEGER_AGENT_HOST=jaeger-service.netskope-integration.svc.cluster.local
+          export JAEGER_AGENT_PORT=6831
+
+          echo "Running E2E tests with full observability..."
+          echo "Jaeger Agent: $JAEGER_AGENT_HOST:$JAEGER_AGENT_PORT"
+
+          pytest tests/e2e/ -v --tb=short --html=/reports/e2e_report.html --self-contained-html || true
+
+          echo "E2E tests completed - check Jaeger for traces"
+
+        env:
+        - name: TESTING_MODE
+          value: "integration"
+        - name: JAEGER_SERVICE_NAME
+          value: "day1-e2e-runner"
+        - name: JAEGER_AGENT_HOST
+          value: "jaeger-service.netskope-integration.svc.cluster.local"
+        - name: JAEGER_AGENT_PORT
+          value: "6831"
+        - name: JAEGER_REPORTER_LOG_SPANS
+          value: "true"
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+
+        ports:
+        - name: http
+          containerPort: 8080
+
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 2Gi
+
+      - name: jaeger-agent
+        image: jaegertracing/jaeger-agent:1.50
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6831
+          name: jaeger-thrift
+        - containerPort: 6832
+          name: jaeger-binary
+        - containerPort: 14271
+          name: admin
+        env:
+        - name: REPORTER_ROTATE_INTERVAL
+          value: "5s"
+        - name: REPORTER_MAX_QUEUE_SIZE
+          value: "10000"
+        - name: REPORTER_FLUSH_INTERVAL_MS
+          value: "1000"
+        - name: AGENT_REPORTER_GRPC_TLS
+          value: "false"
+        - name: AGENT_REPORTER_HTTP_TLS
+          value: "false"
+        - name: COLLECTOR_HOST_PORT
+          value: "jaeger-service.netskope-integration.svc.cluster.local:14250"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

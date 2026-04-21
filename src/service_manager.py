@@ -24,7 +24,70 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
+try:
+    from jaeger_client import Config as JaegerConfig
+    JAEGER_AVAILABLE = True
+except ImportError:
+    JAEGER_AVAILABLE = False
+
 from .environment_manager import get_environment_manager, Environment, ServiceConfig
+
+
+class TracingManager:
+    """Manages distributed tracing for service clients"""
+
+    _tracer = None
+
+    @classmethod
+    def get_tracer(cls, service_name: str = "day1-sdet"):
+        """Get or create Jaeger tracer"""
+        if cls._tracer is None and JAEGER_AVAILABLE:
+            try:
+                config = JaegerConfig(
+                    service_name=service_name,
+                    sampler_config={"type": "const", "param": 1},
+                    reporter_log_spans=True,
+                )
+                cls._tracer = config.new_tracer()
+                logging.info(f"Jaeger tracer initialized for {service_name}")
+            except Exception as e:
+                logging.warning(f"Failed to initialize Jaeger tracer: {e}")
+        return cls._tracer
+
+    @classmethod
+    def create_span(cls, operation_name: str, tags: dict = None):
+        """Create a span for tracing an operation"""
+        tracer = cls.get_tracer()
+        if tracer:
+            with tracer.start_active_span(operation_name) as scope:
+                if tags:
+                    for key, value in tags.items():
+                        scope.span.set_tag(key, str(value))
+                return scope
+        return None
+
+    @classmethod
+    def trace_operation(cls, operation_name: str, service: str, callback, *args, tags: dict = None, **kwargs):
+        """Execute an operation with tracing"""
+        span_tags = {"service": service, "operation": operation_name, **(tags or {})}
+        tracer = cls.get_tracer()
+
+        if tracer:
+            with tracer.start_active_span(operation_name) as scope:
+                scope.span.set_tag("service", service)
+                if tags:
+                    for key, value in tags.items():
+                        scope.span.set_tag(key, str(value))
+                try:
+                    result = callback(*args, **kwargs)
+                    scope.span.set_tag("status", "success")
+                    return result
+                except Exception as e:
+                    scope.span.set_tag("status", "error")
+                    scope.span.set_tag("error", str(e))
+                    raise
+        else:
+            return callback(*args, **kwargs)
 
 # Abstract Base Classes for Service Clients
 
@@ -903,22 +966,57 @@ class RealCacheClient(CacheClient):
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
         try:
-            if isinstance(value, (dict, list)):
-                value = json.dumps(value)
-            return self._connection.set(key, value, ex=ttl)
+            # Create tracing span
+            tracer = TracingManager.get_tracer()
+            if tracer:
+                with tracer.start_active_span("redis.set") as scope:
+                    scope.span.set_tag("redis.key", key[:50])
+                    scope.span.set_tag("redis.operation", "set")
+                    try:
+                        if isinstance(value, (dict, list)):
+                            value = json.dumps(value)
+                        result = self._connection.set(key, value, ex=ttl)
+                        scope.span.set_tag("status", "success")
+                        return result
+                    except Exception as e:
+                        scope.span.set_tag("status", "error")
+                        raise
+            else:
+                if isinstance(value, (dict, list)):
+                    value = json.dumps(value)
+                return self._connection.set(key, value, ex=ttl)
         except Exception as e:
             self.logger.error(f"Redis SET error: {e}")
             return False
 
     def get(self, key: str) -> Optional[Any]:
         try:
-            value = self._connection.get(key)
-            if value:
-                try:
-                    return json.loads(value.decode("utf-8"))
-                except json.JSONDecodeError:
-                    return value.decode("utf-8")
-            return None
+            tracer = TracingManager.get_tracer()
+            if tracer:
+                with tracer.start_active_span("redis.get") as scope:
+                    scope.span.set_tag("redis.key", key[:50])
+                    try:
+                        value = self._connection.get(key)
+                        if value:
+                            try:
+                                result = json.loads(value.decode("utf-8"))
+                            except json.JSONDecodeError:
+                                result = value.decode("utf-8")
+                        else:
+                            result = None
+                        scope.span.set_tag("status", "success")
+                        return result
+                    except Exception as e:
+                        scope.span.set_tag("status", "error")
+                        raise
+            else:
+                value = self._connection.get(key)
+                if value:
+                    try:
+                        return json.loads(value.decode("utf-8"))
+                    except json.JSONDecodeError:
+                        return value.decode("utf-8")
+                return None
         except Exception as e:
             self.logger.error(f"Redis GET error: {e}")
             return None

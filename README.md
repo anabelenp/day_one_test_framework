@@ -131,6 +131,73 @@ Grafana dashboards (auto-provisioned):
 - Framework Overview: http://localhost:3000/d/framework-overview
 - Service Performance: http://localhost:3000/d/service-performance
 - Test Execution: http://localhost:3000/d/test-execution
+- E2E Test Dashboard: http://localhost:3000/d/day1-e2e (import `k8s/integration/e2e-grafana-dashboard.json`)
+
+## Observability (Distributed Tracing)
+
+The framework supports **Jaeger distributed tracing** and **Prometheus metrics** for full service observability:
+
+### Jaeger Tracing (Distributed Tracing)
+Traces service operations across Redis, MongoDB, and API calls:
+
+```bash
+# Install Jaeger client
+pip install jaeger-client
+
+# Set environment variables for tracing
+export JAEGER_SERVICE_NAME=day1-e2e
+export JAEGER_AGENT_HOST=jaeger-service.netskope-integration.svc.cluster.local
+export JAEGER_AGENT_PORT=6831
+```
+
+Trace spans are automatically created for:
+- `redis.set`, `redis.get` - Cache operations
+- `mongodb.insert_one`, `mongodb.find_one` - Database operations
+- `api.get`, `api.post` - HTTP API calls
+
+### Prometheus Metrics
+Test metrics are automatically exported:
+
+```bash
+# Metrics are available at
+curl http://localhost:9090/metrics
+
+# Key metrics:
+# - pytest_tests_total{environment, status, test_file, test_name}
+# - pytest_test_duration_seconds{environment, test_file, test_name}
+# - pytest_session_tests{environment}
+```
+
+### Running E2E Tests with Full Observability
+
+**Option 1: Using K8s job with Jaeger sidecar:**
+```bash
+kubectl apply -f k8s/integration/e2e-observability.yaml
+kubectl logs -n netskope-integration job/e2e-observability-runner -f
+```
+
+**Option 2: Port-forward and run locally:**
+```bash
+# Terminal 1: Port-forward monitoring services
+kubectl port-forward -n netskope-integration svc/prometheus-service 9090:9090 &
+kubectl port-forward -n netskope-integration svc/grafana-service 3000:3000 &
+kubectl port-forward -n netskope-integration svc/jaeger-service 16686:16686 &
+
+# Terminal 2: Run E2E tests (from inside K8s)
+kubectl apply -f k8s/integration/e2e-simple.yaml
+
+# View traces in browser:
+# - Jaeger: http://localhost:16686
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000
+```
+
+### Key Files
+- `k8s/integration/e2e-observability.yaml` - K8s job with Jaeger sidecar
+- `k8s/integration/e2e-simple.yaml` - Simple E2E test runner
+- `k8s/integration/e2e-grafana-dashboard.json` - E2E dashboard for Grafana
+- `src/service_manager.py` - TracingManager class
+- `src/real_service_clients.py` - Traced service clients
 
 ## Kubernetes Environments
 
