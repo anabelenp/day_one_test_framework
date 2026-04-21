@@ -592,6 +592,7 @@ open http://localhost:9090/graph
 pytest tests/ --html=reports/test_report.html --self-contained-html -v
 
 # Generate with Allure results
+# Note: reports/allure-results/ is auto-created by conftest.py
 pytest tests/ --html=reports/test_report.html --alluredir=reports/allure-results -v
 
 # Generate Allure report
@@ -599,6 +600,9 @@ allure serve reports/allure-results
 
 # Open report
 open reports/test_report.html
+
+# For fresh results, use --clean-alluredir:
+pytest tests/ --alluredir=reports/allure-results --clean-alluredir -v
 
 # Report includes:
 # - Test summary (pass/fail/skip)
@@ -776,10 +780,14 @@ open http://localhost:16686   # Jaeger
 TESTING_MODE=local pytest tests/ -v
 
 # Generate with Allure results
+# Note: reports/allure-results/ is auto-created by conftest.py
 TESTING_MODE=local pytest tests/ --alluredir=reports/allure-results -v
 
 # Check service health
 python src/cli.py services health
+
+# For fresh results, use --clean-alluredir:
+TESTING_MODE=local pytest tests/ --alluredir=reports/allure-results --clean-alluredir -v
 ```
 
 ### **4. View Reports**

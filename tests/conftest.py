@@ -27,6 +27,7 @@ def clean_reports_dir():
 
     # Create fresh directories
     reports_dir.mkdir(exist_ok=True)
+    (reports_dir / "allure-results").mkdir(exist_ok=True)
 
     yield
 

@@ -12,6 +12,8 @@ This document describes all methods for generating and viewing test reports in t
 | JUnit XML | `.xml` | CI/CD integration, GitHub Actions |
 | MongoDB | Collections | Historical trends, analytics |
 
+> **Note:** The `reports/allure-results/` directory is auto-created by `tests/conftest.py` when running tests. If you encounter errors about the directory not existing, simply run tests first with `--alluredir=reports/allure-results`, or use `--clean-alluredir` flag to create it fresh.
+
 ---
 
 ## 1. HTML Reports
@@ -61,13 +63,17 @@ pip install allure-pytest
 
 ```bash
 # Run tests (results saved to reports/allure-results/)
-pytest tests/unit/ -v
+# Note: reports/allure-results/ is auto-created by conftest.py
+pytest tests/unit/ --alluredir=reports/allure-results -v
 
 # Generate HTML report from results
 allure serve reports/allure-results
 
 # Or generate static report
 allure generate reports/allure-results -o reports/allure-report --clean
+
+# For fresh results, use --clean-alluredir:
+pytest tests/unit/ --alluredir=reports/allure-results --clean-alluredir -v
 ```
 
 ### View Reports
@@ -524,6 +530,7 @@ addopts =
 **Run with all reports:**
 ```bash
 # Integration tests with full reporting
+# Note: reports/allure-results/ is auto-created by conftest.py
 TESTING_MODE=local pytest tests/integration/ \
   --html=reports/test_report.html \
   --self-contained-html \
@@ -546,6 +553,9 @@ allure serve reports/allure-results
 # Generate static Allure HTML
 allure generate reports/allure-results -o reports/allure-report --clean
 open reports/allure-report/index.html
+
+# For fresh results, use --clean-alluredir:
+TESTING_MODE=local pytest tests/integration/ --alluredir=reports/allure-results --clean-alluredir -v
 ```
 
 ---
